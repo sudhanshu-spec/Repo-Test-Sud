@@ -10,6 +10,20 @@
         "method": "GET",
         "url": "https://api.example.com/data"
       }
+    },
+    {
+      "name": "Hello World Endpoint",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:3000/"
+      }
+    },
+    {
+      "name": "Good Evening Endpoint",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:3000/evening"
+      }
     }
   ]
 }
