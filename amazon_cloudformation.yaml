@@ -1,0 +1,16 @@
+Resources:
+  MyBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: sample-bucket-demo
+      VersioningConfiguration:
+        Status: Enabled
+  MyQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: sample-queue
+Outputs:
+  BucketName:
+    Value: sample-bucket-demo
+  QueueName:
+    Value: sample-queue

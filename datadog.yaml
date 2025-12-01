@@ -1,0 +1,11 @@
+logs:
+  - type: file
+    path: /var/log/app.log
+    service: demo
+    source: python
+apm_config:
+  enabled: true
+process_config:
+  enabled: true
+system_probe_config:
+  enabled: true

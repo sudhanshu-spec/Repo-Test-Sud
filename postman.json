@@ -1,0 +1,15 @@
+{
+  "info": {
+    "name": "Postman Collection Demo",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "GET Example",
+      "request": {
+        "method": "GET",
+        "url": "https://api.example.com/data"
+      }
+    }
+  ]
+}
