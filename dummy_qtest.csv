@@ -1,0 +1,4 @@
+Test Case Name,Description,Test Step,Expected Result
+Verify login with valid credentials,Check if user can login with valid data,Enter valid username and password,User should login successfully
+Verify login with invalid credentials,Check error message for invalid login,Enter invalid username and password,Proper error message should be displayed
+Verify logout functionality,Check if user can logout successfully,Click on logout button,User should be logged out successfully
