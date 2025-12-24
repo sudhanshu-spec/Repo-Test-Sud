@@ -1,0 +1,19 @@
+# TLS/SSL Certificates Directory
+# ================================
+# This directory stores TLS/SSL certificates for HTTPS support.
+#
+# Files to generate locally (NOT committed to version control):
+#   - server.key  : Private key for TLS
+#   - server.cert : TLS certificate
+#
+# To generate self-signed certificates for development:
+#   openssl req -x509 -newkey rsa:4096 -keyout server.key -out server.cert \
+#     -days 365 -nodes -subj "/CN=localhost"
+#
+# Enable HTTPS by setting HTTPS_ENABLED=true in your .env file.
+#
+# WARNING: Self-signed certificates are for development only.
+#          Use properly signed certificates from a Certificate Authority
+#          (e.g., Let's Encrypt) for production environments.
+#
+# This .gitkeep file ensures the certs directory is tracked by git.
