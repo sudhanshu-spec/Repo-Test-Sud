@@ -1,54 +1,63 @@
 /**
- * Express.js Server Entry Point
+ * HTTP Server Bootstrap Module
  * 
- * This module serves as the HTTP listener bootstrap for the Express.js application.
- * It imports the configured Express app from app.js and starts the HTTP server.
- * 
- * This file implements the App-Server Separation pattern as defined in
- * Agent Action Plan Section 0.3.3, decoupling HTTP listener concerns from
- * Express application configuration.
+ * This module serves as the entry point for starting the Express HTTP server.
+ * It imports the configured Express application from app.js and handles:
+ * - Server port configuration from environment variables
+ * - Conditional server startup (only when run directly, not when imported)
+ * - Backward-compatible app export for testing
  * 
  * Architecture:
- * - server.js: HTTP listener bootstrap (this file)
- * - app.js: Express configuration (imported here)
- * - src/routes/: Route definitions (used by app.js)
+ * - server.js (this file): HTTP listener bootstrap
+ * - app.js: Express application configuration and route registration
+ * - src/routes/: Modular route definitions
  * 
- * Endpoints (served via imported app):
- * - GET / : Returns "Hello world"
- * - GET /evening : Returns "Good evening"
+ * Endpoints (served via app.js):
+ * - GET / : Returns "Hello world" (HTTP 200)
+ * - GET /evening : Returns "Good evening" (HTTP 200)
  * 
- * The server listens on the PORT environment variable or defaults to port 3000.
- * The app instance is re-exported for backward compatibility with existing test imports.
+ * Usage:
+ * - Direct execution: `node server.js` starts HTTP server on PORT
+ * - Import for testing: `require('./server')` returns app without binding port
  * 
  * @module server
  */
 
 'use strict';
 
-// Import configured Express application instance from app.js
-// The app has all routes and middleware pre-configured
+/**
+ * Import Express application instance from app.js
+ * 
+ * The app module provides the fully configured Express application with:
+ * - All route middleware registered
+ * - Express instance methods including listen() for starting HTTP server
+ * 
+ * @type {express.Application}
+ */
 const app = require('./app');
 
 /**
  * Server port configuration
  * 
- * Reads from PORT environment variable, defaulting to 3000 if not set.
- * This allows flexible deployment across different environments.
+ * Reads PORT from environment variable or defaults to 3000.
+ * This maintains exact behavior from the original server.js implementation.
  * 
- * @type {number}
+ * @type {number|string}
  */
 const PORT = process.env.PORT || 3000;
 
 /**
  * Conditional server startup
  * 
- * Starts the HTTP listener only when this file is run directly (node server.js).
- * When imported for testing (e.g., via supertest), the listener is not started,
- * allowing tests to make HTTP assertions without binding to a port.
+ * Starts the HTTP server only when this file is executed directly
+ * (via `node server.js`), not when imported as a module (for testing).
  * 
- * This pattern enables:
- * - npm start: Starts the HTTP server on configured port
- * - npm test: Imports app without starting listener for test assertions
+ * This guard pattern allows:
+ * - Production: `node server.js` starts server on configured PORT
+ * - Testing: `require('./server')` returns app without port binding
+ * 
+ * The app.listen() method is provided by Express and binds the
+ * application to the specified port, enabling HTTP request handling.
  */
 if (require.main === module) {
   app.listen(PORT, () => {
@@ -59,12 +68,13 @@ if (require.main === module) {
 /**
  * Export Express application instance
  * 
- * Re-exports the app from app.js to maintain backward compatibility
- * with any code that imports from server.js (e.g., existing tests).
+ * Maintains backward compatibility with existing test imports.
+ * Tests using `require('../server')` will continue to receive
+ * the app instance for HTTP assertions via supertest.
  * 
- * Both import paths will work:
- * - require('./server') -> returns app (this export)
- * - require('./app') -> returns app (direct from app.js)
+ * This export pattern ensures:
+ * - Test suite compatibility without modification
+ * - Consistent interface whether importing from server.js or app.js
  * 
  * @exports app
  */
