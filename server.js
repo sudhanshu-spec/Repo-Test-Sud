@@ -1,53 +1,71 @@
 /**
- * Express.js Application Entry Point
+ * Express.js Server Entry Point
  * 
- * This is a Node.js Express server tutorial implementing two GET endpoints:
+ * This module serves as the HTTP listener bootstrap for the Express.js application.
+ * It imports the configured Express app from app.js and starts the HTTP server.
+ * 
+ * This file implements the App-Server Separation pattern as defined in
+ * Agent Action Plan Section 0.3.3, decoupling HTTP listener concerns from
+ * Express application configuration.
+ * 
+ * Architecture:
+ * - server.js: HTTP listener bootstrap (this file)
+ * - app.js: Express configuration (imported here)
+ * - src/routes/: Route definitions (used by app.js)
+ * 
+ * Endpoints (served via imported app):
  * - GET / : Returns "Hello world"
  * - GET /evening : Returns "Good evening"
  * 
  * The server listens on the PORT environment variable or defaults to port 3000.
- * The app instance is exported for testing purposes.
+ * The app instance is re-exported for backward compatibility with existing test imports.
+ * 
+ * @module server
  */
 
 'use strict';
 
-// Import Express web framework
-const express = require('express');
+// Import configured Express application instance from app.js
+// The app has all routes and middleware pre-configured
+const app = require('./app');
 
-// Create Express application instance
-const app = express();
-
-// Define server port from environment or default to 3000
+/**
+ * Server port configuration
+ * 
+ * Reads from PORT environment variable, defaulting to 3000 if not set.
+ * This allows flexible deployment across different environments.
+ * 
+ * @type {number}
+ */
 const PORT = process.env.PORT || 3000;
 
 /**
- * Root endpoint handler
- * GET / - Returns "Hello world" as plain text response
+ * Conditional server startup
  * 
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- */
-app.get('/', (req, res) => {
-  res.send('Hello world');
-});
-
-/**
- * Evening endpoint handler
- * GET /evening - Returns "Good evening" as plain text response
+ * Starts the HTTP listener only when this file is run directly (node server.js).
+ * When imported for testing (e.g., via supertest), the listener is not started,
+ * allowing tests to make HTTP assertions without binding to a port.
  * 
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
+ * This pattern enables:
+ * - npm start: Starts the HTTP server on configured port
+ * - npm test: Imports app without starting listener for test assertions
  */
-app.get('/evening', (req, res) => {
-  res.send('Good evening');
-});
-
-// Start server only when run directly (not when imported for testing)
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });
 }
 
-// Export app instance for testing
+/**
+ * Export Express application instance
+ * 
+ * Re-exports the app from app.js to maintain backward compatibility
+ * with any code that imports from server.js (e.g., existing tests).
+ * 
+ * Both import paths will work:
+ * - require('./server') -> returns app (this export)
+ * - require('./app') -> returns app (direct from app.js)
+ * 
+ * @exports app
+ */
 module.exports = app;

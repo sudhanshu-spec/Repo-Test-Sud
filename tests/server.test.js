@@ -14,8 +14,9 @@
 // Import supertest for HTTP assertions
 const request = require('supertest');
 
-// Import the Express app from server.js
-const app = require('../server');
+// Import the Express app from app.js (per modular architecture refactoring)
+// The app module exports the configured Express application instance
+const app = require('../app');
 
 describe('Express Server Endpoints', () => {
   /**
