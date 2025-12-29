@@ -2,7 +2,7 @@
  * Jest Test Suite for Express.js Server Endpoints
  * 
  * This test file verifies the correct behavior of the Express.js server
- * endpoints defined in server.js:
+ * endpoints defined in app.js:
  * - GET / : Should return "Hello world" with status 200
  * - GET /evening : Should return "Good evening" with status 200
  * 
@@ -14,8 +14,9 @@
 // Import supertest for HTTP assertions
 const request = require('supertest');
 
-// Import the Express app from server.js
-const app = require('../server');
+// Import the Express app from app.js (per modular architecture refactoring)
+// The app module exports the configured Express application instance
+const app = require('../app');
 
 describe('Express Server Endpoints', () => {
   /**

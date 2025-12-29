@@ -1,53 +1,81 @@
 /**
- * Express.js Application Entry Point
+ * HTTP Server Bootstrap Module
  * 
- * This is a Node.js Express server tutorial implementing two GET endpoints:
- * - GET / : Returns "Hello world"
- * - GET /evening : Returns "Good evening"
+ * This module serves as the entry point for starting the Express HTTP server.
+ * It imports the configured Express application from app.js and handles:
+ * - Server port configuration from environment variables
+ * - Conditional server startup (only when run directly, not when imported)
+ * - Backward-compatible app export for testing
  * 
- * The server listens on the PORT environment variable or defaults to port 3000.
- * The app instance is exported for testing purposes.
+ * Architecture:
+ * - server.js (this file): HTTP listener bootstrap
+ * - app.js: Express application configuration and route registration
+ * - src/routes/: Modular route definitions
+ * 
+ * Endpoints (served via app.js):
+ * - GET / : Returns "Hello world" (HTTP 200)
+ * - GET /evening : Returns "Good evening" (HTTP 200)
+ * 
+ * Usage:
+ * - Direct execution: `node server.js` starts HTTP server on PORT
+ * - Import for testing: `require('./server')` returns app without binding port
+ * 
+ * @module server
  */
 
 'use strict';
 
-// Import Express web framework
-const express = require('express');
+/**
+ * Import Express application instance from app.js
+ * 
+ * The app module provides the fully configured Express application with:
+ * - All route middleware registered
+ * - Express instance methods including listen() for starting HTTP server
+ * 
+ * @type {express.Application}
+ */
+const app = require('./app');
 
-// Create Express application instance
-const app = express();
-
-// Define server port from environment or default to 3000
+/**
+ * Server port configuration
+ * 
+ * Reads PORT from environment variable or defaults to 3000.
+ * This maintains exact behavior from the original server.js implementation.
+ * 
+ * @type {number|string}
+ */
 const PORT = process.env.PORT || 3000;
 
 /**
- * Root endpoint handler
- * GET / - Returns "Hello world" as plain text response
+ * Conditional server startup
  * 
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- */
-app.get('/', (req, res) => {
-  res.send('Hello world');
-});
-
-/**
- * Evening endpoint handler
- * GET /evening - Returns "Good evening" as plain text response
+ * Starts the HTTP server only when this file is executed directly
+ * (via `node server.js`), not when imported as a module (for testing).
  * 
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
+ * This guard pattern allows:
+ * - Production: `node server.js` starts server on configured PORT
+ * - Testing: `require('./server')` returns app without port binding
+ * 
+ * The app.listen() method is provided by Express and binds the
+ * application to the specified port, enabling HTTP request handling.
  */
-app.get('/evening', (req, res) => {
-  res.send('Good evening');
-});
-
-// Start server only when run directly (not when imported for testing)
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });
 }
 
-// Export app instance for testing
+/**
+ * Export Express application instance
+ * 
+ * Maintains backward compatibility with existing test imports.
+ * Tests using `require('../server')` will continue to receive
+ * the app instance for HTTP assertions via supertest.
+ * 
+ * This export pattern ensures:
+ * - Test suite compatibility without modification
+ * - Consistent interface whether importing from server.js or app.js
+ * 
+ * @exports app
+ */
 module.exports = app;
