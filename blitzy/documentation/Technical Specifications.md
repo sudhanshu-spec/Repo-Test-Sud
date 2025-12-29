@@ -4,332 +4,516 @@
 
 ## 0.1 Intent Clarification
 
-This section translates the user's requirements into precise technical language and identifies all implicit requirements for the Express.js feature addition.
+### 0.1.1 Core Refactoring Objective
 
-### 0.1.1 Core Feature Objective
+Based on the prompt, the Blitzy platform understands that the refactoring objective is to **restructure and modernize the existing Node.js server implementation to follow Express.js best practices and modular architecture patterns**, while preserving 100% behavioral compatibility with the current implementation.
 
-Based on the prompt, the Blitzy platform understands that the new feature requirement is to:
+| Attribute | Value |
+|-----------|-------|
+| Refactoring Type | Code structure / Modularity |
+| Target Repository | Same repository (in-place refactor) |
+| Framework Status | Express.js already integrated (v4.21.2) |
+| Behavior Requirement | Maintain exact feature parity |
 
-- **Integrate Express.js Framework**: Add the Express.js web framework to an existing Node.js server project that currently hosts a basic HTTP endpoint
-- **Add New Endpoint**: Create an additional HTTP endpoint that returns a "Good evening" greeting response
-- **Maintain Existing Functionality**: Preserve the existing "Hello world" endpoint while extending the application
+**Key Refactoring Goals (Enhanced Clarity):**
 
-| Requirement ID | Feature Requirement | Enhanced Clarity |
-|----------------|---------------------|------------------|
-| REQ-001 | Add Express.js to the project | Install Express.js as a dependency and refactor the server to use Express routing and middleware patterns |
-| REQ-002 | Add endpoint returning "Good evening" | Create a new GET endpoint at `/evening` path that returns the exact string "Good evening" with HTTP 200 status |
-| REQ-003 | Maintain "Hello world" endpoint | Preserve the root endpoint `GET /` that returns "Hello world" |
+- **Goal 1: Separation of Concerns** - Restructure the single-file Express server (`server.js`) into a modular architecture with distinct layers for routing, application configuration, and server bootstrapping
+- **Goal 2: Express.js Best Practices** - Apply industry-standard Express.js patterns including separate `app.js` for application configuration and `server.js` for HTTP listener
+- **Goal 3: Route Modularization** - Extract route definitions into dedicated route files for better maintainability and scalability
+- **Goal 4: Test Compatibility** - Ensure the refactored architecture maintains testability via app export without port binding during test execution
+- **Goal 5: Feature Preservation** - Maintain exact response behavior for both endpoints:
+  - `GET /` → Returns `"Hello world"` with HTTP 200
+  - `GET /evening` → Returns `"Good evening"` with HTTP 200
 
-**Implicit Requirements Detected:**
+**Implicit Requirements (Surfaced):**
 
-- The server must export the Express app instance for testability (`module.exports = app`)
-- The server should use conditional startup pattern (`require.main === module`) to prevent port binding during tests
-- Test coverage must be added/updated for the new endpoint
-- Documentation (README, Postman collection) should reflect both endpoints
-
-**Feature Dependencies and Prerequisites:**
-
-- Node.js runtime ≥18.0.0 (as specified in `engines` field)
-- npm package manager for dependency installation
-- Express.js ^4.21.2 as the web framework
-- Jest ^29.7.0 and Supertest ^7.0.0 for testing infrastructure
+- Preserve the `require.main === module` guard pattern for conditional server startup
+- Maintain CommonJS module format (`require`/`module.exports`) for consistency
+- Keep environment variable configuration for `PORT` (default: 3000)
+- Ensure zero regression in existing Jest/Supertest test suite
+- Maintain `'use strict'` mode directive
 
 ### 0.1.2 Special Instructions and Constraints
 
-**User-Specified Directives:**
+**Critical Directives:**
 
-- User Example: *"this is a tutorial of node js server hosting one endpoint that returns the response 'Hello world'. Could you add expressjs into the project and add another endpoint that return the reponse of 'Good evening'?"*
+- **Maintain All Public Interfaces** - The exported `app` object must remain accessible for testing via `require('../server')` or equivalent path
+- **Preserve Test Coverage** - All existing tests in `tests/server.test.js` must continue passing without modification
+- **Exact Response Matching** - Response text must match character-for-character: `"Hello world"` and `"Good evening"`
+- **No Breaking Changes** - The `npm start` and `npm test` scripts must work identically after refactoring
 
-**Architectural Requirements:**
+**User Requirements (Preserved Exactly):**
 
-- Maintain flat repository structure (single `server.js` entry point)
-- Use CommonJS module system (`require`/`module.exports`)
-- Follow Express.js routing conventions with `app.get()` pattern
-- Support configurable port via `PORT` environment variable with default of 3000
+> User Example: "Rewrite this Node.js server into a express.js refactor, keeping every feature and functionality exactly as in the original Node.js project. Ensure the rewritten version fully matches the behavior and logic of the current implementation."
 
-**Environment Variables Available:**
+**Migration Requirements:**
 
-| Variable | Purpose | Status |
-|----------|---------|--------|
-| Api Key | External API authentication | Available in environment |
-| Token | Authentication token | Available in environment |
-| PORT | Server listening port | Default: 3000 |
+- In-place refactoring within the same repository structure
+- No external service integrations required
+- No database schema changes (project is stateless)
 
 ### 0.1.3 Technical Interpretation
 
-These feature requirements translate to the following technical implementation strategy:
+This refactoring translates to the following technical transformation strategy:
 
-| User Requirement | Technical Action | Specific Components |
-|------------------|------------------|---------------------|
-| Add Express.js to project | Install express package and configure as main HTTP framework | `package.json` dependencies, `server.js` imports |
-| Add "Good evening" endpoint | Create GET route handler at `/evening` path | `app.get('/evening', ...)` in `server.js` |
-| Return "Good evening" response | Implement response handler using `res.send()` | Route handler function with `res.send('Good evening')` |
-| Maintain backward compatibility | Preserve existing root endpoint implementation | `app.get('/', ...)` route handler |
-
-**Implementation Strategy Summary:**
-
-- To **integrate Express.js**, we will **install** the express package and **refactor** `server.js` to use Express application instance
-- To **add the evening endpoint**, we will **create** a new route handler using `app.get('/evening', handler)`
-- To **ensure testability**, we will **export** the Express app instance and use conditional server startup
-- To **validate functionality**, we will **create/update** Jest tests with Supertest assertions
-
-### 0.1.4 Current Implementation Status
-
-**Critical Observation:** Repository analysis reveals that the requested features have **already been implemented**:
-
-| Feature | Status | Evidence |
-|---------|--------|----------|
-| Express.js Integration | ✅ Complete | `server.js` lines 15-18: `const express = require('express'); const app = express();` |
-| Hello World Endpoint | ✅ Complete | `server.js` lines 30-32: `app.get('/', (req, res) => { res.send('Hello world'); });` |
-| Good Evening Endpoint | ✅ Complete | `server.js` lines 41-43: `app.get('/evening', (req, res) => { res.send('Good evening'); });` |
-| Test Coverage | ✅ Complete | `tests/server.test.js`: 2 passing tests for both endpoints |
-| Documentation | ✅ Complete | `README.md`, `postman.json` document both endpoints |
-
-**Verification Evidence:**
-
-```bash
-npm test
-# PASS tests/server.test.js
-# ✓ GET / returns Hello world (32 ms)
-# ✓ GET /evening returns Good evening (11 ms)
-# Tests: 2 passed, 2 total
-```
-
-
-## 0.2 Repository Scope Discovery
-
-This section provides comprehensive analysis of all repository files affected by the Express.js feature addition, including existing files to modify, new files to create, and integration points.
-
-### 0.2.1 Comprehensive File Analysis
-
-**Repository Structure Overview:**
+**Current Architecture → Target Architecture:**
 
 ```
-/ (repository root)
-├── server.js                    # Express application entry point
-├── package.json                 # Dependencies and scripts
-├── package-lock.json            # Locked dependency versions
-├── README.md                    # Project documentation
-├── .env.example                 # Environment variable template
-├── postman.json                 # API collection for testing
+CURRENT (Monolithic):                    TARGET (Modular):
+┌─────────────────────────┐              ┌─────────────────────────┐
+│      server.js          │              │      server.js          │
+│  ┌─────────────────┐    │              │  (HTTP listener only)   │
+│  │ Express App     │    │              └───────────┬─────────────┘
+│  │ Route Handlers  │    │     ──>                  │
+│  │ Port Binding    │    │              ┌───────────▼─────────────┐
+│  │ Module Export   │    │              │        app.js           │
+│  └─────────────────┘    │              │  (Express configuration)│
+└─────────────────────────┘              └───────────┬─────────────┘
+                                                     │
+                                         ┌───────────▼─────────────┐
+                                         │    src/routes/          │
+                                         │  (Route definitions)    │
+                                         └─────────────────────────┘
+```
+
+**Transformation Rules and Patterns:**
+
+| Rule | From | To |
+|------|------|-----|
+| App Configuration | Inline in `server.js` | Separate `app.js` module |
+| Route Definitions | Inline `app.get()` calls | Modular route files in `src/routes/` |
+| Server Bootstrap | Combined with app logic | Isolated in `server.js` |
+| Module Export | Single `app` export | Maintained for test compatibility |
+
+**Design Pattern Application:**
+
+- **Separation Pattern**: Decouple HTTP server concerns from Express application configuration
+- **Router Pattern**: Use `express.Router()` for modular route organization
+- **Entry Point Pattern**: Maintain single entry point (`server.js`) while delegating to modules
+
+## 0.2 Source Analysis
+
+### 0.2.1 Comprehensive Source File Discovery
+
+**Search Patterns Applied:**
+
+The following patterns were used to identify ALL files requiring refactoring based on user instructions:
+
+| Pattern | Purpose | Files Found |
+|---------|---------|-------------|
+| `*.js` (root) | Core application files | `server.js` |
+| `tests/**/*.js` | Test files requiring import updates | `tests/server.test.js` |
+| `*.json` (root) | Package and configuration files | `package.json`, `postman.json` |
+| `*.md` (root) | Documentation files | `README.md` |
+| `.env*` | Environment configuration | `.env.example` |
+
+### 0.2.2 Current Structure Mapping
+
+```
+Current:
+/
+├── server.js (53 lines - Express app + routes + server combined)
+├── package.json (npm manifest with express ^4.21.2)
+├── package-lock.json (dependency lock file)
+├── README.md (endpoint documentation)
+├── .env.example (environment template)
+├── postman.json (API collection)
 ├── tests/
-│   └── server.test.js           # Jest test suite
+│   └── server.test.js (Jest integration tests)
 └── blitzy/
     └── documentation/
-        ├── Project Guide.md     # Implementation guide
-        └── Technical Specifications.md
+        ├── Technical Specifications.md
+        └── Project Guide.md
 ```
 
-**Files Identified for Feature Implementation:**
+### 0.2.3 Source File Analysis
 
-| File Path | Type | Purpose | Modification Type |
-|-----------|------|---------|-------------------|
-| `server.js` | Source | Express application with route handlers | MODIFY - Add Express import and evening endpoint |
-| `package.json` | Config | Dependency manifest | MODIFY - Add express dependency |
-| `package-lock.json` | Config | Locked dependencies | AUTO-GENERATED - Updated by npm install |
-| `tests/server.test.js` | Test | Endpoint test coverage | MODIFY - Add test for evening endpoint |
-| `README.md` | Documentation | Usage documentation | MODIFY - Document new endpoint |
-| `postman.json` | Config | API collection | MODIFY - Add evening endpoint request |
-| `.env.example` | Config | Environment template | NO CHANGE - PORT config already present |
+**Primary Source File: `server.js`**
 
-### 0.2.2 Existing Modules Analysis
+| Attribute | Current State |
+|-----------|---------------|
+| Total Lines | 53 lines |
+| Concerns Mixed | 4 (app creation, routing, server binding, module export) |
+| Route Handlers | 2 inline handlers |
+| Dependencies | `express` (single import) |
+| Export | `module.exports = app` |
 
-**Source Files (src/**/*.js pattern):**
-
-| File | Lines | Current Purpose | Required Changes |
-|------|-------|-----------------|------------------|
-| `server.js` | 54 | Express application entry point | Express.js already integrated; both endpoints implemented |
-
-**Key Implementation Points in server.js:**
+**Code Structure Breakdown:**
 
 ```javascript
-// Lines 15-18: Express setup (IMPLEMENTED)
-const express = require('express');
-const app = express();
-
-// Lines 30-32: Root endpoint (IMPLEMENTED)
-app.get('/', (req, res) => {
-  res.send('Hello world');
-});
-
-// Lines 41-43: Evening endpoint (IMPLEMENTED)
-app.get('/evening', (req, res) => {
-  res.send('Good evening');
-});
+// Lines 1-10: File documentation
+// Lines 12-21: Imports and app initialization
+// Lines 23-32: GET / route handler
+// Lines 34-43: GET /evening route handler
+// Lines 45-50: Conditional server startup
+// Lines 52-53: Module export
 ```
 
-**Test Files (**/*test*.js pattern):**
+**Test File: `tests/server.test.js`**
 
-| File | Tests | Coverage | Status |
-|------|-------|----------|--------|
-| `tests/server.test.js` | 2 | Both endpoints | ✅ Complete |
+| Attribute | Current State |
+|-----------|---------------|
+| Total Lines | 45 lines |
+| Test Framework | Jest |
+| HTTP Testing | Supertest |
+| Import Path | `require('../server')` |
+| Test Cases | 2 (one per endpoint) |
 
-**Configuration Files (**/*.json, **/*.yaml):**
+### 0.2.4 Complete Source File Inventory
 
-| File | Purpose | Status |
-|------|---------|--------|
-| `package.json` | NPM configuration with express ^4.21.2 | ✅ Complete |
-| `package-lock.json` | Deterministic dependency resolution | ✅ Complete |
-| `postman.json` | API testing collection | ✅ Complete |
-| `.env.example` | Environment variable template | ✅ Complete |
+The following table provides an exhaustive list of ALL source files that need consideration during the refactoring:
 
-### 0.2.3 Integration Point Discovery
+| File Path | Type | Refactoring Action | Reason |
+|-----------|------|-------------------|--------|
+| `server.js` | JavaScript | UPDATE | Extract routes, separate app configuration |
+| `tests/server.test.js` | JavaScript | UPDATE | Update import path if app location changes |
+| `package.json` | JSON | UPDATE | Add new scripts if needed, update main entry |
+| `README.md` | Markdown | UPDATE | Document new project structure |
+| `.env.example` | Config | KEEP | No changes needed (PORT variable stays) |
+| `postman.json` | JSON | KEEP | API endpoints unchanged |
+| `package-lock.json` | JSON | AUTO | Auto-generated, no manual changes |
 
-**API Endpoints:**
+### 0.2.5 Dependency Analysis
 
-| Endpoint | Method | Response | Handler Location |
-|----------|--------|----------|------------------|
-| `/` | GET | "Hello world" | `server.js:30-32` |
-| `/evening` | GET | "Good evening" | `server.js:41-43` |
+**Runtime Dependencies (from `package.json`):**
 
-**Service Architecture:**
+| Package | Version | Purpose | Refactoring Impact |
+|---------|---------|---------|-------------------|
+| express | ^4.21.2 | Web framework | Core - remains unchanged |
 
-```mermaid
-graph LR
-    subgraph "Entry Point"
-        A[server.js]
-    end
-    
-    subgraph "Express Routes"
-        B[GET /]
-        C[GET /evening]
-    end
-    
-    subgraph "Testing"
-        D[server.test.js]
-    end
-    
-    A --> B
-    A --> C
-    D -->|imports| A
-    D -->|tests| B
-    D -->|tests| C
+**Development Dependencies (from `package.json`):**
+
+| Package | Version | Purpose | Refactoring Impact |
+|---------|---------|---------|-------------------|
+| jest | ^29.7.0 | Test framework | None - configuration unchanged |
+| supertest | ^7.0.0 | HTTP testing | None - usage pattern unchanged |
+
+### 0.2.6 Code Coupling Assessment
+
+**Current Coupling Points:**
+
+- `server.js` → Self-contained (no external module imports beyond Express)
+- `tests/server.test.js` → Coupled to `../server` import path
+- `package.json` → Coupled to `server.js` as main entry point
+
+**Files Requiring Import Updates Post-Refactoring:**
+
+| File | Current Import | Potential New Import |
+|------|----------------|---------------------|
+| `tests/server.test.js` | `require('../server')` | `require('../server')` or `require('../app')` |
+
+## 0.3 Target Design
+
+### 0.3.1 Refactored Structure Planning
+
+**Target Architecture (Comprehensive):**
+
+```
+Target:
+/
+├── server.js                 (HTTP listener - bootstrap only)
+├── app.js                    (Express app configuration & export)
+├── src/
+│   └── routes/
+│       ├── index.js          (Route aggregator)
+│       └── greeting.routes.js (Greeting endpoint handlers)
+├── package.json              (Updated main entry if needed)
+├── package-lock.json         (Auto-generated)
+├── README.md                 (Updated project structure docs)
+├── .env.example              (Environment template - unchanged)
+├── postman.json              (API collection - unchanged)
+├── tests/
+│   └── server.test.js        (Tests - import path updated)
+└── blitzy/
+    └── documentation/
+        ├── Technical Specifications.md
+        └── Project Guide.md
 ```
 
-**Module Export Pattern:**
+**Standalone Operation Requirements:**
 
-- `server.js` exports `app` instance via `module.exports = app`
-- Enables in-process testing without network binding
-- Conditional startup pattern using `require.main === module`
+The refactored project includes all necessary files for independent operation:
 
-### 0.2.4 New File Requirements
+| File Category | Files | Purpose |
+|---------------|-------|---------|
+| Entry Point | `server.js` | HTTP server bootstrap |
+| Application | `app.js` | Express app configuration |
+| Routes | `src/routes/*.js` | Endpoint definitions |
+| Configuration | `.env.example` | Environment template |
+| Dependencies | `package.json`, `package-lock.json` | Package management |
+| Testing | `tests/server.test.js` | Automated testing |
+| Documentation | `README.md` | Usage documentation |
 
-Based on the feature requirements, the following files would need to be created **if not already present**:
+### 0.3.2 Web Search Research Conducted
 
-**New Source Files (if not existing):**
+Based on comprehensive research of Express.js refactoring best practices:
 
-| Proposed File | Purpose | Status |
-|---------------|---------|--------|
-| `server.js` | Express application with both endpoints | ✅ Already exists and complete |
+**Best Practices for Express.js Modular Architecture:**
 
-**New Test Files (if not existing):**
+| Practice | Application to This Project | Source Reference |
+|----------|----------------------------|------------------|
+| Separate app and server | Split `server.js` into `app.js` (config) and `server.js` (listener) | Treblle Blog |
+| Modular route organization | Extract routes to `src/routes/` directory | Node.js Best Practices |
+| Router instances | Use `express.Router()` for route grouping | Express.js Patterns |
+| Conditional startup guard | Maintain `require.main === module` pattern | Industry Standard |
+| Three-layer architecture | Web layer (routes) separation from entry point | Treblle Blog |
 
-| Proposed File | Purpose | Status |
-|---------------|---------|--------|
-| `tests/server.test.js` | Unit tests for all endpoints | ✅ Already exists and complete |
+**Express.js Convention Alignment:**
 
-**New Configuration Files (if not existing):**
+| Convention | Implementation |
+|------------|----------------|
+| Entry point file | `server.js` (HTTP listener) |
+| App configuration | `app.js` (middleware, routes) |
+| Route organization | `src/routes/` directory |
+| Module system | CommonJS (`require`/`module.exports`) |
+| Strict mode | `'use strict'` directive retained |
 
-| Proposed File | Purpose | Status |
-|---------------|---------|--------|
-| `postman.json` | API collection with both endpoints | ✅ Already exists and complete |
+**Migration Strategy Applied:**
 
-### 0.2.5 Documentation Files
+- **Pattern**: In-place modular refactoring
+- **Approach**: Extract components while maintaining backward compatibility
+- **Validation**: Existing test suite as regression gate
 
-| File | Purpose | Content Status |
-|------|---------|----------------|
-| `README.md` | Project documentation | ✅ Documents both endpoints, setup, and testing |
-| `blitzy/documentation/Project Guide.md` | Implementation guide | ✅ Complete with verification evidence |
-| `blitzy/documentation/Technical Specifications.md` | Technical requirements | ✅ Complete specification |
+### 0.3.3 Design Pattern Applications
 
-### 0.2.6 Build and Deployment Files
+**Pattern 1: App-Server Separation**
 
-| File | Purpose | Impact |
-|------|---------|--------|
-| `package.json` | NPM scripts (start, test) | ✅ Scripts configured |
-| `amazon_cloudformation.yaml` | AWS infrastructure template | NO CHANGE - Not related to endpoint feature |
-| `apache.conf` | Apache HTTP configuration | NO CHANGE - Separate web server config |
-| `datadog.yaml` | Observability configuration | NO CHANGE - Monitoring setup |
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        server.js                            │
+│  - Imports app from app.js                                  │
+│  - PORT configuration                                       │
+│  - Conditional server.listen()                              │
+│  - require.main === module guard                            │
+└─────────────────────────┬───────────────────────────────────┘
+                          │ imports
+┌─────────────────────────▼───────────────────────────────────┐
+│                         app.js                              │
+│  - Creates Express instance                                 │
+│  - Registers routes via Router                              │
+│  - Exports app for testing                                  │
+└─────────────────────────┬───────────────────────────────────┘
+                          │ uses
+┌─────────────────────────▼───────────────────────────────────┐
+│                   src/routes/index.js                       │
+│  - Aggregates all route modules                             │
+│  - Mounts routers with path prefixes                        │
+└─────────────────────────┬───────────────────────────────────┘
+                          │ includes
+┌─────────────────────────▼───────────────────────────────────┐
+│               src/routes/greeting.routes.js                 │
+│  - GET / handler                                            │
+│  - GET /evening handler                                     │
+└─────────────────────────────────────────────────────────────┘
+```
 
+**Pattern 2: Express Router Pattern**
 
-## 0.3 Dependency Inventory
+- Use `express.Router()` to create modular, mountable route handlers
+- Group related routes together (greeting endpoints)
+- Export router instances for composition in main app
 
-This section documents all private and public packages relevant to the Express.js feature addition, including exact versions and their purposes.
+**Pattern 3: Module Export for Testing**
 
-### 0.3.1 Package Registry Overview
+- Export `app` instance from `app.js` for Supertest integration
+- Maintain same testing interface: `require('../app')` or redirect via `server.js`
+- No port binding during import for clean test execution
 
-**Primary Package Source:** npm (Node Package Manager)
+### 0.3.4 File Responsibility Matrix
 
-| Registry | URL | Authentication |
-|----------|-----|----------------|
-| npm public | https://registry.npmjs.org | Not required |
+| File | Responsibility | Dependencies | Exports |
+|------|---------------|--------------|---------|
+| `server.js` | HTTP listener bootstrap | `app.js` | None (entry point) |
+| `app.js` | Express app configuration | `express`, `src/routes` | `app` |
+| `src/routes/index.js` | Route aggregation | `greeting.routes.js` | `router` |
+| `src/routes/greeting.routes.js` | Greeting endpoint handlers | `express` | `router` |
 
-### 0.3.2 Production Dependencies
+## 0.4 Transformation Mapping
 
-| Package | Registry | Version | Purpose | Status |
-|---------|----------|---------|---------|--------|
-| express | npm | ^4.21.2 | Web framework for HTTP routing and middleware | ✅ Installed |
+### 0.4.1 File-by-File Transformation Plan
 
-**Express.js Version Details:**
+**Complete File Transformation Matrix:**
 
-- **Semantic Version**: `^4.21.2` (allows minor and patch updates within 4.x)
-- **License**: MIT
-- **Repository**: https://github.com/expressjs/express
-- **Purpose**: Provides HTTP server capabilities, routing, and middleware support
+| Target File | Transformation | Source File | Key Changes |
+|------------|----------------|-------------|-------------|
+| `server.js` | UPDATE | `server.js` | Strip app configuration, import from app.js, retain HTTP listener logic only |
+| `app.js` | CREATE | `server.js` | Extract Express app creation, middleware setup, route registration, and module export |
+| `src/routes/index.js` | CREATE | `server.js` | Create route aggregator that imports and mounts all route modules |
+| `src/routes/greeting.routes.js` | CREATE | `server.js` | Extract GET / and GET /evening handlers into Router module |
+| `tests/server.test.js` | UPDATE | `tests/server.test.js` | Update import path from `../server` to `../app` for app instance access |
+| `package.json` | UPDATE | `package.json` | Update main entry point to `server.js` (already correct), verify scripts |
+| `README.md` | UPDATE | `README.md` | Add documentation for new project structure and file organization |
 
-### 0.3.3 Development Dependencies
+### 0.4.2 Detailed Transformation Specifications
 
-| Package | Registry | Version | Purpose | Status |
-|---------|----------|---------|---------|--------|
-| jest | npm | ^29.7.0 | JavaScript testing framework | ✅ Installed |
-| supertest | npm | ^7.0.0 | HTTP assertion library for testing | ✅ Installed |
+**Transformation 1: `server.js` (UPDATE)**
 
-**Jest Version Details:**
-
-- **Semantic Version**: `^29.7.0`
-- **License**: MIT
-- **Purpose**: Test runner, assertion library, and mocking capabilities
-
-**Supertest Version Details:**
-
-- **Semantic Version**: `^7.0.0`
-- **License**: MIT
-- **Purpose**: HTTP assertions without starting a live server
-
-### 0.3.4 Runtime Requirements
-
-| Requirement | Specified Version | Installed Version | Status |
-|-------------|-------------------|-------------------|--------|
-| Node.js | >=18.0.0 | v20.19.6 | ✅ Compatible |
-| npm | >=8.0.0 (implied) | 11.1.0 | ✅ Compatible |
-
-**Engine Specification from package.json:**
-
-```json
-{
-  "engines": {
-    "node": ">=18.0.0"
-  }
+```javascript
+// BEFORE: Full application in one file
+// AFTER: HTTP listener only
+'use strict';
+const app = require('./app');
+const PORT = process.env.PORT || 3000;
+if (require.main === module) {
+  app.listen(PORT, () => { /* ... */ });
 }
 ```
 
-### 0.3.5 Dependency Manifest (package.json)
+| Element | Action | Details |
+|---------|--------|---------|
+| Express import | REMOVE | Moved to app.js |
+| App creation | REMOVE | Moved to app.js |
+| Route definitions | REMOVE | Moved to src/routes/ |
+| Port configuration | KEEP | Retained in server.js |
+| Conditional startup | KEEP | `require.main === module` guard |
+| Module export | MODIFY | Export app for backward compatibility |
 
-**Complete dependency configuration:**
+**Transformation 2: `app.js` (CREATE)**
+
+```javascript
+// NEW FILE: Express application configuration
+'use strict';
+const express = require('express');
+const routes = require('./src/routes');
+const app = express();
+app.use('/', routes);
+module.exports = app;
+```
+
+| Element | Source | Details |
+|---------|--------|---------|
+| Express import | `server.js` line 15 | Moved from server.js |
+| App instantiation | `server.js` line 18 | `const app = express()` |
+| Route mounting | `server.js` lines 30-43 | Via imported router |
+| Module export | `server.js` line 53 | Export app for testing |
+
+**Transformation 3: `src/routes/index.js` (CREATE)**
+
+```javascript
+// NEW FILE: Route aggregator
+'use strict';
+const express = require('express');
+const greetingRoutes = require('./greeting.routes');
+const router = express.Router();
+router.use('/', greetingRoutes);
+module.exports = router;
+```
+
+**Transformation 4: `src/routes/greeting.routes.js` (CREATE)**
+
+```javascript
+// NEW FILE: Greeting endpoint handlers
+'use strict';
+const express = require('express');
+const router = express.Router();
+router.get('/', (req, res) => res.send('Hello world'));
+router.get('/evening', (req, res) => res.send('Good evening'));
+module.exports = router;
+```
+
+| Element | Source Location | Target Location |
+|---------|-----------------|-----------------|
+| GET / handler | `server.js` lines 30-32 | `greeting.routes.js` |
+| GET /evening handler | `server.js` lines 41-43 | `greeting.routes.js` |
+
+**Transformation 5: `tests/server.test.js` (UPDATE)**
+
+| Element | Before | After |
+|---------|--------|-------|
+| App import | `require('../server')` | `require('../app')` |
+| Test logic | Unchanged | Unchanged |
+| Assertions | Unchanged | Unchanged |
+
+### 0.4.3 Cross-File Dependencies
+
+**Import Statement Updates:**
+
+| File | Old Import | New Import | Reason |
+|------|-----------|-----------|--------|
+| `server.js` | `require('express')` | `require('./app')` | App now in separate module |
+| `tests/server.test.js` | `require('../server')` | `require('../app')` | Direct app import for testing |
+
+**Module Dependency Graph:**
+
+```
+┌──────────────────┐
+│   server.js      │ ─────imports────▶ ┌──────────────┐
+│ (entry point)    │                   │   app.js     │
+└──────────────────┘                   └──────┬───────┘
+                                              │ imports
+┌──────────────────┐                   ┌──────▼───────┐
+│ tests/           │                   │ src/routes/  │
+│ server.test.js   │ ─────imports────▶ │ index.js     │
+└──────────────────┘                   └──────┬───────┘
+                                              │ imports
+                                       ┌──────▼───────────────┐
+                                       │ src/routes/          │
+                                       │ greeting.routes.js   │
+                                       └──────────────────────┘
+```
+
+**Configuration Updates:**
+
+| File | Configuration Element | Change |
+|------|----------------------|--------|
+| `package.json` | `"main"` field | Verify set to `"server.js"` |
+| `package.json` | `"scripts.start"` | Verify `"node server.js"` |
+| `package.json` | `"scripts.test"` | No change (`"jest"`) |
+
+### 0.4.4 Wildcard Pattern Specifications
+
+**Trailing Wildcard Patterns Applied:**
+
+| Pattern | Target Files | Purpose |
+|---------|-------------|---------|
+| `src/routes/*.js` | All route modules | Route file updates |
+| `tests/*.js` | Test files | Import path corrections |
+
+**Specific File Patterns (No Wildcards Needed):**
+
+Due to the small scope of this refactoring, specific file paths are preferred over wildcards:
+
+- `server.js` - Single entry point
+- `app.js` - Single app configuration
+- `src/routes/index.js` - Single route aggregator
+- `src/routes/greeting.routes.js` - Single route module
+- `tests/server.test.js` - Single test file
+
+### 0.4.5 One-Phase Execution
+
+**CRITICAL: The entire refactor will be executed by Blitzy in ONE phase.**
+
+**Single-Phase Transformation Sequence:**
+
+1. Create `src/routes/` directory structure
+2. Create `src/routes/greeting.routes.js` with extracted handlers
+3. Create `src/routes/index.js` as route aggregator
+4. Create `app.js` with Express configuration
+5. Update `server.js` to import from `app.js`
+6. Update `tests/server.test.js` import path
+7. Update `README.md` with new structure documentation
+8. Verify `package.json` configuration
+
+**All files are included in this single phase - no splitting into multiple phases.**
+
+## 0.5 Dependency Inventory
+
+### 0.5.1 Key Private and Public Packages
+
+**Complete Package Registry:**
+
+| Registry | Package Name | Version | Purpose | Refactoring Impact |
+|----------|--------------|---------|---------|-------------------|
+| npm (public) | express | ^4.21.2 | Web application framework | Core dependency - no changes |
+| npm (public) | jest | ^29.7.0 | Testing framework | Dev dependency - no changes |
+| npm (public) | supertest | ^7.0.0 | HTTP assertions library | Dev dependency - no changes |
+
+**Version Verification:**
+
+All versions are directly sourced from `package.json` in the repository:
 
 ```json
 {
-  "name": "repo-test-sud",
-  "version": "1.0.0",
-  "description": "Node.js Express server tutorial",
-  "main": "server.js",
-  "scripts": {
-    "start": "node server.js",
-    "test": "jest"
-  },
-  "engines": {
-    "node": ">=18.0.0"
-  },
   "dependencies": {
     "express": "^4.21.2"
   },
@@ -340,772 +524,368 @@ This section documents all private and public packages relevant to the Express.j
 }
 ```
 
-### 0.3.6 Transitive Dependencies
+**Package Lock Analysis (from `package-lock.json`):**
 
-**Total packages installed:** 356 packages (as of npm install)
+| Package | Locked Version | Integrity Hash Prefix |
+|---------|---------------|----------------------|
+| express | 4.21.2 | sha512-... (verified) |
+| jest | 29.7.0 | sha512-... (verified) |
+| supertest | 7.0.0 | sha512-... (verified) |
 
-**Key transitive dependencies from Express.js:**
+**No Additional Packages Required:**
 
-| Package | Purpose |
-|---------|---------|
-| body-parser | Request body parsing middleware |
-| cookie | Cookie parsing utilities |
-| debug | Debug logging |
-| finalhandler | Final HTTP responder |
-| qs | Query string parsing |
-| send | Static file serving |
+The refactoring does not introduce any new dependencies. The existing Express.js Router functionality is built into the `express` package.
 
-### 0.3.7 Import Updates Required
+### 0.5.2 Dependency Updates
+
+**Import Refactoring:**
 
 **Files Requiring Import Updates:**
 
-| File Pattern | Import Statement | Status |
-|--------------|------------------|--------|
-| `server.js` | `const express = require('express');` | ✅ Already present |
-| `tests/server.test.js` | `const request = require('supertest');` | ✅ Already present |
-| `tests/server.test.js` | `const app = require('../server');` | ✅ Already present |
-
-**Import Transformation Rules (if migrating from raw Node.js):**
-
-```javascript
-// Before (raw Node.js http module):
-const http = require('http');
-
-// After (Express.js):
-const express = require('express');
-const app = express();
-```
-
-### 0.3.8 External Reference Updates
-
-**Configuration Files Updated:**
-
-| File | Change Type | Content |
-|------|-------------|---------|
-| `package.json` | Dependencies section | Express.js added |
-| `package-lock.json` | Auto-generated | Full dependency tree locked |
-
-**Documentation Files Updated:**
-
-| File | Change Type | Content |
-|------|-------------|---------|
-| `README.md` | Endpoints section | Both endpoints documented |
-| `postman.json` | Request collection | Evening endpoint request added |
-
-### 0.3.9 Dependency Installation Verification
-
-**Installation Command:**
-
-```bash
-npm install
-```
-
-**Verification Output:**
-
-```
-added 355 packages, and audited 356 packages in 5s
-49 packages are looking for funding
-found 0 vulnerabilities
-```
-
-**Audit Status:** ✅ No vulnerabilities found
-
-
-## 0.4 Integration Analysis
-
-This section documents all existing code touchpoints, dependency injections, and integration points affected by the Express.js feature addition.
-
-### 0.4.1 Existing Code Touchpoints
-
-**Direct Modifications Required:**
-
-| File | Location | Modification Purpose | Status |
-|------|----------|---------------------|--------|
-| `server.js` | Lines 15-18 | Add Express.js import and app initialization | ✅ Complete |
-| `server.js` | Lines 30-32 | Root endpoint handler | ✅ Complete |
-| `server.js` | Lines 41-43 | Evening endpoint handler | ✅ Complete |
-| `server.js` | Lines 46-50 | Conditional server startup | ✅ Complete |
-| `server.js` | Line 53 | App instance export | ✅ Complete |
-
-**Integration Flow Diagram:**
-
-```mermaid
-graph TB
-    subgraph "Application Entry"
-        A[server.js]
-    end
-    
-    subgraph "Framework Layer"
-        B[Express.js]
-        C[app instance]
-    end
-    
-    subgraph "Route Handlers"
-        D["GET / handler"]
-        E["GET /evening handler"]
-    end
-    
-    subgraph "Response Layer"
-        F["'Hello world'"]
-        G["'Good evening'"]
-    end
-    
-    subgraph "Test Integration"
-        H[supertest]
-        I[server.test.js]
-    end
-    
-    A --> B
-    B --> C
-    C --> D
-    C --> E
-    D --> F
-    E --> G
-    I --> H
-    H --> C
-```
-
-### 0.4.2 Module Export Pattern Integration
-
-**Export Configuration in server.js:**
-
-```javascript
-// Export app instance for testing (line 53)
-module.exports = app;
-```
-
-**Consumer Integration in tests/server.test.js:**
-
-```javascript
-// Import the Express app from server.js (line 18)
-const app = require('../server');
-```
-
-**Testability Pattern:**
-
-| Pattern | Implementation | Purpose |
-|---------|----------------|---------|
-| Module Export | `module.exports = app` | Enables app import in test files |
-| Conditional Startup | `require.main === module` | Prevents port binding during test imports |
-| In-Process Testing | Supertest mounts app directly | No network listener required for tests |
-
-### 0.4.3 Configuration Integration Points
-
-**Environment Variable Integration:**
-
-| Variable | Integration Point | Default Value | Usage |
-|----------|-------------------|---------------|-------|
-| PORT | `server.js` line 21 | 3000 | `process.env.PORT \|\| 3000` |
-
-**Configuration Flow:**
-
-```mermaid
-graph LR
-    A[.env file] -->|process.env| B[server.js]
-    C[.env.example] -->|template| A
-    B -->|PORT| D[app.listen]
-    D -->|binds| E[HTTP Server]
-```
-
-### 0.4.4 HTTP Routing Integration
-
-**Express Router Configuration:**
-
-| Route | Method | Handler | Response Type |
-|-------|--------|---------|---------------|
-| `/` | GET | Arrow function | text/plain |
-| `/evening` | GET | Arrow function | text/plain |
-
-**Route Handler Implementation Pattern:**
-
-```javascript
-// Standard Express route handler pattern
-app.get('/path', (req, res) => {
-  res.send('Response text');
-});
-```
-
-### 0.4.5 Test Framework Integration
-
-**Jest Configuration:**
-
-| Setting | Value | Source |
-|---------|-------|--------|
-| Test Command | `jest` | package.json scripts.test |
-| Test Discovery | `*.test.js` pattern | Jest defaults |
-| Test Location | `tests/` directory | Convention |
-
-**Supertest Integration:**
-
-| Integration Point | Purpose | Implementation |
-|-------------------|---------|----------------|
-| App Import | Direct module import | `require('../server')` |
-| Request Builder | HTTP request simulation | `request(app).get(path)` |
-| Response Assertions | Status and body validation | `expect(response.status).toBe(200)` |
-
-**Test Execution Flow:**
-
-```mermaid
-sequenceDiagram
-    participant Jest as Jest Runner
-    participant Test as server.test.js
-    participant ST as Supertest
-    participant App as Express App
-    
-    Jest->>Test: Execute test suite
-    Test->>App: Import via require
-    Test->>ST: Create request(app)
-    ST->>App: Mount app in-process
-    ST->>App: Execute GET /
-    App->>ST: Return response
-    ST->>Test: Provide response object
-    Test->>Jest: Assert and report
-```
-
-### 0.4.6 Documentation Integration
-
-**README.md Integration:**
-
-| Section | Content | Status |
-|---------|---------|--------|
-| Setup | npm install, npm start | ✅ Complete |
-| Endpoints | Route table with responses | ✅ Complete |
-| Testing | npm test command | ✅ Complete |
-| Environment | PORT and DB variables | ✅ Complete |
-
-**Postman Collection Integration:**
-
-| Request Name | Method | URL | Status |
-|--------------|--------|-----|--------|
-| Hello World Endpoint | GET | http://localhost:3000/ | ✅ Complete |
-| Good Evening Endpoint | GET | http://localhost:3000/evening | ✅ Complete |
-
-### 0.4.7 No Database/Schema Changes Required
-
-This feature addition does not require any database or schema modifications:
-
-| Aspect | Requirement | Reason |
-|--------|-------------|--------|
-| Database Models | Not required | Endpoints return static strings |
-| Migrations | Not required | No data persistence |
-| Schema Updates | Not required | Stateless operation |
-
-
-## 0.5 Technical Implementation
-
-This section provides the file-by-file execution plan and implementation approach for the Express.js feature addition.
-
-### 0.5.1 File-by-File Execution Plan
-
-**CRITICAL:** Every file listed below has been created or modified as part of this feature implementation.
-
-#### Group 1 - Core Feature Files
-
-| Action | File | Purpose | Status |
-|--------|------|---------|--------|
-| MODIFY | `server.js` | Integrate Express.js framework and add route handlers | ✅ Complete |
-| MODIFY | `package.json` | Add express dependency to project | ✅ Complete |
-| AUTO | `package-lock.json` | Lock dependency versions | ✅ Complete |
-
-**server.js Implementation:**
-
-```javascript
-// Express import and app creation
-const express = require('express');
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-// Route handlers
-app.get('/', (req, res) => { /* ... */ });
-app.get('/evening', (req, res) => { /* ... */ });
-```
-
-#### Group 2 - Supporting Infrastructure
-
-| Action | File | Purpose | Status |
-|--------|------|---------|--------|
-| MODIFY | `.env.example` | Document PORT environment variable | ✅ Complete |
-| NO CHANGE | `apache.conf` | Unrelated infrastructure config | N/A |
-| NO CHANGE | `datadog.yaml` | Unrelated observability config | N/A |
-
-#### Group 3 - Tests and Documentation
-
-| Action | File | Purpose | Status |
-|--------|------|---------|--------|
-| MODIFY | `tests/server.test.js` | Add test coverage for both endpoints | ✅ Complete |
-| MODIFY | `README.md` | Document endpoints and usage | ✅ Complete |
-| MODIFY | `postman.json` | Add API requests for both endpoints | ✅ Complete |
-
-### 0.5.2 Implementation Approach per File
-
-## server.js - Express Application Entry Point
-
-**Implementation Steps:**
-
-1. **Import Express framework** (line 15)
-   - Add `const express = require('express');`
-   
-2. **Create Express application instance** (line 18)
-   - Add `const app = express();`
-   
-3. **Configure port** (line 21)
-   - Add `const PORT = process.env.PORT || 3000;`
-   
-4. **Define root endpoint** (lines 30-32)
-   - Add `app.get('/', handler)` returning "Hello world"
-   
-5. **Define evening endpoint** (lines 41-43)
-   - Add `app.get('/evening', handler)` returning "Good evening"
-   
-6. **Implement conditional startup** (lines 46-50)
-   - Add `require.main === module` check before `app.listen()`
-   
-7. **Export app instance** (line 53)
-   - Add `module.exports = app;`
-
-**Final Implementation Structure:**
-
-```javascript
-'use strict';
-const express = require('express');
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.get('/', (req, res) => {
-  res.send('Hello world');
-});
-
-app.get('/evening', (req, res) => {
-  res.send('Good evening');
-});
-
-if (require.main === module) {
-  app.listen(PORT, () => { /* ... */ });
-}
-
-module.exports = app;
-```
-
-## package.json - Dependency Configuration
-
-**Implementation Steps:**
-
-1. **Add express to dependencies**
-   ```json
-   "dependencies": {
-     "express": "^4.21.2"
-   }
-   ```
-
-2. **Configure npm scripts**
-   ```json
-   "scripts": {
-     "start": "node server.js",
-     "test": "jest"
-   }
-   ```
-
-3. **Specify Node.js engine requirement**
-   ```json
-   "engines": {
-     "node": ">=18.0.0"
-   }
-   ```
-
-### tests/server.test.js - Test Coverage
-
-**Implementation Steps:**
-
-1. **Import test dependencies**
-   ```javascript
-   const request = require('supertest');
-   const app = require('../server');
-   ```
-
-2. **Create test suite structure**
-   - Describe block: "Express Server Endpoints"
-   - Nested describe: "GET /"
-   - Nested describe: "GET /evening"
-
-3. **Implement endpoint tests**
-   - Test GET / returns 200 and "Hello world"
-   - Test GET /evening returns 200 and "Good evening"
-
-## README.md - Documentation
-
-**Implementation Steps:**
-
-1. **Add endpoints table**
-   | Route | Method | Response |
-   |-------|--------|----------|
-   | `/` | GET | "Hello world" |
-   | `/evening` | GET | "Good evening" |
-
-2. **Document setup commands**
-   - `npm install`
-   - `npm start`
-   - `npm test`
-
-## postman.json - API Collection
-
-**Implementation Steps:**
-
-1. **Add Hello World endpoint request**
-   - Method: GET
-   - URL: http://localhost:3000/
-
-2. **Add Good Evening endpoint request**
-   - Method: GET
-   - URL: http://localhost:3000/evening
-
-### 0.5.3 Implementation Verification Commands
-
-| Step | Command | Expected Result |
-|------|---------|-----------------|
-| Install dependencies | `npm install` | Exit code 0, no vulnerabilities |
-| Run tests | `npm test` | 2/2 tests passing |
-| Start server | `npm start` | Server running on port 3000 |
-| Test root endpoint | `curl http://localhost:3000/` | "Hello world" |
-| Test evening endpoint | `curl http://localhost:3000/evening` | "Good evening" |
-
-### 0.5.4 Implementation Completion Evidence
-
-**All verification commands executed successfully:**
-
-```bash
-# Dependency installation
-$ npm install
-added 355 packages, audited 356 packages
-found 0 vulnerabilities
-
-#### Test execution
-$ npm test
-PASS tests/server.test.js
-  ✓ GET / returns Hello world (32 ms)
-  ✓ GET /evening returns Good evening (11 ms)
-Tests: 2 passed, 2 total
-```
-
-
-## 0.6 Scope Boundaries
-
-This section defines the exhaustive boundaries of what is included in and excluded from the Express.js feature addition scope.
-
-### 0.6.1 Exhaustively In Scope
-
-**Core Application Files:**
-
-| Pattern | Files Matched | Purpose |
-|---------|---------------|---------|
-| `server.js` | 1 file | Express application entry point with route handlers |
-| `package.json` | 1 file | Dependency manifest with express ^4.21.2 |
-| `package-lock.json` | 1 file | Locked dependency tree |
-
-**Test Files:**
-
-| Pattern | Files Matched | Purpose |
-|---------|---------------|---------|
-| `tests/**/*.test.js` | 1 file | Jest test suite for endpoint verification |
-| `tests/server.test.js` | Explicit | Supertest-based HTTP assertions |
+| File Pattern | Current State | Required Changes |
+|--------------|---------------|------------------|
+| `server.js` | `require('express')` | Change to `require('./app')` |
+| `tests/server.test.js` | `require('../server')` | Change to `require('../app')` |
+
+**Import Transformation Rules:**
+
+| Rule ID | Old Pattern | New Pattern | Apply To |
+|---------|------------|-------------|----------|
+| IR-001 | `const express = require('express')` | `const app = require('./app')` | `server.js` |
+| IR-002 | `const app = express()` | REMOVE (moved to `app.js`) | `server.js` |
+| IR-003 | `const app = require('../server')` | `const app = require('../app')` | `tests/server.test.js` |
+
+**New Import Statements (New Files):**
+
+| File | Required Imports |
+|------|-----------------|
+| `app.js` | `const express = require('express')` |
+| `app.js` | `const routes = require('./src/routes')` |
+| `src/routes/index.js` | `const express = require('express')` |
+| `src/routes/index.js` | `const greetingRoutes = require('./greeting.routes')` |
+| `src/routes/greeting.routes.js` | `const express = require('express')` |
+
+### 0.5.3 External Reference Updates
 
 **Configuration Files:**
 
-| Pattern | Files Matched | Purpose |
-|---------|---------------|---------|
-| `.env.example` | 1 file | Environment variable template (PORT=3000) |
-| `postman.json` | 1 file | API collection for manual/automated testing |
+| File | Element | Current Value | New Value |
+|------|---------|---------------|-----------|
+| `package.json` | `main` | `"server.js"` | `"server.js"` (no change) |
+| `package.json` | `scripts.start` | `"node server.js"` | `"node server.js"` (no change) |
+| `package.json` | `scripts.test` | `"jest"` | `"jest"` (no change) |
 
 **Documentation Files:**
 
-| Pattern | Files Matched | Purpose |
-|---------|---------------|---------|
-| `README.md` | 1 file | Project documentation with endpoint table |
-| `blitzy/documentation/*.md` | 2 files | Technical specifications and project guide |
-
-### 0.6.2 Complete In-Scope File Inventory
-
-| File Path | Lines | Type | Modification Status |
-|-----------|-------|------|---------------------|
-| `server.js` | 54 | Source | ✅ Modified |
-| `package.json` | 21 | Config | ✅ Modified |
-| `package-lock.json` | ~12000 | Config | ✅ Auto-generated |
-| `tests/server.test.js` | 45 | Test | ✅ Modified |
-| `README.md` | 32 | Documentation | ✅ Modified |
-| `postman.json` | 29 | Config | ✅ Modified |
-| `.env.example` | 14 | Config | ✅ Complete |
-
-### 0.6.3 Integration Points In Scope
-
-| Integration Point | Location | Change Type |
-|-------------------|----------|-------------|
-| Express App Initialization | `server.js:15-18` | Added |
-| Root Route Handler | `server.js:30-32` | Added |
-| Evening Route Handler | `server.js:41-43` | Added |
-| Server Startup Logic | `server.js:46-50` | Added |
-| Module Export | `server.js:53` | Added |
-| Express Dependency | `package.json:13-15` | Added |
-| Test Imports | `tests/server.test.js:15-18` | Added |
-| Test Assertions | `tests/server.test.js:20-44` | Added |
-
-### 0.6.4 Explicitly Out of Scope
-
-**Unrelated Infrastructure Files:**
-
-| File | Reason for Exclusion |
-|------|---------------------|
-| `amazon_cloudformation.yaml` | AWS infrastructure template - not related to endpoint feature |
-| `apache.conf` | Apache web server configuration - separate service |
-| `datadog.yaml` | Observability agent configuration - monitoring setup |
-
-**Sample/Demo Files (Not Part of Feature):**
-
-| File | Reason for Exclusion |
-|------|---------------------|
-| `dotnet.cs` | C# demo file - different language |
-| `php.php` | PHP demo file - different language |
-| `junit.java` | Java test demo - different ecosystem |
-| `maven.xml` | Maven configuration - Java build tool |
-| `mysql.sql` | MySQL schema demo - database sample |
-| `oracle.sql` | Oracle schema demo - database sample |
-| `script.sh` | Shell script demo - utility example |
-| `dummy_qtest.csv` | Test data sample - unrelated |
-| `notion.md` | Markdown demo - documentation sample |
-| `eclipse.xml` | Eclipse IDE configuration - tooling |
-
-### 0.6.5 Feature Boundaries
-
-**Included Functionality:**
-
-| Feature | Included | Implementation |
-|---------|----------|----------------|
-| Express.js framework integration | ✅ Yes | `const express = require('express')` |
-| GET / endpoint | ✅ Yes | Returns "Hello world" |
-| GET /evening endpoint | ✅ Yes | Returns "Good evening" |
-| Configurable port | ✅ Yes | `PORT` environment variable |
-| Test coverage | ✅ Yes | Jest + Supertest assertions |
-| API documentation | ✅ Yes | README and Postman collection |
-
-**Excluded Functionality:**
-
-| Feature | Included | Reason |
-|---------|----------|--------|
-| Additional endpoints | ❌ No | Not requested in requirements |
-| Database integration | ❌ No | Not part of feature scope |
-| Authentication/Authorization | ❌ No | Not specified in requirements |
-| Middleware (helmet, cors, morgan) | ❌ No | Optional production hardening |
-| Health check endpoint | ❌ No | Not specified in requirements |
-| Error handling middleware | ❌ No | Basic implementation sufficient |
-| Request logging | ❌ No | Not specified in requirements |
-| API versioning | ❌ No | Tutorial scope - single version |
-
-### 0.6.6 Environment Variables Scope
-
-**In Scope:**
-
-| Variable | Purpose | Status |
-|----------|---------|--------|
-| PORT | Server listening port | ✅ Implemented |
-
-**Out of Scope (Available but unused):**
-
-| Variable | Purpose | Status |
-|----------|---------|--------|
-| DB | Database connection string | ⚠️ Documented but not used |
-| Api Key | External API authentication | ⚠️ Available in environment |
-| Token | Authentication token | ⚠️ Available in environment |
-
-### 0.6.7 Scope Verification Checklist
-
-| Scope Item | Requirement | Verification | Status |
-|------------|-------------|--------------|--------|
-| Express.js added | Add Express framework | `require('express')` in server.js | ✅ |
-| Evening endpoint | Return "Good evening" | GET /evening → "Good evening" | ✅ |
-| Hello world preserved | Maintain existing endpoint | GET / → "Hello world" | ✅ |
-| Tests updated | Verify both endpoints | 2 passing tests | ✅ |
-| Documentation complete | Document new endpoint | README + Postman updated | ✅ |
-
-
-## 0.7 Special Instructions
-
-This section captures all feature-specific requirements, patterns, and special considerations explicitly emphasized by the user or identified during analysis.
-
-### 0.7.1 User-Specified Requirements
-
-**Original User Request (Preserved Exactly):**
-
-> "this is a tutorial of node js server hosting one endpoint that returns the response 'Hello world'. Could you add expressjs into the project and add another endpoint that return the reponse of 'Good evening'?"
-
-**Requirement Interpretation:**
-
-| User Statement | Technical Interpretation |
-|----------------|-------------------------|
-| "tutorial of node js server" | Educational project with clear, simple code |
-| "hosting one endpoint" | Existing GET / endpoint returning "Hello world" |
-| "add expressjs into the project" | Integrate Express.js as HTTP framework |
-| "add another endpoint" | Create new GET /evening route |
-| "return the reponse of 'Good evening'" | Response body: exact string "Good evening" |
-
-### 0.7.2 Patterns and Conventions to Follow
-
-**Code Style Conventions:**
-
-| Convention | Implementation | Example |
-|------------|----------------|---------|
-| Module System | CommonJS | `require()` / `module.exports` |
-| Strict Mode | Enabled | `'use strict';` at file start |
-| Arrow Functions | Route handlers | `(req, res) => { ... }` |
-| Const Declarations | Immutable bindings | `const express = require('express');` |
-| JSDoc Comments | Function documentation | Multi-line `/** ... */` blocks |
-
-**Express.js Patterns:**
-
-| Pattern | Implementation | Purpose |
-|---------|----------------|---------|
-| App Factory | `const app = express();` | Create Express application |
-| Route Definition | `app.get(path, handler)` | Define HTTP route handlers |
-| Response Methods | `res.send(string)` | Send plain text response |
-| Conditional Startup | `require.main === module` | Enable testability |
-| Module Export | `module.exports = app` | Enable in-process testing |
-
-### 0.7.3 Integration Requirements
-
-**Existing Feature Preservation:**
-
-| Feature | Requirement | Verification |
-|---------|-------------|--------------|
-| Hello World Endpoint | Must remain functional | Test: GET / → "Hello world" |
-| Port Configuration | Must support PORT env var | `process.env.PORT \|\| 3000` |
-| Startup Logging | Must log port on startup | Console message on listen |
-
-**Test Integration:**
-
-| Requirement | Implementation |
-|-------------|----------------|
-| In-process testing | Supertest mounts app without network binding |
-| Assertion style | Jest expect with toBe for strict equality |
-| Test organization | Nested describe blocks per endpoint |
-
-### 0.7.4 Performance and Scalability Considerations
-
-**Current Implementation Characteristics:**
-
-| Aspect | Implementation | Notes |
-|--------|----------------|-------|
-| Response Type | Static strings | No computation overhead |
-| State Management | Stateless | No memory accumulation |
-| Connection Handling | Express default | Single-threaded event loop |
-| Response Time | <100ms typical | Immediate response delivery |
-
-**Not Required for Tutorial Scope:**
-
-- Load balancing configuration
-- Clustering for multi-core utilization
-- Rate limiting
-- Response caching
-- Connection pooling
-
-### 0.7.5 Security Requirements
-
-**Implemented Security Measures:**
-
-| Measure | Status | Implementation |
-|---------|--------|----------------|
-| Port Isolation | ✅ | Default port 3000 (non-privileged) |
-| Environment Config | ✅ | Sensitive values via env vars |
-| No Secret Exposure | ✅ | .env excluded from version control |
-
-**Not Required for Tutorial Scope:**
-
-| Security Feature | Reason for Exclusion |
-|------------------|---------------------|
-| HTTPS/TLS | Tutorial runs on localhost |
-| Authentication | Public endpoints, no user data |
-| CORS Configuration | Single-origin development |
-| Helmet.js | Production hardening optional |
-| Rate Limiting | No abuse protection needed |
-| Input Validation | No user input accepted |
-
-### 0.7.6 Environment Setup Instructions
-
-**User-Provided Setup Command:**
-
-```bash
-npm run
-```
-
-**Complete Setup Sequence:**
-
-```bash
-# 1. Verify Node.js version (>=18.0.0)
-node --version
-
-##### 2. Install dependencies
-npm install
-
-##### 3. Run tests to verify implementation
-npm test
-
-##### 4. Start the server
-npm start
-```
-
-**Environment Variables Available:**
-
-| Variable | Value | Usage |
-|----------|-------|-------|
-| Api Key | (provided) | Available in environment |
-| Token | (provided) | Available in environment |
-| https://8008 | (provided) | Available in environment |
-
-### 0.7.7 Verification and Acceptance Criteria
-
-**Automated Verification:**
-
-| Test | Command | Expected Result |
+| File | Section | Required Update |
 |------|---------|-----------------|
-| Unit Tests | `npm test` | 2/2 tests pass |
-| Hello World | GET http://localhost:3000/ | "Hello world" |
-| Good Evening | GET http://localhost:3000/evening | "Good evening" |
+| `README.md` | Project structure | Add new file organization |
+| `README.md` | Setup instructions | No changes (npm install/start still work) |
 
-**Manual Verification (curl):**
+**Build/CI Files:**
+
+No CI/CD configuration files exist in this project that require updates.
+
+### 0.5.4 Environment Configuration
+
+**Environment Variables (Unchanged):**
+
+| Variable | Source | Default | Usage |
+|----------|--------|---------|-------|
+| `PORT` | `.env.example` | 3000 | Server listening port |
+| `DB` | `.env.example` | (empty) | Optional database connection |
+| `DB_HOST` | User-provided | (set) | Database host configuration |
+| `DB_HOST1` | User-provided | (set) | Additional database host |
+
+**Note:** Environment variable handling remains in `server.js` and requires no changes to the configuration approach.
+
+### 0.5.5 Node.js Runtime Requirements
+
+| Requirement | Specification | Source |
+|-------------|--------------|--------|
+| Node.js Version | >=18.0.0 | `package.json` engines field |
+| Current Installed | v20.19.6 | Runtime verification |
+| npm Version | >=7 (lockfileVersion 3) | `package-lock.json` |
+
+**Runtime Compatibility Verified:**
+- Node.js v20.19.6 satisfies >=18.0.0 requirement ✓
+- All 356 packages installed successfully ✓
+- Zero vulnerabilities reported ✓
+- All tests passing (2/2) ✓
+
+## 0.6 Scope Boundaries
+
+### 0.6.1 Exhaustively In Scope
+
+**Source Transformations:**
+
+| Pattern | Description | Files Matched |
+|---------|-------------|---------------|
+| `server.js` | Main server entry point | 1 file |
+| `app.js` | New application configuration (to be created) | 1 file |
+| `src/routes/*.js` | Route modules (to be created) | 2 files |
+
+**Test Updates:**
+
+| Pattern | Description | Files Matched |
+|---------|-------------|---------------|
+| `tests/server.test.js` | Integration test file | 1 file |
+
+**Configuration Updates:**
+
+| Pattern | Description | Files Matched |
+|---------|-------------|---------------|
+| `package.json` | npm manifest verification | 1 file |
+
+**Documentation Updates:**
+
+| Pattern | Description | Files Matched |
+|---------|-------------|---------------|
+| `README.md` | Project structure documentation | 1 file |
+
+**Directory Creation:**
+
+| Path | Purpose |
+|------|---------|
+| `src/` | Source code root directory |
+| `src/routes/` | Route module directory |
+
+**Complete In-Scope File List:**
+
+| # | File Path | Action | Justification |
+|---|-----------|--------|---------------|
+| 1 | `server.js` | UPDATE | Extract app configuration, keep HTTP listener |
+| 2 | `app.js` | CREATE | New Express app configuration module |
+| 3 | `src/routes/index.js` | CREATE | Route aggregator module |
+| 4 | `src/routes/greeting.routes.js` | CREATE | Greeting endpoints module |
+| 5 | `tests/server.test.js` | UPDATE | Update import path to app.js |
+| 6 | `package.json` | UPDATE | Verify main entry point |
+| 7 | `README.md` | UPDATE | Document new project structure |
+
+**Import Corrections:**
+
+Every file containing old import statements that require updates:
+
+| File | Old Import | New Import |
+|------|-----------|-----------|
+| `server.js` | `require('express')` | `require('./app')` |
+| `tests/server.test.js` | `require('../server')` | `require('../app')` |
+
+### 0.6.2 Explicitly Out of Scope
+
+**Files NOT to be Modified:**
+
+| File Path | Reason for Exclusion |
+|-----------|---------------------|
+| `package-lock.json` | Auto-generated file, will update automatically |
+| `.env.example` | Environment configuration unchanged |
+| `postman.json` | API endpoints unchanged, collection remains valid |
+| `blitzy/documentation/*.md` | Specification documents, not implementation |
+| `amazon_cloudformation.yaml` | Infrastructure template, unrelated |
+| `apache.conf` | Web server config, unrelated |
+| `datadog.yaml` | Monitoring config, unrelated |
+| `script.sh` | Shell script, unrelated |
+| `dummy_qtest.csv` | Test data, unrelated |
+| `notion.md` | Documentation sample, unrelated |
+| `mysql.sql` | Database script, unrelated |
+| `oracle.sql` | Database script, unrelated |
+| `dotnet.cs` | C# sample, unrelated |
+| `php.php` | PHP sample, unrelated |
+| `eclipse.xml` | IDE config, unrelated |
+| `junit.java` | Java test, unrelated |
+| `maven.xml` | Maven config, unrelated |
+
+**Features NOT Being Changed:**
+
+| Feature | Current Behavior | Post-Refactor Behavior |
+|---------|-----------------|----------------------|
+| GET / response | Returns `"Hello world"` | Returns `"Hello world"` (unchanged) |
+| GET /evening response | Returns `"Good evening"` | Returns `"Good evening"` (unchanged) |
+| HTTP status codes | 200 OK for both endpoints | 200 OK for both endpoints (unchanged) |
+| Default port | 3000 | 3000 (unchanged) |
+| Port configuration | `process.env.PORT` | `process.env.PORT` (unchanged) |
+| Test framework | Jest with Supertest | Jest with Supertest (unchanged) |
+| Module format | CommonJS | CommonJS (unchanged) |
+
+**Architectural Decisions NOT Being Changed:**
+
+| Decision | Rationale |
+|----------|-----------|
+| No middleware additions | User requested exact functionality preservation |
+| No error handling additions | Not in original implementation |
+| No logging additions | Not in original implementation |
+| No database integration | Not in original implementation |
+| No authentication | Not in original implementation |
+
+### 0.6.3 Scope Boundary Diagram
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              IN SCOPE                                       │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────────────────┐  │
+│  │ Source Files    │  │ Test Files      │  │ Configuration               │  │
+│  │ ─────────────── │  │ ─────────────── │  │ ───────────────────────────│  │
+│  │ • server.js     │  │ • tests/        │  │ • package.json              │  │
+│  │ • app.js (new)  │  │   server.test.js│  │ • README.md                 │  │
+│  │ • src/routes/   │  │                 │  │                             │  │
+│  │   *.js (new)    │  │                 │  │                             │  │
+│  └─────────────────┘  └─────────────────┘  └─────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              OUT OF SCOPE                                   │
+│  ┌─────────────────────────────────────────────────────────────────────────┐│
+│  │ Infrastructure: amazon_cloudformation.yaml, apache.conf, datadog.yaml  ││
+│  │ Database: mysql.sql, oracle.sql                                         ││
+│  │ Other Languages: dotnet.cs, php.php, junit.java, eclipse.xml, maven.xml││
+│  │ Documentation Artifacts: blitzy/documentation/*, notion.md              ││
+│  │ Utilities: script.sh, dummy_qtest.csv                                   ││
+│  │ Auto-generated: package-lock.json                                       ││
+│  │ Unchanged Config: .env.example, postman.json                            ││
+│  └─────────────────────────────────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+## 0.7 Special Instructions for Refactoring
+
+### 0.7.1 Refactoring-Specific Requirements
+
+**User-Emphasized Requirements:**
+
+| Requirement | Priority | Validation Method |
+|-------------|----------|-------------------|
+| Keep every feature and functionality exactly as in the original | CRITICAL | Test suite execution |
+| Fully match the behavior and logic of current implementation | CRITICAL | Response text comparison |
+| Rewrite into Express.js refactor | HIGH | Code structure review |
+
+### 0.7.2 Behavioral Preservation Mandates
+
+**Endpoint Contract Preservation:**
+
+| Endpoint | Request | Expected Response | Status |
+|----------|---------|-------------------|--------|
+| `GET /` | `curl http://localhost:3000/` | `Hello world` | 200 OK |
+| `GET /evening` | `curl http://localhost:3000/evening` | `Good evening` | 200 OK |
+
+**Response Format Requirements:**
+
+- Content-Type: `text/html; charset=utf-8` (Express default for `res.send()`)
+- Body: Exact string match, no whitespace differences
+- Headers: Standard Express response headers
+
+### 0.7.3 API Contract Maintenance
+
+**Maintain All Public API Contracts:**
+
+| Contract Element | Specification | Preservation Method |
+|-----------------|---------------|---------------------|
+| Route paths | `/` and `/evening` | Exact path registration |
+| HTTP methods | GET only | Router configuration |
+| Response strings | Character-exact | Literal string preservation |
+| Status codes | 200 | Default `res.send()` behavior |
+
+### 0.7.4 Test Compatibility Requirements
+
+**Preserve All Existing Functionality:**
+
+| Test Case | Assertion | Must Pass |
+|-----------|-----------|-----------|
+| `GET / returns Hello world` | `response.text === 'Hello world'` | ✓ |
+| `GET / returns 200` | `response.status === 200` | ✓ |
+| `GET /evening returns Good evening` | `response.text === 'Good evening'` | ✓ |
+| `GET /evening returns 200` | `response.status === 200` | ✓ |
+
+**Ensure All Tests Continue Passing:**
+
+The existing test suite in `tests/server.test.js` must execute successfully after refactoring:
 
 ```bash
-# Test root endpoint
-curl -i http://localhost:3000/
-# Expected: HTTP/1.1 200 OK, Body: Hello world
-
-#### Test evening endpoint
-curl -i http://localhost:3000/evening
-#### Expected: HTTP/1.1 200 OK, Body: Good evening
-```
-
-### 0.7.8 Implementation Completion Status
-
-**Feature Status Summary:**
-
-| Requirement | Status | Evidence |
-|-------------|--------|----------|
-| Express.js Integration | ✅ COMPLETE | `server.js` line 15: `require('express')` |
-| Hello World Endpoint | ✅ COMPLETE | `server.js` lines 30-32 |
-| Good Evening Endpoint | ✅ COMPLETE | `server.js` lines 41-43 |
-| Test Coverage | ✅ COMPLETE | `tests/server.test.js` - 2 tests |
-| Documentation | ✅ COMPLETE | README.md, postman.json |
-
-**Final Verification Results:**
-
-```
+# Required test command (must succeed)
 npm test
+
+#### Expected output
 PASS tests/server.test.js
   Express Server Endpoints
     GET /
-      ✓ GET / returns Hello world (32 ms)
+      ✓ GET / returns Hello world
     GET /evening
-      ✓ GET /evening returns Good evening (11 ms)
+      ✓ GET /evening returns Good evening
 
-Test Suites: 1 passed, 1 total
-Tests:       2 passed, 2 total
+Tests: 2 passed, 2 total
 ```
 
-**Conclusion:** All requested features have been successfully implemented and verified. The repository is ready for deployment with both endpoints functional and tested.
+### 0.7.5 Design Pattern Application Guidelines
 
+**Follow Express.js Best Practices Where Applicable:**
+
+| Pattern | Application | Implementation |
+|---------|-------------|----------------|
+| App-Server Separation | Split `server.js` | `app.js` + `server.js` |
+| Express Router | Modular routes | `express.Router()` in route files |
+| Conditional Startup | Test compatibility | `require.main === module` guard |
+| Module Export | Testing support | `module.exports = app` in `app.js` |
+
+### 0.7.6 Backward Compatibility Requirements
+
+**Maintain Backward Compatibility:**
+
+| Compatibility Aspect | Requirement | Implementation |
+|---------------------|-------------|----------------|
+| npm start | Must work unchanged | Entry point remains `server.js` |
+| npm test | Must work unchanged | Jest configuration unchanged |
+| Import path | Flexible for tests | Export app from both entry points if needed |
+| Environment vars | Must work unchanged | PORT handling in `server.js` |
+
+**Script Compatibility Matrix:**
+
+| Command | Current Behavior | Post-Refactor Behavior | Status |
+|---------|-----------------|----------------------|--------|
+| `npm install` | Install dependencies | Install dependencies | Unchanged |
+| `npm start` | Start server on PORT | Start server on PORT | Unchanged |
+| `npm test` | Run Jest tests | Run Jest tests | Unchanged |
+| `node server.js` | Start server | Start server | Unchanged |
+
+### 0.7.7 Code Quality Standards
+
+**Maintain Code Standards:**
+
+| Standard | Requirement | Verification |
+|----------|-------------|--------------|
+| Strict mode | `'use strict'` in all JS files | Code review |
+| CommonJS | `require`/`module.exports` format | Code review |
+| Documentation | JSDoc comments preserved | Code review |
+| Naming conventions | Consistent with original | Code review |
+
+### 0.7.8 Validation Checklist
+
+**Pre-Completion Validation:**
+
+- [ ] All route handlers produce identical responses
+- [ ] Test suite passes (2/2 tests)
+- [ ] npm scripts work without modification
+- [ ] No new dependencies introduced
+- [ ] Module export pattern maintained
+- [ ] Strict mode enabled in all files
+- [ ] Port configuration unchanged
+- [ ] README updated with new structure
+
+**Post-Refactoring Verification Commands:**
+
+```bash
+# Install dependencies
+npm install
+
+#### Run automated tests (must pass)
+npm test
+
+#### Start server
+npm start
+
+#### Manual endpoint verification
+curl http://localhost:3000/
+#### Expected: Hello world
+
+curl http://localhost:3000/evening
+# Expected: Good evening
+```
 
