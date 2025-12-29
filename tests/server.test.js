@@ -2,7 +2,7 @@
  * Jest Test Suite for Express.js Server Endpoints
  * 
  * This test file verifies the correct behavior of the Express.js server
- * endpoints defined in server.js:
+ * endpoints defined in app.js:
  * - GET / : Should return "Hello world" with status 200
  * - GET /evening : Should return "Good evening" with status 200
  * 
