@@ -1,11 +1,11 @@
 /**
- * Express.js Application Entry Point
+ * Express.js Server Entry Point
  * 
- * This is the entry point for the Node.js Express server tutorial.
- * It imports the configured Express application from src/app.js and handles
- * server startup.
+ * This is the entry point for the Node.js Express server application.
+ * It imports the configured Express application from src/app.js and
+ * handles server startup.
  * 
- * Endpoints (defined in src/routes/index.js):
+ * Endpoints (defined in src/routes/):
  * - GET / : Returns "Hello world"
  * - GET /evening : Returns "Good evening"
  * 
@@ -15,7 +15,8 @@
 
 'use strict';
 
-// Import the configured Express application
+// Import configured Express application from src/app.js
+// The app module contains all Express configuration, middleware setup, and route mounting
 const app = require('./src/app');
 
 // Define server port from environment or default to 3000
