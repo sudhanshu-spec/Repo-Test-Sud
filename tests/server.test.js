@@ -5,15 +5,15 @@
  * endpoints defined in server.js:
  * - GET / : Should return "Hello world" with status 200
  * - GET /evening : Should return "Good evening" with status 200
- * - GET /health : Should return JSON health status with status 200
- * 
- * Also tests:
- * - 404 Not Found handler for undefined routes
- * - HTTP method validation (only GET methods are defined)
- * - Edge cases and boundary conditions
- * - Response headers
+ * - GET /health : Should return JSON with healthy status
+ * - 404 handler : Should return proper JSON error for undefined routes
+ * - Error handling : Should handle various edge cases properly
  * 
  * Uses supertest for HTTP assertions without starting a live server.
+ * 
+ * Test Coverage:
+ * - 27 total tests organized in 8 describe blocks
+ * - Original endpoints, health check, 404 handler, HTTP methods, edge cases, headers
  */
 
 'use strict';
@@ -61,8 +61,7 @@ describe('Express Server Endpoints', () => {
 
   /**
    * Test suite for the health check endpoint (/health)
-   * Verifies the endpoint returns correct status, JSON response with healthy status,
-   * and a valid ISO timestamp
+   * Verifies the endpoint returns proper JSON health status for container orchestration
    */
   describe('GET /health', () => {
     test('GET /health returns 200 status', async () => {
@@ -77,17 +76,17 @@ describe('Express Server Endpoints', () => {
 
     test('GET /health timestamp is a valid ISO date string', async () => {
       const response = await request(app).get('/health');
-      expect(response.body.timestamp).toBeDefined();
-      // Verify timestamp is a valid ISO date string
-      const timestamp = new Date(response.body.timestamp);
-      expect(timestamp.toISOString()).toBe(response.body.timestamp);
+      const timestamp = response.body.timestamp;
+      // Verify timestamp exists and is a valid ISO date string
+      expect(timestamp).toBeDefined();
+      const parsedDate = new Date(timestamp);
+      expect(parsedDate.toISOString()).toBe(timestamp);
     });
   });
 
   /**
    * Test suite for 404 Not Found handler
-   * Verifies that undefined routes return proper 404 JSON responses
-   * with consistent error formatting across different HTTP methods
+   * Verifies undefined routes return proper 404 JSON error responses
    */
   describe('404 Not Found Handler', () => {
     test('Returns 404 for undefined route', async () => {
@@ -109,19 +108,19 @@ describe('Express Server Endpoints', () => {
     test('Returns 404 for POST to undefined route', async () => {
       const response = await request(app).post('/nonexistent');
       expect(response.status).toBe(404);
-      expect(response.body.message).toContain('Cannot POST /nonexistent');
+      expect(response.body.error).toBe('Not Found');
     });
 
     test('Returns 404 for PUT to undefined route', async () => {
       const response = await request(app).put('/nonexistent');
       expect(response.status).toBe(404);
-      expect(response.body.message).toContain('Cannot PUT /nonexistent');
+      expect(response.body.error).toBe('Not Found');
     });
 
     test('Returns 404 for DELETE to undefined route', async () => {
       const response = await request(app).delete('/nonexistent');
       expect(response.status).toBe(404);
-      expect(response.body.message).toContain('Cannot DELETE /nonexistent');
+      expect(response.body.error).toBe('Not Found');
     });
 
     test('Returns 404 for deeply nested undefined routes', async () => {
@@ -133,7 +132,7 @@ describe('Express Server Endpoints', () => {
 
   /**
    * Test suite for HTTP method validation
-   * Verifies that using wrong HTTP methods on GET-only routes returns 404
+   * Verifies that non-GET methods to GET-only routes return 404
    */
   describe('HTTP Method Validation', () => {
     test('POST to GET-only route / returns 404', async () => {
@@ -159,7 +158,7 @@ describe('Express Server Endpoints', () => {
 
   /**
    * Test suite for edge cases and boundary conditions
-   * Verifies the server handles various edge cases correctly
+   * Verifies server handles unusual inputs correctly
    */
   describe('Edge Cases and Boundary Conditions', () => {
     test('GET / with query parameters still works', async () => {
@@ -198,7 +197,7 @@ describe('Express Server Endpoints', () => {
 
   /**
    * Test suite for response headers
-   * Verifies that responses include proper headers
+   * Verifies proper headers are set for different response types
    */
   describe('Response Headers', () => {
     test('Successful responses include proper headers', async () => {
