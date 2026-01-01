@@ -5,6 +5,7 @@
  * - Server startup: app.listen() returns server instance
  * - Server shutdown: server.close() completes without error
  * - Conditional startup guard: require.main === module behavior
+ * - Direct execution mode: server.js run as main module
  * 
  * Uses beforeAll/afterAll hooks for proper server setup and teardown.
  * Tests verify the application is properly structured for testability.
@@ -20,6 +21,12 @@ const app = require('../server');
 
 // Import Node.js http module for type checking
 const http = require('http');
+
+// Import child_process for spawning server as main module
+const { spawn } = require('child_process');
+
+// Import path for resolving server.js location
+const path = require('path');
 
 // Test port constant (different from default 3000 to avoid conflicts)
 const TEST_PORT = 3001;
@@ -206,4 +213,142 @@ describe('Server Lifecycle', () => {
       });
     });
   });
+});
+
+/**
+ * Test suite for Direct Execution Mode (require.main === module)
+ * This test spawns server.js as a child process to cover the 
+ * conditional startup block that only executes when server.js
+ * is run directly (not imported).
+ */
+describe('Direct Execution Mode', () => {
+  // Use a unique port for direct execution tests
+  const DIRECT_EXEC_PORT = 3099;
+  
+  test('server.js should start and log startup message when run directly', async () => {
+    // Resolve the path to server.js
+    const serverPath = path.resolve(__dirname, '../server.js');
+    
+    // Spawn the server as a child process with custom PORT
+    const serverProcess = spawn('node', [serverPath], {
+      env: { ...process.env, PORT: DIRECT_EXEC_PORT.toString() },
+      stdio: ['pipe', 'pipe', 'pipe']
+    });
+    
+    // Collect stdout data
+    let stdoutData = '';
+    
+    try {
+      // Wait for the server to start and output the startup message
+      await new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Server startup timeout'));
+        }, 5000);
+        
+        serverProcess.stdout.on('data', (data) => {
+          stdoutData += data.toString();
+          // Check if we received the expected startup message
+          if (stdoutData.includes(`Server running on port ${DIRECT_EXEC_PORT}`)) {
+            clearTimeout(timeout);
+            resolve();
+          }
+        });
+        
+        serverProcess.stderr.on('data', (data) => {
+          // Log any stderr for debugging but don't fail
+          console.error('Server stderr:', data.toString());
+        });
+        
+        serverProcess.on('error', (err) => {
+          clearTimeout(timeout);
+          reject(err);
+        });
+        
+        serverProcess.on('exit', (code) => {
+          if (code !== 0 && code !== null) {
+            clearTimeout(timeout);
+            reject(new Error(`Server process exited with code ${code}`));
+          }
+        });
+      });
+      
+      // Verify the startup message was logged
+      expect(stdoutData).toContain(`Server running on port ${DIRECT_EXEC_PORT}`);
+      
+    } finally {
+      // Always clean up: kill the server process
+      serverProcess.kill('SIGTERM');
+      
+      // Wait for process to actually terminate
+      await new Promise((resolve) => {
+        serverProcess.on('exit', resolve);
+        // Fallback timeout in case process doesn't exit cleanly
+        setTimeout(() => {
+          serverProcess.kill('SIGKILL');
+          resolve();
+        }, 1000);
+      });
+    }
+  }, 10000); // 10 second timeout for this test
+  
+  test('server.js should respond to HTTP requests when run directly', async () => {
+    const serverPath = path.resolve(__dirname, '../server.js');
+    const testPort = DIRECT_EXEC_PORT + 1;
+    
+    const serverProcess = spawn('node', [serverPath], {
+      env: { ...process.env, PORT: testPort.toString() },
+      stdio: ['pipe', 'pipe', 'pipe']
+    });
+    
+    try {
+      // Wait for server to start
+      await new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Server startup timeout'));
+        }, 5000);
+        
+        serverProcess.stdout.on('data', (data) => {
+          if (data.toString().includes(`Server running on port ${testPort}`)) {
+            clearTimeout(timeout);
+            resolve();
+          }
+        });
+        
+        serverProcess.on('error', (err) => {
+          clearTimeout(timeout);
+          reject(err);
+        });
+      });
+      
+      // Make HTTP request to verify server is working
+      const httpModule = require('http');
+      const response = await new Promise((resolve, reject) => {
+        const req = httpModule.get(`http://localhost:${testPort}/`, (res) => {
+          let data = '';
+          res.on('data', (chunk) => { data += chunk; });
+          res.on('end', () => {
+            resolve({ statusCode: res.statusCode, body: data });
+          });
+        });
+        req.on('error', reject);
+        req.setTimeout(5000, () => {
+          req.destroy();
+          reject(new Error('Request timeout'));
+        });
+      });
+      
+      expect(response.statusCode).toBe(200);
+      expect(response.body).toBe('Hello world');
+      
+    } finally {
+      serverProcess.kill('SIGTERM');
+      await new Promise((resolve) => {
+        serverProcess.on('exit', resolve);
+        setTimeout(() => {
+          serverProcess.kill('SIGKILL');
+          resolve();
+        }, 1000);
+      });
+    }
+  }, 15000); // 15 second timeout for this test
 });
