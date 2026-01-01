@@ -1,7 +1,11 @@
 /**
- * Express.js Application Entry Point
+ * Express.js Server Entry Point
  * 
- * This is a Node.js Express server tutorial implementing two GET endpoints:
+ * This is the entry point for the Node.js Express server application.
+ * It imports the configured Express application from src/app.js and
+ * handles server startup.
+ * 
+ * Endpoints (defined in src/routes/):
  * - GET / : Returns "Hello world"
  * - GET /evening : Returns "Good evening"
  * 
@@ -11,36 +15,12 @@
 
 'use strict';
 
-// Import Express web framework
-const express = require('express');
-
-// Create Express application instance
-const app = express();
+// Import configured Express application from src/app.js
+// The app module contains all Express configuration, middleware setup, and route mounting
+const app = require('./src/app');
 
 // Define server port from environment or default to 3000
 const PORT = process.env.PORT || 3000;
-
-/**
- * Root endpoint handler
- * GET / - Returns "Hello world" as plain text response
- * 
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- */
-app.get('/', (req, res) => {
-  res.send('Hello world');
-});
-
-/**
- * Evening endpoint handler
- * GET /evening - Returns "Good evening" as plain text response
- * 
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- */
-app.get('/evening', (req, res) => {
-  res.send('Good evening');
-});
 
 // Start server only when run directly (not when imported for testing)
 if (require.main === module) {
