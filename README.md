@@ -12,6 +12,14 @@ npm install
 npm start
 ```
 
+### Project Structure
+
+- `server.js` - Entry point and server startup
+- `src/app.js` - Express application configuration
+- `src/routes/` - Route definitions
+- `src/controllers/` - Request handlers
+- `tests/` - Jest test suite
+
 ### Endpoints
 
 | Route | Method | Response |
