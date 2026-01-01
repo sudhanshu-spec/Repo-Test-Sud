@@ -351,4 +351,175 @@ describe('Server Lifecycle', () => {
       expect(server.listening).toBe(false);
     });
   });
+
+  /**
+   * Test suite for direct script execution (require.main === module)
+   * Verifies server auto-starts when run directly as `node server.js`
+   */
+  describe('Direct Script Execution', () => {
+    const { spawn } = require('child_process');
+    const path = require('path');
+    const http = require('http');
+
+    /**
+     * Helper function to wait for server to be ready on a port
+     * @param {number} port - Port to check
+     * @param {number} maxAttempts - Maximum retry attempts
+     * @returns {Promise<boolean>} - Resolves true if server ready, false if not
+     */
+    const waitForServer = (port, maxAttempts = 20) => {
+      return new Promise((resolve) => {
+        let attempts = 0;
+        const checkServer = () => {
+          const req = http.request({ hostname: 'localhost', port, path: '/', method: 'GET', timeout: 100 }, (res) => {
+            res.resume(); // Consume response data to free resources
+            resolve(true);
+          });
+          req.on('error', () => {
+            attempts++;
+            if (attempts < maxAttempts) {
+              setTimeout(checkServer, 100);
+            } else {
+              resolve(false);
+            }
+          });
+          req.on('timeout', () => {
+            req.destroy();
+            attempts++;
+            if (attempts < maxAttempts) {
+              setTimeout(checkServer, 100);
+            } else {
+              resolve(false);
+            }
+          });
+          req.end();
+        };
+        checkServer();
+      });
+    };
+
+    /**
+     * Helper function to cleanly kill a child process
+     * @param {ChildProcess} proc - The child process to kill
+     * @returns {Promise<void>}
+     */
+    const killProcess = (proc) => {
+      return new Promise((resolve) => {
+        if (!proc || proc.killed) {
+          resolve();
+          return;
+        }
+        proc.on('close', () => resolve());
+        proc.on('error', () => resolve());
+        proc.kill('SIGKILL'); // Use SIGKILL for immediate termination
+      });
+    };
+
+    test('should auto-start server when run directly as main module', async () => {
+      const serverPath = path.join(__dirname, '..', 'server.js');
+      const TEST_PORT = 3007;
+      
+      // Spawn server.js as a child process with custom PORT
+      const serverProcess = spawn('node', [serverPath], {
+        env: { ...process.env, PORT: String(TEST_PORT) },
+        stdio: ['pipe', 'pipe', 'pipe'],
+        detached: false
+      });
+
+      let stdoutData = '';
+      serverProcess.stdout.on('data', (data) => {
+        stdoutData += data.toString();
+      });
+
+      // Ensure cleanup on any error
+      let cleanedUp = false;
+      const cleanup = async () => {
+        if (!cleanedUp) {
+          cleanedUp = true;
+          await killProcess(serverProcess);
+        }
+      };
+
+      try {
+        // Wait for server to start
+        const serverReady = await waitForServer(TEST_PORT);
+        expect(serverReady).toBe(true);
+
+        // Verify console.log was called with expected message
+        // Give a moment for stdout to be captured
+        await new Promise(resolve => setTimeout(resolve, 100));
+        expect(stdoutData).toContain(`Server running on port ${TEST_PORT}`);
+
+        // Make a request to verify server is responding
+        const response = await new Promise((resolve, reject) => {
+          const req = http.request({
+            hostname: 'localhost',
+            port: TEST_PORT,
+            path: '/',
+            method: 'GET',
+            timeout: 1000
+          }, (res) => {
+            let body = '';
+            res.on('data', chunk => body += chunk);
+            res.on('end', () => resolve({ status: res.statusCode, body }));
+          });
+          req.on('error', reject);
+          req.on('timeout', () => {
+            req.destroy();
+            reject(new Error('Request timeout'));
+          });
+          req.end();
+        });
+
+        expect(response.status).toBe(200);
+        expect(response.body).toBe('Hello world');
+
+      } finally {
+        await cleanup();
+      }
+    }, 10000); // Increased timeout for child process operations
+
+    test('should use default PORT 3000 when PORT env is not set', async () => {
+      const serverPath = path.join(__dirname, '..', 'server.js');
+      const DEFAULT_PORT = 3000;
+      
+      // Create a minimal env without PORT to test default
+      const envWithoutPort = { ...process.env };
+      delete envWithoutPort.PORT;
+      
+      // Spawn server.js as a child process without PORT env
+      const serverProcess = spawn('node', [serverPath], {
+        env: envWithoutPort,
+        stdio: ['pipe', 'pipe', 'pipe'],
+        detached: false
+      });
+
+      let stdoutData = '';
+      serverProcess.stdout.on('data', (data) => {
+        stdoutData += data.toString();
+      });
+
+      // Ensure cleanup on any error
+      let cleanedUp = false;
+      const cleanup = async () => {
+        if (!cleanedUp) {
+          cleanedUp = true;
+          await killProcess(serverProcess);
+        }
+      };
+
+      try {
+        // Wait for server to start
+        const serverReady = await waitForServer(DEFAULT_PORT);
+        expect(serverReady).toBe(true);
+
+        // Verify console.log shows default port
+        await new Promise(resolve => setTimeout(resolve, 100));
+        expect(stdoutData).toContain(`Server running on port ${DEFAULT_PORT}`);
+
+      } finally {
+        await cleanup();
+      }
+    }, 10000);
+  });
 });
