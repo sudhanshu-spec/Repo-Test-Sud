@@ -1,100 +1,76 @@
-# Project Guide: Express.js Feature Addition
+# Project Guide: Production-Ready Express.js Server Enhancement
 
 ## Executive Summary
 
-**Project Completion: 80% (4 hours completed out of 5 total hours)**
+**Project Completion: 80% (12 hours completed out of 15 total hours)**
 
-This project successfully integrates Express.js framework into an existing Node.js server and adds a new "Good evening" endpoint. All development work has been completed and validated with 100% test pass rate.
+This project successfully enhances the Express.js server with production-ready features addressing critical code quality deficiencies. All development work specified in the Agent Action Plan has been completed and validated.
 
 ### Key Achievements
-- ✅ Express.js ^4.21.2 integrated as HTTP framework
-- ✅ GET `/` endpoint returning "Hello world" (preserved)
-- ✅ GET `/evening` endpoint returning "Good evening" (new)
-- ✅ Jest + Supertest test suite with 2/2 tests passing
-- ✅ Comprehensive documentation created
-- ✅ Zero security vulnerabilities in dependencies
+- ✅ All 10 production-ready features implemented in server.js
+- ✅ Test suite expanded from 2 to 27 tests (100% pass rate)
+- ✅ All endpoints functional with runtime validation
+- ✅ Graceful shutdown verified with SIGTERM signal
+- ✅ Zero compilation errors or warnings
+- ✅ Clean git working tree with all changes committed
 
-### Remaining Work
-- Production environment configuration (0.5h)
-- Deployment to production server (0.5h)
+### Hours Breakdown
+- **Completed**: 12 hours of development work
+- **Remaining**: 3 hours of human review/deployment tasks
+- **Total**: 15 hours
+
+```mermaid
+pie title Project Hours Breakdown
+    "Completed Work" : 12
+    "Remaining Work" : 3
+```
 
 ---
 
 ## Validation Results Summary
 
-### 1. Dependencies Installation ✅ PASS
+### Test Execution Results
 | Metric | Value |
 |--------|-------|
-| Node.js Version | v20.19.6 (requirement: >=18.0.0) |
-| npm Version | 10.8.2 |
-| Total Packages | 355+ installed |
-| Vulnerabilities | 0 found |
-| Production Dependencies | express@4.21.2 |
-| Dev Dependencies | jest@29.7.0, supertest@7.0.0 |
+| Total Tests | 27 |
+| Tests Passed | 27 |
+| Tests Failed | 0 |
+| Pass Rate | 100% |
+| Execution Time | 0.488s |
 
-### 2. Code Compilation ✅ PASS
-- **Syntax Validation**: `node --check server.js` - OK
-- **No syntax errors** in any JavaScript files
-- **Module imports** resolve correctly
+### Test Coverage by Category
+| Test Suite | Tests | Status |
+|------------|-------|--------|
+| GET / | 2 | ✅ All Pass |
+| GET /evening | 2 | ✅ All Pass |
+| GET /health | 3 | ✅ All Pass |
+| 404 Not Found Handler | 7 | ✅ All Pass |
+| HTTP Method Validation | 4 | ✅ All Pass |
+| Edge Cases & Boundaries | 6 | ✅ All Pass |
+| Response Headers | 3 | ✅ All Pass |
 
-### 3. Unit Tests ✅ PASS (100%)
-| Test | Status | Duration |
-|------|--------|----------|
-| GET / returns Hello world | ✓ Pass | 18ms |
-| GET /evening returns Good evening | ✓ Pass | 4ms |
+### Runtime Validation Results
+| Endpoint | Method | Expected | Actual | Status |
+|----------|--------|----------|--------|--------|
+| `/` | GET | "Hello world" | "Hello world" | ✅ PASSED |
+| `/evening` | GET | "Good evening" | "Good evening" | ✅ PASSED |
+| `/health` | GET | JSON healthy status | `{"status":"healthy","timestamp":"..."}` | ✅ PASSED |
+| `/nonexistent` | GET | 404 JSON error | `{"error":"Not Found",...}` | ✅ PASSED |
+| Graceful Shutdown | SIGTERM | Clean exit | "HTTP server closed successfully." | ✅ PASSED |
 
-**Test Suite**: tests/server.test.js
-**Framework**: Jest + Supertest
-
-### 4. Application Runtime ✅ PASS
-| Endpoint | Response | Status |
-|----------|----------|--------|
-| GET / | "Hello world" | 200 OK |
-| GET /evening | "Good evening" | 200 OK |
-
----
-
-## Project Hours Breakdown
-
-```mermaid
-pie title Project Hours Breakdown
-    "Completed Work" : 4
-    "Remaining Work" : 1
-```
-
-### Hours Calculation
-
-**Completed Work: 4 hours**
-| Component | Hours | Evidence |
-|-----------|-------|----------|
-| Project setup and initialization | 0.5h | package.json, .gitignore created |
-| Express.js server implementation | 1.5h | server.js (54 lines, well-documented) |
-| Test suite creation | 1.0h | tests/server.test.js (45 lines) |
-| Configuration files | 0.5h | .env.example, package.json scripts |
-| Documentation | 0.5h | README.md, postman.json |
-
-**Remaining Work: 1 hour**
-| Task | Hours | Priority |
-|------|-------|----------|
-| Configure production .env file | 0.5h | High |
-| Deploy to production server | 0.5h | High |
-
-**Completion Calculation:**
-- Completed Hours: 4h
-- Remaining Hours: 1h
-- Total Project Hours: 5h
-- **Completion Percentage: 4h / 5h = 80%**
-
----
-
-## Detailed Task Table
-
-| # | Task | Description | Hours | Priority | Severity |
-|---|------|-------------|-------|----------|----------|
-| 1 | Configure Production Environment | Create `.env` file from `.env.example` template and set `PORT` and `DB` variables with production values | 0.5h | High | Medium |
-| 2 | Deploy to Production Server | Deploy application to production infrastructure (PM2, Docker, or cloud service) | 0.5h | High | Medium |
-
-**Total Remaining Hours: 1.0h**
+### Production-Ready Features Implemented
+| # | Feature | Status | Description |
+|---|---------|--------|-------------|
+| 1 | Server Reference | ✅ | Captured for graceful shutdown capability |
+| 2 | Shutdown Flag | ✅ | Prevents multiple simultaneous shutdown attempts |
+| 3 | Health Endpoint | ✅ | `/health` returns JSON status for container orchestration |
+| 4 | 404 Handler | ✅ | Returns consistent JSON error for undefined routes |
+| 5 | Error Handler | ✅ | 4-parameter middleware for centralized error handling |
+| 6 | gracefulShutdown | ✅ | 10-second timeout protection |
+| 7 | Process Handlers | ✅ | uncaughtException and unhandledRejection |
+| 8 | Signal Handlers | ✅ | SIGTERM and SIGINT for graceful termination |
+| 9 | Conditional Start | ✅ | `require.main === module` for test compatibility |
+| 10 | Server Error Handler | ✅ | EADDRINUSE and EACCES handling |
 
 ---
 
@@ -102,82 +78,87 @@ pie title Project Hours Breakdown
 
 ### System Prerequisites
 
-| Requirement | Minimum Version | Verified Version |
-|-------------|-----------------|------------------|
-| Node.js | >=18.0.0 | v20.19.6 |
-| npm | >=8.0.0 | 10.8.2 |
-| Operating System | Linux, macOS, Windows | Any |
+| Requirement | Version | Purpose |
+|-------------|---------|---------|
+| Node.js | ≥18.0.0 | JavaScript runtime |
+| npm | ≥7.0.0 | Package manager |
+| Git | Latest | Version control |
 
 ### Environment Setup
 
-1. **Clone the repository and checkout the branch:**
+1. **Clone the repository** (if not already done):
 ```bash
 git clone <repository-url>
-cd Repo-Test-Sud
-git checkout blitzy-5ddf1f71-0729-45a0-874f-19dc3092a782
+cd <repository-directory>
 ```
 
-2. **Create environment configuration:**
+2. **Switch to the feature branch**:
 ```bash
-cp .env.example .env
+git checkout blitzy-46c4de7d-633f-4303-9beb-4284a6ac12a8
 ```
 
-3. **Edit `.env` file with your values:**
-```env
-# Server Configuration
-PORT=3000
-
-# Database Configuration (optional)
-DB=your_connection_string_here
+3. **Verify Node.js version**:
+```bash
+node --version
+# Expected output: v20.x.x or higher (must be ≥18.0.0)
 ```
 
 ### Dependency Installation
 
 ```bash
-# Install all dependencies
+# Install all dependencies (recommended for CI/CD)
+npm ci
+
+# OR install dependencies (development)
 npm install
 ```
 
-**Expected Output:**
+**Expected output:**
 ```
-added 355 packages, and audited 356 packages in 5s
-49 packages are looking for funding
-found 0 vulnerabilities
+added 273 packages in 2s
 ```
 
-### Application Startup
+### Running Tests
 
-**Start the server:**
 ```bash
-npm start
+# Run all tests with CI mode (non-interactive)
+CI=true npm test -- --ci --watchAll=false
 ```
 
-**Expected Output:**
-```
-Server running on port 3000
-```
-
-### Verification Steps
-
-1. **Run automated tests:**
-```bash
-npm test
-```
-
-**Expected Output:**
+**Expected output:**
 ```
 PASS tests/server.test.js
   Express Server Endpoints
-    GET /
-      ✓ GET / returns Hello world
-    GET /evening
-      ✓ GET /evening returns Good evening
+    GET / (2 tests)
+    GET /evening (2 tests)
+    GET /health (3 tests)
+    404 Not Found Handler (7 tests)
+    HTTP Method Validation (4 tests)
+    Edge Cases and Boundary Conditions (6 tests)
+    Response Headers (3 tests)
 
 Test Suites: 1 passed, 1 total
-Tests:       2 passed, 2 total
+Tests:       27 passed, 27 total
+Time:        ~0.5s
 ```
 
-2. **Verify endpoints manually (with server running):**
+### Starting the Server
+
+```bash
+# Start the server
+npm start
+# OR
+node server.js
+```
+
+**Expected output:**
+```
+Server running on port 3000
+Health check available at http://localhost:3000/health
+```
+
+### Verifying Endpoints
+
 ```bash
 # Test root endpoint
 curl http://localhost:3000/
@@ -186,131 +167,136 @@ curl http://localhost:3000/
 # Test evening endpoint
 curl http://localhost:3000/evening
 # Expected: Good evening
+
+# Test health endpoint
+curl http://localhost:3000/health
+# Expected: {"status":"healthy","timestamp":"2026-01-01T..."}
+
+# Test 404 handling
+curl http://localhost:3000/nonexistent
+# Expected: {"error":"Not Found","message":"Cannot GET /nonexistent","statusCode":404}
 ```
 
-3. **Using Postman:**
-   - Import `postman.json` into Postman
-   - Execute "Hello World Endpoint" request
-   - Execute "Good Evening Endpoint" request
+### Testing Graceful Shutdown
 
-### Example Usage
-
-**Root Endpoint:**
 ```bash
-curl -i http://localhost:3000/
-```
-Response:
-```
-HTTP/1.1 200 OK
-Content-Type: text/html; charset=utf-8
-Content-Length: 11
+# Start server in background
+node server.js &
+SERVER_PID=$!
 
-Hello world
+# Send SIGTERM signal
+kill -SIGTERM $SERVER_PID
 ```
 
-**Evening Endpoint:**
-```bash
-curl -i http://localhost:3000/evening
+**Expected output:**
 ```
-Response:
+SIGTERM signal received: starting graceful shutdown...
+HTTP server closed successfully.
+Cleanup complete. Exiting process.
 ```
-HTTP/1.1 200 OK
-Content-Type: text/html; charset=utf-8
-Content-Length: 12
 
-Good evening
-```
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PORT` | 3000 | Server listening port |
+| `NODE_ENV` | undefined | Set to 'development' for stack traces in errors |
 
 ---
 
-## Repository Analysis
+## Files Modified
 
-### Git Statistics
-| Metric | Value |
-|--------|-------|
-| Total Commits | 8 |
-| Files Added | 24 |
-| Lines Added | 6,255 (1,528 excluding package-lock.json) |
-| Lines Removed | 0 |
+### In-Scope Files (Per Agent Action Plan)
 
-### File Inventory
-| File | Lines | Type | Status |
-|------|-------|------|--------|
-| server.js | 54 | Source | ✅ Complete |
-| package.json | 21 | Config | ✅ Complete |
-| tests/server.test.js | 45 | Test | ✅ Complete |
-| README.md | 32 | Documentation | ✅ Complete |
-| .env.example | 14 | Config | ✅ Complete |
-| postman.json | 29 | Config | ✅ Complete |
-| package-lock.json | ~12000 | Auto-generated | ✅ Complete |
+| File | Original | Final | Change |
+|------|----------|-------|--------|
+| `server.js` | 17 lines | 319 lines | +302 lines |
+| `tests/server.test.js` | 15 lines | 219 lines | +204 lines |
+| **Total** | 32 lines | 538 lines | +506 lines |
+
+### Out-of-Scope Files (Unchanged)
+- `package.json` - No modifications needed
+- `package-lock.json` - No modifications needed
+- `.gitignore` - No modifications needed
+- All other repository files - Explicitly excluded per scope boundaries
+
+---
+
+## Human Tasks Remaining
+
+### Task Summary
+
+| Priority | Tasks | Total Hours |
+|----------|-------|-------------|
+| High | 0 | 0h |
+| Medium | 2 | 2h |
+| Low | 2 | 1h |
+| **Total** | **4** | **3h** |
+
+### Detailed Task Table
+
+| # | Task | Description | Priority | Hours | Severity |
+|---|------|-------------|----------|-------|----------|
+| 1 | Code Review | Review server.js and tests/server.test.js changes before merging to main branch. Verify JSDoc comments, error handling logic, and test coverage. | Medium | 1h | Low |
+| 2 | Production Deployment Verification | Deploy to staging/production environment and verify all endpoints respond correctly. Test graceful shutdown in container environment (Docker/Kubernetes). | Medium | 1h | Low |
+| 3 | Documentation Review | Review README.md and ensure deployment documentation matches new health endpoint and error handling behavior. | Low | 0.5h | Low |
+| 4 | Security Scan | Run npm audit and verify no security vulnerabilities in dependencies. Consider adding Helmet.js for production (out of current scope). | Low | 0.5h | Low |
+| **Total** | | | | **3h** | |
 
 ---
 
 ## Risk Assessment
 
 ### Technical Risks
-| Risk | Severity | Likelihood | Mitigation |
-|------|----------|------------|------------|
-| No error handling middleware | Low | Low | Tutorial scope - add for production |
-| Missing health check endpoint | Low | Medium | Add `/health` endpoint for monitoring |
 
-### Security Risks
 | Risk | Severity | Likelihood | Mitigation |
 |------|----------|------------|------------|
-| No HTTPS/TLS | Low | Low | Tutorial runs on localhost; configure for production |
-| No helmet.js | Low | Low | Add security headers for production |
-| No rate limiting | Low | Low | Add rate limiting for production |
+| Port conflict on startup | Low | Low | Server handles EADDRINUSE error gracefully with clear error message |
+| Unhandled promise rejections | Low | Low | Process-level handler implemented to catch and log |
+| Memory leaks during shutdown | Low | Very Low | 10-second timeout ensures forced exit if shutdown hangs |
 
 ### Operational Risks
+
 | Risk | Severity | Likelihood | Mitigation |
 |------|----------|------------|------------|
-| No request logging | Low | Medium | Add morgan middleware for production |
-| No process manager | Medium | Medium | Use PM2 or Docker for production |
+| Health check false positives | Low | Very Low | Health endpoint returns 503 when shutting down |
+| Request loss during restart | Low | Low | Graceful shutdown allows existing requests to complete |
+
+### Security Risks
+
+| Risk | Severity | Likelihood | Mitigation |
+|------|----------|------------|------------|
+| Stack trace exposure | Low | Low | Stack traces only shown in development mode |
+| Error message information leak | Low | Low | Generic error messages used in production |
 
 ### Integration Risks
+
 | Risk | Severity | Likelihood | Mitigation |
 |------|----------|------------|------------|
-| No database integration | N/A | N/A | Intentionally out of scope |
+| Container orchestration compatibility | Low | Very Low | Standard SIGTERM/SIGINT handling implemented |
+| Test framework conflicts | None | None | Tests use supertest without starting live server |
 
 ---
 
-## Production Hardening Recommendations (Optional)
+## Git Repository Status
 
-For production deployment, consider adding:
-
-1. **Security middleware (helmet.js):**
-```bash
-npm install helmet
-```
-
-2. **Request logging (morgan):**
-```bash
-npm install morgan
-```
-
-3. **Health check endpoint:**
-```javascript
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'healthy' });
-});
-```
-
-4. **Process manager:**
-```bash
-npm install -g pm2
-pm2 start server.js
-```
+- **Branch**: `blitzy-46c4de7d-633f-4303-9beb-4284a6ac12a8`
+- **Working Tree**: Clean (all changes committed)
+- **Commits on Branch**: 12 total
+- **Key Commits**:
+  - `9b31c87`: feat: Add production-ready features to server.js
+  - `c727d3f`: Expand test suite from 2 to 27 tests for server.js
+  - `b50aadc`: Expand test coverage from 2 to 27 tests for server.js
 
 ---
 
 ## Conclusion
 
-The Express.js feature addition has been successfully implemented with:
-- ✅ All requested features complete
-- ✅ 100% test pass rate
-- ✅ Zero security vulnerabilities
-- ✅ Comprehensive documentation
+The production-ready Express.js server enhancement project is **80% complete** with 12 hours of development work completed out of 15 total hours. All code changes specified in the Agent Action Plan have been implemented and validated:
 
-**Project Status: 80% Complete (4 hours completed out of 5 total hours)**
+- ✅ **server.js**: Enhanced from 17 to 319 lines with all 10 production-ready features
+- ✅ **tests/server.test.js**: Expanded from 2 to 27 tests with 100% pass rate
+- ✅ **Runtime Validation**: All endpoints functional, graceful shutdown verified
+- ✅ **Zero Issues**: No compilation errors, test failures, or runtime errors
 
-The remaining 1 hour of work consists of production configuration and deployment tasks that require human intervention to set environment-specific values and deploy to the target infrastructure.
+The remaining 3 hours consist of human review and deployment tasks that require manual verification before production deployment. The codebase is production-ready and meets all specifications from the Agent Action Plan.
