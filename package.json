@@ -5,13 +5,21 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "start:prod": "pm2 start ecosystem.config.js --env production",
+    "stop": "pm2 stop ecosystem.config.js",
+    "restart": "pm2 restart ecosystem.config.js",
     "test": "jest"
   },
   "engines": {
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "express": "^4.21.2"
+    "compression": "^1.8.1",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^4.21.2",
+    "helmet": "^8.1.0",
+    "morgan": "^1.10.1"
   },
   "devDependencies": {
     "jest": "^29.7.0",

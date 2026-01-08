@@ -4,1108 +4,1103 @@
 
 ## 0.1 Intent Clarification
 
-This section translates the user's requirements into precise technical language and identifies all implicit requirements for the Express.js feature addition.
+This section transforms the user's requirements into precise technical language and surfaces all implicit requirements for enhancing the Express.js server with production-ready capabilities.
 
-### 0.1.1 Core Feature Objective
+### 0.1.1 Core Objective
 
-Based on the prompt, the Blitzy platform understands that the new feature requirement is to:
+Based on the provided requirements, the Blitzy platform understands that the objective is to:
 
-- **Integrate Express.js Framework**: Add the Express.js web framework to an existing Node.js server project that currently hosts a basic HTTP endpoint
-- **Add New Endpoint**: Create an additional HTTP endpoint that returns a "Good evening" greeting response
-- **Maintain Existing Functionality**: Preserve the existing "Hello world" endpoint while extending the application
+- **Enhance Existing Express.js Server**: Extend the current basic HTTP server with production-grade middleware, environment configuration, structured logging, and process management capabilities
+- **Implement Security Middleware**: Add helmet.js for HTTP security headers and CORS support for cross-origin requests
+- **Configure Environment Management**: Integrate dotenv for environment variable management from `.env` files
+- **Add Request Logging**: Implement morgan middleware for HTTP request logging in production-appropriate formats
+- **Prepare PM2 Deployment**: Create ecosystem configuration for PM2 process management with cluster mode support
 
 | Requirement ID | Feature Requirement | Enhanced Clarity |
 |----------------|---------------------|------------------|
-| REQ-001 | Add Express.js to the project | Install Express.js as a dependency and refactor the server to use Express routing and middleware patterns |
-| REQ-002 | Add endpoint returning "Good evening" | Create a new GET endpoint at `/evening` path that returns the exact string "Good evening" with HTTP 200 status |
-| REQ-003 | Maintain "Hello world" endpoint | Preserve the root endpoint `GET /` that returns "Hello world" |
+| REQ-001 | Add middleware | Integrate helmet (security headers), morgan (logging), cors (CORS support), and compression (response compression) middleware |
+| REQ-002 | Add routing | Organize routes with Express Router pattern and add health check endpoint for monitoring |
+| REQ-003 | Environment config | Implement dotenv for `.env` file parsing with support for development and production environments |
+| REQ-004 | Add logging | Configure morgan with 'combined' format for production and 'dev' format for development |
+| REQ-005 | PM2 deployment | Create `ecosystem.config.js` with cluster mode, environment variables, and log rotation |
 
 **Implicit Requirements Detected:**
 
-- The server must export the Express app instance for testability (`module.exports = app`)
-- The server should use conditional startup pattern (`require.main === module`) to prevent port binding during tests
-- Test coverage must be added/updated for the new endpoint
-- Documentation (README, Postman collection) should reflect both endpoints
+- The server must gracefully handle uncaught exceptions and unhandled promise rejections
+- Environment-specific middleware configuration (e.g., morgan format differs by NODE_ENV)
+- Health check endpoint (`/health`) for load balancer and monitoring integration
+- Trust proxy settings for deployments behind reverse proxies (Nginx, AWS ALB)
+- Error handling middleware for consistent error responses
 
 **Feature Dependencies and Prerequisites:**
 
-- Node.js runtime ≥18.0.0 (as specified in `engines` field)
-- npm package manager for dependency installation
-- Express.js ^4.21.2 as the web framework
-- Jest ^29.7.0 and Supertest ^7.0.0 for testing infrastructure
+- Node.js runtime v20.19.6 (currently installed, satisfies ≥18.0.0 requirement)
+- npm package manager v11.1.0 (currently installed)
+- Express.js ^4.21.2 (already installed)
+- New production dependencies: helmet, morgan, cors, compression, dotenv
+- PM2 process manager (global installation for production deployment)
 
-### 0.1.2 Special Instructions and Constraints
+### 0.1.2 Task Categorization
+
+- **Primary Task Type**: Configuration + Feature Enhancement
+- **Secondary Aspects**: Security hardening, DevOps/deployment preparation, observability
+- **Scope Classification**: Cross-cutting change affecting server initialization, middleware stack, and deployment configuration
+
+### 0.1.3 Special Instructions and Constraints
 
 **User-Specified Directives:**
 
-- User Example: *"this is a tutorial of node js server hosting one endpoint that returns the response 'Hello world'. Could you add expressjs into the project and add another endpoint that return the reponse of 'Good evening'?"*
+- User Request: *"Enhance this basic HTTP server with Express.js framework, add routing, middleware, environment config, logging, and prepare for production deployment with PM2."*
 
-**Architectural Requirements:**
+**Environment Variables Provided:**
 
-- Maintain flat repository structure (single `server.js` entry point)
-- Use CommonJS module system (`require`/`module.exports`)
-- Follow Express.js routing conventions with `app.get()` pattern
-- Support configurable port via `PORT` environment variable with default of 3000
+| Variable | Source | Purpose |
+|----------|--------|---------|
+| DB_Host | User-provided environment | Database host configuration |
+| API_KEY | User-provided secret | External API authentication |
 
-**Environment Variables Available:**
+**Build Command Specified:**
 
-| Variable | Purpose | Status |
-|----------|---------|--------|
-| Api Key | External API authentication | Available in environment |
-| Token | Authentication token | Available in environment |
-| PORT | Server listening port | Default: 3000 |
+```bash
+npm run build
+```
 
-### 0.1.3 Technical Interpretation
+Note: The current `package.json` does not define a `build` script. This is acceptable for this Node.js project as no transpilation is required.
 
-These feature requirements translate to the following technical implementation strategy:
+### 0.1.4 Technical Interpretation
 
-| User Requirement | Technical Action | Specific Components |
-|------------------|------------------|---------------------|
-| Add Express.js to project | Install express package and configure as main HTTP framework | `package.json` dependencies, `server.js` imports |
-| Add "Good evening" endpoint | Create GET route handler at `/evening` path | `app.get('/evening', ...)` in `server.js` |
-| Return "Good evening" response | Implement response handler using `res.send()` | Route handler function with `res.send('Good evening')` |
-| Maintain backward compatibility | Preserve existing root endpoint implementation | `app.get('/', ...)` route handler |
+These requirements translate to the following technical implementation strategy:
+
+| User Requirement | Technical Action | Implementation Approach |
+|------------------|------------------|------------------------|
+| Add middleware | Install and configure security/utility middleware | Add helmet(), morgan(), cors(), compression() in correct order before routes |
+| Add routing | Implement Express Router pattern | Create routes directory with modular route definitions |
+| Environment config | Integrate dotenv at application entry | Load dotenv before any environment variable access; create comprehensive .env.example |
+| Add logging | Configure morgan with environment-aware formats | Use 'combined' for production, 'dev' for development with conditional logic |
+| PM2 deployment | Create ecosystem.config.js | Configure cluster mode, instances, environment variables, and log paths |
 
 **Implementation Strategy Summary:**
 
-- To **integrate Express.js**, we will **install** the express package and **refactor** `server.js` to use Express application instance
-- To **add the evening endpoint**, we will **create** a new route handler using `app.get('/evening', handler)`
-- To **ensure testability**, we will **export** the Express app instance and use conditional server startup
-- To **validate functionality**, we will **create/update** Jest tests with Supertest assertions
-
-### 0.1.4 Current Implementation Status
-
-**Critical Observation:** Repository analysis reveals that the requested features have **already been implemented**:
-
-| Feature | Status | Evidence |
-|---------|--------|----------|
-| Express.js Integration | ✅ Complete | `server.js` lines 15-18: `const express = require('express'); const app = express();` |
-| Hello World Endpoint | ✅ Complete | `server.js` lines 30-32: `app.get('/', (req, res) => { res.send('Hello world'); });` |
-| Good Evening Endpoint | ✅ Complete | `server.js` lines 41-43: `app.get('/evening', (req, res) => { res.send('Good evening'); });` |
-| Test Coverage | ✅ Complete | `tests/server.test.js`: 2 passing tests for both endpoints |
-| Documentation | ✅ Complete | `README.md`, `postman.json` document both endpoints |
-
-**Verification Evidence:**
-
-```bash
-npm test
-# PASS tests/server.test.js
-# ✓ GET / returns Hello world (32 ms)
-# ✓ GET /evening returns Good evening (11 ms)
-# Tests: 2 passed, 2 total
-```
+- To **add middleware**, we will **install** helmet, morgan, cors, compression packages and **configure** them in the correct middleware stack order in `server.js`
+- To **enhance routing**, we will **create** a health check endpoint and **document** API routes in README
+- To **configure environment**, we will **install** dotenv and **update** server.js to load environment variables at startup
+- To **add logging**, we will **configure** morgan with environment-aware format selection and optional file logging
+- To **enable PM2 deployment**, we will **create** `ecosystem.config.js` with cluster mode, environment configurations, and production settings
 
 
 ## 0.2 Repository Scope Discovery
 
-This section provides comprehensive analysis of all repository files affected by the Express.js feature addition, including existing files to modify, new files to create, and integration points.
+This section documents the comprehensive repository analysis conducted to identify all affected files and existing infrastructure patterns.
 
 ### 0.2.1 Comprehensive File Analysis
 
-**Repository Structure Overview:**
+**Files Identified for Modification:**
+
+| Category | Files | Pattern Match |
+|----------|-------|---------------|
+| Source Code | `server.js` | Main application entry point |
+| Configuration | `package.json` | Dependency manifest |
+| Configuration | `.env.example` | Environment template |
+| Documentation | `README.md` | Project documentation |
+| Tests | `tests/server.test.js` | Test suite |
+
+**New Files to Create:**
+
+| File | Purpose |
+|------|---------|
+| `ecosystem.config.js` | PM2 process manager configuration |
+| `.env` | Production environment variables (from template) |
+| `routes/index.js` | Route aggregation module (optional enhancement) |
+| `middleware/errorHandler.js` | Centralized error handling middleware (optional) |
+
+**Related Files Discovery:**
+
+| File | Relationship | Action Required |
+|------|--------------|-----------------|
+| `package-lock.json` | Auto-generated dependency lock | Will be updated by npm install |
+| `postman.json` | API collection | Update with health endpoint |
+| `.gitignore` | Version control exclusions | Ensure `.env` is excluded |
+
+### 0.2.2 Web Search Research Conducted
+
+**Best Practices Researched:**
+
+| Topic | Key Findings |
+|-------|--------------|
+| Express.js Production Best Practices | Setting NODE_ENV to "production" improves performance by 3x; use PM2 for process management; implement proper error handling |
+| PM2 Ecosystem Configuration | Use cluster mode with `instances: "max"` for CPU utilization; configure `ecosystem.config.js` for environment-specific settings |
+| Security Middleware (Helmet) | Latest version 8.1.0; automatically sets security headers including Content-Security-Policy, X-Content-Type-Options |
+| Request Logging (Morgan) | Use 'combined' format for production (Apache combined format); 'dev' for development with colored output |
+| Environment Configuration | dotenv 17.2.3 is latest; Node.js v20.6.0+ supports native `--env-file` flag as alternative |
+
+**Package Versions Verified:**
+
+| Package | Latest Version | Purpose |
+|---------|---------------|---------|
+| dotenv | 17.2.3 | Environment variable management |
+| helmet | 8.1.0 | Security HTTP headers |
+| morgan | 1.10.1 | HTTP request logging |
+| cors | 2.8.5 | Cross-Origin Resource Sharing |
+| compression | 1.8.1 | Response compression |
+| express-rate-limit | 8.2.1 | Rate limiting (recommended) |
+| pm2 | 6.0.14 | Process management |
+
+### 0.2.3 Existing Infrastructure Assessment
+
+**Current Project Structure:**
 
 ```
-/ (repository root)
-├── server.js                    # Express application entry point
-├── package.json                 # Dependencies and scripts
-├── package-lock.json            # Locked dependency versions
+/tmp/blitzy/Repo-Test-Sud/010126/
+├── server.js                    # Express application entry point (54 lines)
+├── package.json                 # npm configuration with Express ^4.21.2
+├── package-lock.json            # Dependency lock file
+├── .env.example                 # Environment template (PORT, DB)
+├── .gitignore                   # Git exclusions
 ├── README.md                    # Project documentation
-├── .env.example                 # Environment variable template
-├── postman.json                 # API collection for testing
 ├── tests/
-│   └── server.test.js           # Jest test suite
-└── blitzy/
-    └── documentation/
-        ├── Project Guide.md     # Implementation guide
-        └── Technical Specifications.md
+│   └── server.test.js           # Jest test suite (45 lines)
+├── blitzy/
+│   └── documentation/
+│       ├── Project Guide.md     # Implementation guide
+│       └── Technical Specifications.md
+└── postman.json                 # API collection
 ```
 
-**Files Identified for Feature Implementation:**
+**Existing Patterns to Follow:**
 
-| File Path | Type | Purpose | Modification Type |
-|-----------|------|---------|-------------------|
-| `server.js` | Source | Express application with route handlers | MODIFY - Add Express import and evening endpoint |
-| `package.json` | Config | Dependency manifest | MODIFY - Add express dependency |
-| `package-lock.json` | Config | Locked dependencies | AUTO-GENERATED - Updated by npm install |
-| `tests/server.test.js` | Test | Endpoint test coverage | MODIFY - Add test for evening endpoint |
-| `README.md` | Documentation | Usage documentation | MODIFY - Document new endpoint |
-| `postman.json` | Config | API collection | MODIFY - Add evening endpoint request |
-| `.env.example` | Config | Environment template | NO CHANGE - PORT config already present |
+| Pattern | Location | Description |
+|---------|----------|-------------|
+| CommonJS Modules | `server.js` | Uses `require()` and `module.exports` |
+| Environment Variables | `server.js:21` | `process.env.PORT \|\| 3000` pattern |
+| Conditional Startup | `server.js:46` | `require.main === module` for test compatibility |
+| JSDoc Comments | `server.js:1-10` | Block comments with parameter documentation |
+| Express Route Handlers | `server.js:30-32` | Arrow function handlers with req/res |
 
-### 0.2.2 Existing Modules Analysis
+**Build and Deployment:**
 
-**Source Files (src/**/*.js pattern):**
+| Aspect | Current State | Enhancement |
+|--------|---------------|-------------|
+| Start Command | `node server.js` | Add PM2 scripts |
+| Test Command | `jest` | No changes needed |
+| Build Command | Not defined | Not required for Node.js |
+| Process Management | None | Add PM2 ecosystem.config.js |
 
-| File | Lines | Current Purpose | Required Changes |
-|------|-------|-----------------|------------------|
-| `server.js` | 54 | Express application entry point | Express.js already integrated; both endpoints implemented |
+**Testing Infrastructure:**
 
-**Key Implementation Points in server.js:**
+| Component | Status | Details |
+|-----------|--------|---------|
+| Test Framework | ✅ Jest 29.7.0 | Configured in package.json |
+| HTTP Testing | ✅ Supertest 7.0.0 | Used for endpoint assertions |
+| Test Location | `tests/server.test.js` | 2 passing tests |
+| Coverage | Not configured | Optional enhancement |
 
+
+## 0.3 File Transformation Mapping
+
+This section provides a comprehensive mapping of all files requiring creation, modification, or deletion to implement the requested enhancements.
+
+### 0.3.1 File-by-File Execution Plan
+
+| Target File | Transformation | Source/Reference | Purpose/Changes |
+|-------------|----------------|------------------|-----------------|
+| `server.js` | UPDATE | `server.js` | Add middleware imports (helmet, morgan, cors, compression, dotenv); configure middleware stack; add health endpoint |
+| `package.json` | UPDATE | `package.json` | Add production dependencies; add PM2 scripts (start:prod, stop, restart) |
+| `.env.example` | UPDATE | `.env.example` | Add NODE_ENV, LOG_LEVEL, API_KEY placeholder, DB_Host reference |
+| `.env` | CREATE | `.env.example` | Create production environment file from template |
+| `ecosystem.config.js` | CREATE | PM2 documentation | Create PM2 ecosystem configuration with cluster mode |
+| `README.md` | UPDATE | `README.md` | Add middleware documentation, PM2 usage, health endpoint |
+| `tests/server.test.js` | UPDATE | `tests/server.test.js` | Add health endpoint test; update for middleware compatibility |
+| `postman.json` | UPDATE | `postman.json` | Add health check endpoint request |
+| `.gitignore` | UPDATE | `.gitignore` | Ensure .env is excluded, add PM2 log patterns |
+
+### 0.3.2 New Files Detail
+
+**ecosystem.config.js** - PM2 Process Manager Configuration
+- Content type: Configuration
+- Based on: PM2 official documentation patterns
+- Key sections:
+  - `apps` array with application configuration
+  - `name`: Application name for PM2 process list
+  - `script`: Entry point (`server.js`)
+  - `instances`: Cluster mode worker count (`max` or specific number)
+  - `exec_mode`: Set to `cluster` for load balancing
+  - `env`: Development environment variables
+  - `env_production`: Production environment variables
+  - `log_file`, `out_file`, `error_file`: Log file paths
+  - `max_memory_restart`: Memory threshold for automatic restart
+
+**.env** - Production Environment Configuration
+- Content type: Configuration
+- Based on: `.env.example` template
+- Key variables:
+  - `NODE_ENV=production`
+  - `PORT=3000`
+  - `DB_Host` (from user-provided environment)
+  - `API_KEY` (from user-provided secret)
+  - `LOG_LEVEL=info`
+
+### 0.3.3 Files to Modify Detail
+
+**server.js** - Main Application Entry Point
+
+Sections to update:
+- **Lines 1-15**: Add new imports for middleware packages
+- **Lines 17-22**: Add dotenv configuration call
+- **Lines 23-35**: Configure middleware stack in correct order
+- **Lines 45-50**: Add health check endpoint before server start
+
+New content to add:
 ```javascript
-// Lines 15-18: Express setup (IMPLEMENTED)
-const express = require('express');
-const app = express();
+// Middleware imports (after line 15)
+const helmet = require('helmet');
+const morgan = require('morgan');
+const cors = require('cors');
+const compression = require('compression');
+require('dotenv').config();
 
-// Lines 30-32: Root endpoint (IMPLEMENTED)
-app.get('/', (req, res) => {
-  res.send('Hello world');
-});
-
-// Lines 41-43: Evening endpoint (IMPLEMENTED)
-app.get('/evening', (req, res) => {
-  res.send('Good evening');
-});
+// Middleware configuration (after app creation)
+app.use(helmet());
+app.use(compression());
+app.use(cors());
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 ```
 
-**Test Files (**/*test*.js pattern):**
+**package.json** - Dependency and Script Configuration
 
-| File | Tests | Coverage | Status |
-|------|-------|----------|--------|
-| `tests/server.test.js` | 2 | Both endpoints | ✅ Complete |
+Sections to update:
+- `dependencies`: Add helmet, morgan, cors, compression, dotenv
+- `scripts`: Add PM2 management commands
 
-**Configuration Files (**/*.json, **/*.yaml):**
-
-| File | Purpose | Status |
-|------|---------|--------|
-| `package.json` | NPM configuration with express ^4.21.2 | ✅ Complete |
-| `package-lock.json` | Deterministic dependency resolution | ✅ Complete |
-| `postman.json` | API testing collection | ✅ Complete |
-| `.env.example` | Environment variable template | ✅ Complete |
-
-### 0.2.3 Integration Point Discovery
-
-**API Endpoints:**
-
-| Endpoint | Method | Response | Handler Location |
-|----------|--------|----------|------------------|
-| `/` | GET | "Hello world" | `server.js:30-32` |
-| `/evening` | GET | "Good evening" | `server.js:41-43` |
-
-**Service Architecture:**
-
-```mermaid
-graph LR
-    subgraph "Entry Point"
-        A[server.js]
-    end
-    
-    subgraph "Express Routes"
-        B[GET /]
-        C[GET /evening]
-    end
-    
-    subgraph "Testing"
-        D[server.test.js]
-    end
-    
-    A --> B
-    A --> C
-    D -->|imports| A
-    D -->|tests| B
-    D -->|tests| C
-```
-
-**Module Export Pattern:**
-
-- `server.js` exports `app` instance via `module.exports = app`
-- Enables in-process testing without network binding
-- Conditional startup pattern using `require.main === module`
-
-### 0.2.4 New File Requirements
-
-Based on the feature requirements, the following files would need to be created **if not already present**:
-
-**New Source Files (if not existing):**
-
-| Proposed File | Purpose | Status |
-|---------------|---------|--------|
-| `server.js` | Express application with both endpoints | ✅ Already exists and complete |
-
-**New Test Files (if not existing):**
-
-| Proposed File | Purpose | Status |
-|---------------|---------|--------|
-| `tests/server.test.js` | Unit tests for all endpoints | ✅ Already exists and complete |
-
-**New Configuration Files (if not existing):**
-
-| Proposed File | Purpose | Status |
-|---------------|---------|--------|
-| `postman.json` | API collection with both endpoints | ✅ Already exists and complete |
-
-### 0.2.5 Documentation Files
-
-| File | Purpose | Content Status |
-|------|---------|----------------|
-| `README.md` | Project documentation | ✅ Documents both endpoints, setup, and testing |
-| `blitzy/documentation/Project Guide.md` | Implementation guide | ✅ Complete with verification evidence |
-| `blitzy/documentation/Technical Specifications.md` | Technical requirements | ✅ Complete specification |
-
-### 0.2.6 Build and Deployment Files
-
-| File | Purpose | Impact |
-|------|---------|--------|
-| `package.json` | NPM scripts (start, test) | ✅ Scripts configured |
-| `amazon_cloudformation.yaml` | AWS infrastructure template | NO CHANGE - Not related to endpoint feature |
-| `apache.conf` | Apache HTTP configuration | NO CHANGE - Separate web server config |
-| `datadog.yaml` | Observability configuration | NO CHANGE - Monitoring setup |
-
-
-## 0.3 Dependency Inventory
-
-This section documents all private and public packages relevant to the Express.js feature addition, including exact versions and their purposes.
-
-### 0.3.1 Package Registry Overview
-
-**Primary Package Source:** npm (Node Package Manager)
-
-| Registry | URL | Authentication |
-|----------|-----|----------------|
-| npm public | https://registry.npmjs.org | Not required |
-
-### 0.3.2 Production Dependencies
-
-| Package | Registry | Version | Purpose | Status |
-|---------|----------|---------|---------|--------|
-| express | npm | ^4.21.2 | Web framework for HTTP routing and middleware | ✅ Installed |
-
-**Express.js Version Details:**
-
-- **Semantic Version**: `^4.21.2` (allows minor and patch updates within 4.x)
-- **License**: MIT
-- **Repository**: https://github.com/expressjs/express
-- **Purpose**: Provides HTTP server capabilities, routing, and middleware support
-
-### 0.3.3 Development Dependencies
-
-| Package | Registry | Version | Purpose | Status |
-|---------|----------|---------|---------|--------|
-| jest | npm | ^29.7.0 | JavaScript testing framework | ✅ Installed |
-| supertest | npm | ^7.0.0 | HTTP assertion library for testing | ✅ Installed |
-
-**Jest Version Details:**
-
-- **Semantic Version**: `^29.7.0`
-- **License**: MIT
-- **Purpose**: Test runner, assertion library, and mocking capabilities
-
-**Supertest Version Details:**
-
-- **Semantic Version**: `^7.0.0`
-- **License**: MIT
-- **Purpose**: HTTP assertions without starting a live server
-
-### 0.3.4 Runtime Requirements
-
-| Requirement | Specified Version | Installed Version | Status |
-|-------------|-------------------|-------------------|--------|
-| Node.js | >=18.0.0 | v20.19.6 | ✅ Compatible |
-| npm | >=8.0.0 (implied) | 11.1.0 | ✅ Compatible |
-
-**Engine Specification from package.json:**
-
+New content to add:
 ```json
-{
-  "engines": {
-    "node": ">=18.0.0"
-  }
+"dependencies": {
+  "express": "^4.21.2",
+  "helmet": "^8.1.0",
+  "morgan": "^1.10.1",
+  "cors": "^2.8.5",
+  "compression": "^1.8.1",
+  "dotenv": "^17.2.3"
+},
+"scripts": {
+  "start": "node server.js",
+  "start:prod": "pm2 start ecosystem.config.js --env production",
+  "stop": "pm2 stop ecosystem.config.js",
+  "restart": "pm2 restart ecosystem.config.js",
+  "test": "jest"
 }
 ```
 
-### 0.3.5 Dependency Manifest (package.json)
+**.env.example** - Environment Template
 
-**Complete dependency configuration:**
+Content to update:
+```env
+# Environment Configuration Template
+NODE_ENV=development
+PORT=3000
+LOG_LEVEL=info
 
-```json
-{
-  "name": "repo-test-sud",
-  "version": "1.0.0",
-  "description": "Node.js Express server tutorial",
-  "main": "server.js",
-  "scripts": {
-    "start": "node server.js",
-    "test": "jest"
-  },
-  "engines": {
-    "node": ">=18.0.0"
-  },
-  "dependencies": {
-    "express": "^4.21.2"
-  },
-  "devDependencies": {
-    "jest": "^29.7.0",
-    "supertest": "^7.0.0"
-  }
-}
+#### Database Configuration
+DB_Host=
+
+#### API Configuration
+API_KEY=
+
+#### Application Settings
+#### DB= (legacy, maintained for compatibility)
 ```
 
-### 0.3.6 Transitive Dependencies
+**README.md** - Project Documentation
 
-**Total packages installed:** 356 packages (as of npm install)
+Sections to add:
+- Middleware documentation section
+- PM2 deployment instructions
+- Health check endpoint documentation
+- Environment variables reference table
 
-**Key transitive dependencies from Express.js:**
+**.gitignore** - Version Control Exclusions
 
-| Package | Purpose |
-|---------|---------|
-| body-parser | Request body parsing middleware |
-| cookie | Cookie parsing utilities |
-| debug | Debug logging |
-| finalhandler | Final HTTP responder |
-| qs | Query string parsing |
-| send | Static file serving |
+Content to add (if not present):
+```
+.env
+.env.local
+.env.*.local
+*.log
+logs/
+.pm2/
+```
 
-### 0.3.7 Import Updates Required
+### 0.3.4 Configuration and Documentation Updates
+
+**Configuration Changes:**
+
+| Config File | Settings to Update | Impact |
+|-------------|-------------------|--------|
+| `package.json` | Add 5 new dependencies | Server will require additional npm install |
+| `package.json` | Add PM2 scripts | Enable `npm run start:prod` for production |
+| `.env.example` | Add NODE_ENV, LOG_LEVEL | Document all available configuration options |
+| `ecosystem.config.js` | Create new file | Enable PM2 process management with cluster mode |
+
+**Documentation Updates:**
+
+| Doc File | Sections to Update | Cross-references |
+|----------|-------------------|------------------|
+| `README.md` | Setup, Endpoints, Deployment | Link to ecosystem.config.js |
+| `postman.json` | Add health check request | Reference new /health endpoint |
+| `blitzy/documentation/Project Guide.md` | Update completion status | Mark middleware task complete |
+
+### 0.3.5 Cross-File Dependencies
+
+**Import/Reference Updates:**
+
+| Source File | Dependency | Action |
+|-------------|-----------|--------|
+| `server.js` | `dotenv` | Add `require('dotenv').config()` before env access |
+| `server.js` | `helmet` | Add `require('helmet')` |
+| `server.js` | `morgan` | Add `require('morgan')` |
+| `server.js` | `cors` | Add `require('cors')` |
+| `server.js` | `compression` | Add `require('compression')` |
+| `ecosystem.config.js` | `server.js` | Reference as entry script |
+
+**Middleware Stack Order:**
+
+The middleware must be configured in this specific order:
+1. `helmet()` - Security headers first
+2. `compression()` - Compress responses early
+3. `cors()` - CORS handling before routes
+4. `morgan()` - Logging after security middleware
+5. `express.json()` - Body parsing (if needed)
+6. Route handlers
+7. Error handling middleware (last)
+
+
+## 0.4 Dependency Inventory
+
+This section catalogs all dependencies required for the production enhancement implementation.
+
+### 0.4.1 Key Private and Public Packages
+
+**Production Dependencies:**
+
+| Registry | Package Name | Version | Purpose |
+|----------|--------------|---------|---------|
+| npm | express | ^4.21.2 | Web application framework (existing) |
+| npm | helmet | ^8.1.0 | Security HTTP headers middleware |
+| npm | morgan | ^1.10.1 | HTTP request logger middleware |
+| npm | cors | ^2.8.5 | Cross-Origin Resource Sharing middleware |
+| npm | compression | ^1.8.1 | Response compression middleware |
+| npm | dotenv | ^17.2.3 | Environment variable loader |
+
+**Development Dependencies (Existing):**
+
+| Registry | Package Name | Version | Purpose |
+|----------|--------------|---------|---------|
+| npm | jest | ^29.7.0 | Testing framework |
+| npm | supertest | ^7.0.0 | HTTP assertion library |
+
+**Global Dependencies (Production Server):**
+
+| Registry | Package Name | Version | Purpose |
+|----------|--------------|---------|---------|
+| npm | pm2 | ^6.0.14 | Production process manager |
+
+### 0.4.2 Dependency Updates
+
+**New Dependencies to Add:**
+
+| Package Name | Version | Reason for Addition |
+|--------------|---------|---------------------|
+| helmet | ^8.1.0 | Security best practice for Express.js production deployments; sets Content-Security-Policy, X-Content-Type-Options, X-Frame-Options |
+| morgan | ^1.10.1 | HTTP request logging for monitoring, debugging, and audit trail |
+| cors | ^2.8.5 | Enable cross-origin requests for API consumers |
+| compression | ^1.8.1 | Gzip compression reduces response sizes by up to 70% |
+| dotenv | ^17.2.3 | Load environment variables from .env files following 12-factor app methodology |
+
+**Dependencies to Update:**
+
+No existing dependencies require version updates. All current versions are compatible.
+
+**Dependencies to Remove:**
+
+No dependencies need to be removed.
+
+### 0.4.3 Import/Reference Updates
 
 **Files Requiring Import Updates:**
 
-| File Pattern | Import Statement | Status |
-|--------------|------------------|--------|
-| `server.js` | `const express = require('express');` | ✅ Already present |
-| `tests/server.test.js` | `const request = require('supertest');` | ✅ Already present |
-| `tests/server.test.js` | `const app = require('../server');` | ✅ Already present |
+| File | Update Required | Pattern |
+|------|-----------------|---------|
+| `server.js` | Add 5 new require statements | `const pkg = require('pkg')` |
 
-**Import Transformation Rules (if migrating from raw Node.js):**
+**Import Transformation Rules:**
 
-```javascript
-// Before (raw Node.js http module):
-const http = require('http');
+| Old Import | New Import | Apply To |
+|------------|------------|----------|
+| N/A | `require('dotenv').config()` | server.js (line 1-3, before other imports) |
+| N/A | `const helmet = require('helmet')` | server.js (after express import) |
+| N/A | `const morgan = require('morgan')` | server.js (after helmet import) |
+| N/A | `const cors = require('cors')` | server.js (after morgan import) |
+| N/A | `const compression = require('compression')` | server.js (after cors import) |
 
-// After (Express.js):
-const express = require('express');
-const app = express();
-```
-
-### 0.3.8 External Reference Updates
-
-**Configuration Files Updated:**
-
-| File | Change Type | Content |
-|------|-------------|---------|
-| `package.json` | Dependencies section | Express.js added |
-| `package-lock.json` | Auto-generated | Full dependency tree locked |
-
-**Documentation Files Updated:**
-
-| File | Change Type | Content |
-|------|-------------|---------|
-| `README.md` | Endpoints section | Both endpoints documented |
-| `postman.json` | Request collection | Evening endpoint request added |
-
-### 0.3.9 Dependency Installation Verification
-
-**Installation Command:**
+**Package Installation Command:**
 
 ```bash
-npm install
+npm install helmet@^8.1.0 morgan@^1.10.1 cors@^2.8.5 compression@^1.8.1 dotenv@^17.2.3
 ```
 
-**Verification Output:**
+**Global PM2 Installation (Production Server):**
 
-```
-added 355 packages, and audited 356 packages in 5s
-49 packages are looking for funding
-found 0 vulnerabilities
+```bash
+npm install -g pm2@latest
 ```
 
-**Audit Status:** ✅ No vulnerabilities found
+### 0.4.4 Dependency Compatibility Matrix
+
+| Package | Node.js Requirement | Express.js Compatibility | Status |
+|---------|---------------------|-------------------------|--------|
+| helmet@8.1.0 | ≥18.0.0 | Express 4.x, 5.x | ✅ Compatible |
+| morgan@1.10.1 | ≥0.8.0 | Express 4.x, 5.x | ✅ Compatible |
+| cors@2.8.5 | ≥0.10.0 | Express 4.x, 5.x | ✅ Compatible |
+| compression@1.8.1 | ≥0.8.0 | Express 4.x | ✅ Compatible |
+| dotenv@17.2.3 | ≥12.0.0 | N/A (standalone) | ✅ Compatible |
+| pm2@6.0.14 | ≥16.0.0 | N/A (process manager) | ✅ Compatible |
+
+**Project Runtime:**
+- Node.js: v20.19.6 (exceeds all minimum requirements)
+- npm: v11.1.0
+- Express.js: ^4.21.2
+
+All packages are fully compatible with the project's runtime environment.
 
 
-## 0.4 Integration Analysis
+## 0.5 Implementation Design
 
-This section documents all existing code touchpoints, dependency injections, and integration points affected by the Express.js feature addition.
+This section defines the technical approach and implementation strategy for enhancing the Express.js server with production-ready capabilities.
 
-### 0.4.1 Existing Code Touchpoints
+### 0.5.1 Technical Approach
+
+**Primary Objectives with Implementation Approach:**
+
+| Objective | Implementation Approach | Rationale |
+|-----------|------------------------|-----------|
+| Add security middleware | Configure helmet() as first middleware in stack | Helmet must be applied before any response is sent to set security headers |
+| Add request logging | Configure morgan with environment-aware format | 'combined' format provides Apache-style logs for production analysis |
+| Enable CORS | Configure cors() with production-safe defaults | Allow API consumption from different origins |
+| Compress responses | Configure compression() before routes | Reduce bandwidth and improve response times |
+| Load environment config | Call dotenv.config() at application start | Environment variables must be available before any code uses them |
+| Enable PM2 deployment | Create ecosystem.config.js with cluster mode | Leverage all CPU cores and enable zero-downtime restarts |
+
+**Logical Implementation Flow:**
+
+1. **First, establish environment configuration** by installing dotenv and loading `.env` at the earliest point in `server.js`
+2. **Next, configure security middleware** by adding helmet() as the first middleware after app creation
+3. **Then, add utility middleware** (compression, cors, morgan) in the correct order
+4. **After that, add health endpoint** for load balancer health checks and monitoring
+5. **Finally, create PM2 configuration** with ecosystem.config.js for production deployment
+
+### 0.5.2 Component Impact Analysis
 
 **Direct Modifications Required:**
 
-| File | Location | Modification Purpose | Status |
-|------|----------|---------------------|--------|
-| `server.js` | Lines 15-18 | Add Express.js import and app initialization | ✅ Complete |
-| `server.js` | Lines 30-32 | Root endpoint handler | ✅ Complete |
-| `server.js` | Lines 41-43 | Evening endpoint handler | ✅ Complete |
-| `server.js` | Lines 46-50 | Conditional server startup | ✅ Complete |
-| `server.js` | Line 53 | App instance export | ✅ Complete |
+| Component | Modification | Purpose |
+|-----------|--------------|---------|
+| server.js | Add middleware imports and configuration | Enable security, logging, compression, CORS |
+| server.js | Add health check endpoint | Provide monitoring endpoint |
+| package.json | Add dependencies and scripts | Install packages and enable PM2 commands |
+| .env.example | Expand environment template | Document all configuration options |
 
-**Integration Flow Diagram:**
+**Indirect Impacts:**
 
-```mermaid
-graph TB
-    subgraph "Application Entry"
-        A[server.js]
-    end
-    
-    subgraph "Framework Layer"
-        B[Express.js]
-        C[app instance]
-    end
-    
-    subgraph "Route Handlers"
-        D["GET / handler"]
-        E["GET /evening handler"]
-    end
-    
-    subgraph "Response Layer"
-        F["'Hello world'"]
-        G["'Good evening'"]
-    end
-    
-    subgraph "Test Integration"
-        H[supertest]
-        I[server.test.js]
-    end
-    
-    A --> B
-    B --> C
-    C --> D
-    C --> E
-    D --> F
-    E --> G
-    I --> H
-    H --> C
-```
+| Component | Impact | Action Required |
+|-----------|--------|-----------------|
+| tests/server.test.js | Health endpoint needs testing | Add new test case |
+| README.md | Documentation needs updating | Add middleware and PM2 sections |
+| postman.json | New endpoint to document | Add health check request |
+| package-lock.json | Will be regenerated | Auto-updated by npm install |
 
-### 0.4.2 Module Export Pattern Integration
+**New Components Introduction:**
 
-**Export Configuration in server.js:**
+| Component | Type | Responsibility |
+|-----------|------|----------------|
+| ecosystem.config.js | Configuration | PM2 process management with cluster mode, environment variables, logging |
+
+### 0.5.3 Critical Implementation Details
+
+**Middleware Stack Order (Critical):**
 
 ```javascript
-// Export app instance for testing (line 53)
-module.exports = app;
+// Order matters! Configure in this sequence:
+app.use(helmet());            // 1. Security headers first
+app.use(compression());       // 2. Compress early for performance
+app.use(cors());              // 3. CORS before route handling
+app.use(morgan(format));      // 4. Log after security, before routes
+// Routes come after middleware
+app.get('/health', ...);
+app.get('/', ...);
+app.get('/evening', ...);
 ```
 
-**Consumer Integration in tests/server.test.js:**
+**Environment-Aware Logging:**
 
 ```javascript
-// Import the Express app from server.js (line 18)
-const app = require('../server');
+const morganFormat = process.env.NODE_ENV === 'production' 
+  ? 'combined' 
+  : 'dev';
+app.use(morgan(morganFormat));
 ```
 
-**Testability Pattern:**
-
-| Pattern | Implementation | Purpose |
-|---------|----------------|---------|
-| Module Export | `module.exports = app` | Enables app import in test files |
-| Conditional Startup | `require.main === module` | Prevents port binding during test imports |
-| In-Process Testing | Supertest mounts app directly | No network listener required for tests |
-
-### 0.4.3 Configuration Integration Points
-
-**Environment Variable Integration:**
-
-| Variable | Integration Point | Default Value | Usage |
-|----------|-------------------|---------------|-------|
-| PORT | `server.js` line 21 | 3000 | `process.env.PORT \|\| 3000` |
-
-**Configuration Flow:**
-
-```mermaid
-graph LR
-    A[.env file] -->|process.env| B[server.js]
-    C[.env.example] -->|template| A
-    B -->|PORT| D[app.listen]
-    D -->|binds| E[HTTP Server]
-```
-
-### 0.4.4 HTTP Routing Integration
-
-**Express Router Configuration:**
-
-| Route | Method | Handler | Response Type |
-|-------|--------|---------|---------------|
-| `/` | GET | Arrow function | text/plain |
-| `/evening` | GET | Arrow function | text/plain |
-
-**Route Handler Implementation Pattern:**
+**PM2 Cluster Mode Configuration:**
 
 ```javascript
-// Standard Express route handler pattern
-app.get('/path', (req, res) => {
-  res.send('Response text');
+module.exports = {
+  apps: [{
+    name: 'express-server',
+    script: './server.js',
+    instances: 'max',           // Use all CPU cores
+    exec_mode: 'cluster',       // Enable cluster mode
+    env: {
+      NODE_ENV: 'development',
+      PORT: 3000
+    },
+    env_production: {
+      NODE_ENV: 'production',
+      PORT: 3000
+    }
+  }]
+};
+```
+
+**Health Check Endpoint Design:**
+
+```javascript
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
 });
 ```
 
-### 0.4.5 Test Framework Integration
+### 0.5.4 Design Patterns Employed
 
-**Jest Configuration:**
+| Pattern | Application | Benefit |
+|---------|-------------|---------|
+| Middleware Pipeline | Express middleware stack | Clean separation of concerns |
+| Environment Configuration | dotenv + .env files | 12-factor app compliance |
+| Health Check Pattern | /health endpoint | Load balancer integration |
+| Cluster Mode | PM2 cluster | Horizontal scaling on single machine |
+| Graceful Shutdown | PM2 built-in handling | Zero-downtime deployments |
 
-| Setting | Value | Source |
-|---------|-------|--------|
-| Test Command | `jest` | package.json scripts.test |
-| Test Discovery | `*.test.js` pattern | Jest defaults |
-| Test Location | `tests/` directory | Convention |
+### 0.5.5 Error Handling Considerations
 
-**Supertest Integration:**
+**Current State:**
+The existing server does not have centralized error handling middleware.
 
-| Integration Point | Purpose | Implementation |
-|-------------------|---------|----------------|
-| App Import | Direct module import | `require('../server')` |
-| Request Builder | HTTP request simulation | `request(app).get(path)` |
-| Response Assertions | Status and body validation | `expect(response.status).toBe(200)` |
-
-**Test Execution Flow:**
-
-```mermaid
-sequenceDiagram
-    participant Jest as Jest Runner
-    participant Test as server.test.js
-    participant ST as Supertest
-    participant App as Express App
-    
-    Jest->>Test: Execute test suite
-    Test->>App: Import via require
-    Test->>ST: Create request(app)
-    ST->>App: Mount app in-process
-    ST->>App: Execute GET /
-    App->>ST: Return response
-    ST->>Test: Provide response object
-    Test->>Jest: Assert and report
-```
-
-### 0.4.6 Documentation Integration
-
-**README.md Integration:**
-
-| Section | Content | Status |
-|---------|---------|--------|
-| Setup | npm install, npm start | ✅ Complete |
-| Endpoints | Route table with responses | ✅ Complete |
-| Testing | npm test command | ✅ Complete |
-| Environment | PORT and DB variables | ✅ Complete |
-
-**Postman Collection Integration:**
-
-| Request Name | Method | URL | Status |
-|--------------|--------|-----|--------|
-| Hello World Endpoint | GET | http://localhost:3000/ | ✅ Complete |
-| Good Evening Endpoint | GET | http://localhost:3000/evening | ✅ Complete |
-
-### 0.4.7 No Database/Schema Changes Required
-
-This feature addition does not require any database or schema modifications:
-
-| Aspect | Requirement | Reason |
-|--------|-------------|--------|
-| Database Models | Not required | Endpoints return static strings |
-| Migrations | Not required | No data persistence |
-| Schema Updates | Not required | Stateless operation |
-
-
-## 0.5 Technical Implementation
-
-This section provides the file-by-file execution plan and implementation approach for the Express.js feature addition.
-
-### 0.5.1 File-by-File Execution Plan
-
-**CRITICAL:** Every file listed below has been created or modified as part of this feature implementation.
-
-#### Group 1 - Core Feature Files
-
-| Action | File | Purpose | Status |
-|--------|------|---------|--------|
-| MODIFY | `server.js` | Integrate Express.js framework and add route handlers | ✅ Complete |
-| MODIFY | `package.json` | Add express dependency to project | ✅ Complete |
-| AUTO | `package-lock.json` | Lock dependency versions | ✅ Complete |
-
-**server.js Implementation:**
+**Recommended Enhancement (Optional):**
 
 ```javascript
-// Express import and app creation
-const express = require('express');
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-// Route handlers
-app.get('/', (req, res) => { /* ... */ });
-app.get('/evening', (req, res) => { /* ... */ });
-```
-
-#### Group 2 - Supporting Infrastructure
-
-| Action | File | Purpose | Status |
-|--------|------|---------|--------|
-| MODIFY | `.env.example` | Document PORT environment variable | ✅ Complete |
-| NO CHANGE | `apache.conf` | Unrelated infrastructure config | N/A |
-| NO CHANGE | `datadog.yaml` | Unrelated observability config | N/A |
-
-#### Group 3 - Tests and Documentation
-
-| Action | File | Purpose | Status |
-|--------|------|---------|--------|
-| MODIFY | `tests/server.test.js` | Add test coverage for both endpoints | ✅ Complete |
-| MODIFY | `README.md` | Document endpoints and usage | ✅ Complete |
-| MODIFY | `postman.json` | Add API requests for both endpoints | ✅ Complete |
-
-### 0.5.2 Implementation Approach per File
-
-## server.js - Express Application Entry Point
-
-**Implementation Steps:**
-
-1. **Import Express framework** (line 15)
-   - Add `const express = require('express');`
-   
-2. **Create Express application instance** (line 18)
-   - Add `const app = express();`
-   
-3. **Configure port** (line 21)
-   - Add `const PORT = process.env.PORT || 3000;`
-   
-4. **Define root endpoint** (lines 30-32)
-   - Add `app.get('/', handler)` returning "Hello world"
-   
-5. **Define evening endpoint** (lines 41-43)
-   - Add `app.get('/evening', handler)` returning "Good evening"
-   
-6. **Implement conditional startup** (lines 46-50)
-   - Add `require.main === module` check before `app.listen()`
-   
-7. **Export app instance** (line 53)
-   - Add `module.exports = app;`
-
-**Final Implementation Structure:**
-
-```javascript
-'use strict';
-const express = require('express');
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.get('/', (req, res) => {
-  res.send('Hello world');
+// Error handling middleware (add at end of middleware stack)
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Internal Server Error' });
 });
-
-app.get('/evening', (req, res) => {
-  res.send('Good evening');
-});
-
-if (require.main === module) {
-  app.listen(PORT, () => { /* ... */ });
-}
-
-module.exports = app;
 ```
 
-## package.json - Dependency Configuration
+**PM2 Error Recovery:**
+- Automatic restart on crash (default behavior)
+- `max_memory_restart` for memory leak protection
+- `exp_backoff_restart_delay` for preventing restart loops
 
-**Implementation Steps:**
+### 0.5.6 Performance Considerations
 
-1. **Add express to dependencies**
-   ```json
-   "dependencies": {
-     "express": "^4.21.2"
-   }
-   ```
+| Enhancement | Performance Impact |
+|-------------|-------------------|
+| compression() middleware | Reduces response size by 50-70%, faster transfers |
+| PM2 cluster mode | Utilizes all CPU cores, handles more concurrent requests |
+| NODE_ENV=production | Enables Express.js view caching, 3x performance improvement |
+| Helmet caching | Sets appropriate cache headers for static assets |
 
-2. **Configure npm scripts**
-   ```json
-   "scripts": {
-     "start": "node server.js",
-     "test": "jest"
-   }
-   ```
+### 0.5.7 Security Considerations
 
-3. **Specify Node.js engine requirement**
-   ```json
-   "engines": {
-     "node": ">=18.0.0"
-   }
-   ```
-
-### tests/server.test.js - Test Coverage
-
-**Implementation Steps:**
-
-1. **Import test dependencies**
-   ```javascript
-   const request = require('supertest');
-   const app = require('../server');
-   ```
-
-2. **Create test suite structure**
-   - Describe block: "Express Server Endpoints"
-   - Nested describe: "GET /"
-   - Nested describe: "GET /evening"
-
-3. **Implement endpoint tests**
-   - Test GET / returns 200 and "Hello world"
-   - Test GET /evening returns 200 and "Good evening"
-
-## README.md - Documentation
-
-**Implementation Steps:**
-
-1. **Add endpoints table**
-   | Route | Method | Response |
-   |-------|--------|----------|
-   | `/` | GET | "Hello world" |
-   | `/evening` | GET | "Good evening" |
-
-2. **Document setup commands**
-   - `npm install`
-   - `npm start`
-   - `npm test`
-
-## postman.json - API Collection
-
-**Implementation Steps:**
-
-1. **Add Hello World endpoint request**
-   - Method: GET
-   - URL: http://localhost:3000/
-
-2. **Add Good Evening endpoint request**
-   - Method: GET
-   - URL: http://localhost:3000/evening
-
-### 0.5.3 Implementation Verification Commands
-
-| Step | Command | Expected Result |
-|------|---------|-----------------|
-| Install dependencies | `npm install` | Exit code 0, no vulnerabilities |
-| Run tests | `npm test` | 2/2 tests passing |
-| Start server | `npm start` | Server running on port 3000 |
-| Test root endpoint | `curl http://localhost:3000/` | "Hello world" |
-| Test evening endpoint | `curl http://localhost:3000/evening` | "Good evening" |
-
-### 0.5.4 Implementation Completion Evidence
-
-**All verification commands executed successfully:**
-
-```bash
-# Dependency installation
-$ npm install
-added 355 packages, audited 356 packages
-found 0 vulnerabilities
-
-#### Test execution
-$ npm test
-PASS tests/server.test.js
-  ✓ GET / returns Hello world (32 ms)
-  ✓ GET /evening returns Good evening (11 ms)
-Tests: 2 passed, 2 total
-```
+| Middleware | Security Benefit |
+|------------|------------------|
+| helmet() | Sets Content-Security-Policy, X-Content-Type-Options, X-Frame-Options, Strict-Transport-Security |
+| cors() | Controls which origins can access the API |
+| Rate limiting (recommended) | Prevents brute force and DDoS attacks |
+| .env exclusion | Keeps secrets out of version control |
 
 
 ## 0.6 Scope Boundaries
 
-This section defines the exhaustive boundaries of what is included in and excluded from the Express.js feature addition scope.
+This section defines clear boundaries for what is included and excluded from the implementation scope.
 
 ### 0.6.1 Exhaustively In Scope
 
-**Core Application Files:**
+**Source Code Changes:**
 
-| Pattern | Files Matched | Purpose |
-|---------|---------------|---------|
-| `server.js` | 1 file | Express application entry point with route handlers |
-| `package.json` | 1 file | Dependency manifest with express ^4.21.2 |
-| `package-lock.json` | 1 file | Locked dependency tree |
+| Pattern | Files | Description |
+|---------|-------|-------------|
+| `server.js` | Main entry point | Add middleware imports, configuration, health endpoint |
+| `routes/*.js` | Route modules (optional) | Modular route organization if implemented |
 
-**Test Files:**
+**Configuration Updates:**
 
-| Pattern | Files Matched | Purpose |
-|---------|---------------|---------|
-| `tests/**/*.test.js` | 1 file | Jest test suite for endpoint verification |
-| `tests/server.test.js` | Explicit | Supertest-based HTTP assertions |
+| Pattern | Files | Description |
+|---------|-------|-------------|
+| `package.json` | Dependency manifest | Add production dependencies, PM2 scripts |
+| `.env.example` | Environment template | Expand with all configuration variables |
+| `.env` | Environment config | Create from template with actual values |
+| `ecosystem.config.js` | PM2 configuration | Create new file for process management |
+| `.gitignore` | VCS exclusions | Ensure .env and logs excluded |
+
+**Documentation Updates:**
+
+| Pattern | Files | Description |
+|---------|-------|-------------|
+| `README.md` | Project readme | Add middleware, deployment, health endpoint docs |
+| `postman.json` | API collection | Add health check endpoint request |
+| `blitzy/documentation/*.md` | Blitzy docs | Update completion status |
+
+**Test Updates:**
+
+| Pattern | Files | Description |
+|---------|-------|-------------|
+| `tests/server.test.js` | Jest tests | Add health endpoint test case |
+| `tests/*.test.js` | Additional tests (optional) | Middleware-specific tests if needed |
+
+### 0.6.2 Explicitly Out of Scope
+
+**Related Features Not Specified:**
+
+| Feature | Reason for Exclusion |
+|---------|---------------------|
+| Database integration | Not mentioned in user requirements; DB_Host provided for configuration only |
+| Authentication/Authorization | Not mentioned in user requirements |
+| API versioning | Not mentioned in user requirements |
+| WebSocket support | Not mentioned in user requirements |
+| File upload handling | Not mentioned in user requirements |
+
+**Performance Optimizations Beyond Requirements:**
+
+| Optimization | Reason for Exclusion |
+|--------------|---------------------|
+| Redis caching | Not mentioned; adds infrastructure complexity |
+| CDN integration | Not mentioned; requires external service |
+| Database connection pooling | No database integration in scope |
+| Load balancer configuration | PM2 handles basic load balancing internally |
+
+**Refactoring Unrelated to Core Objectives:**
+
+| Refactoring | Reason for Exclusion |
+|-------------|---------------------|
+| TypeScript migration | Not mentioned; maintains existing CommonJS pattern |
+| ES modules migration | Not mentioned; maintains existing require() pattern |
+| Directory restructuring | Minimal changes; maintains flat structure |
+| Code style/linting | Not mentioned; existing style preserved |
+
+**Additional Tooling Not Mentioned:**
+
+| Tool | Reason for Exclusion |
+|------|---------------------|
+| Docker containerization | Not mentioned; PM2 specified for deployment |
+| Kubernetes orchestration | Not mentioned; beyond scope |
+| CI/CD pipeline | Not mentioned; manual deployment assumed |
+| Monitoring/APM tools | Not mentioned; PM2 monitoring sufficient |
+
+**Future Enhancements Not Part of Current Request:**
+
+| Enhancement | Reason for Exclusion |
+|-------------|---------------------|
+| GraphQL endpoint | Not mentioned |
+| OpenAPI/Swagger documentation | Not mentioned |
+| Input validation middleware | Not mentioned |
+| Session management | Not mentioned |
+| Email integration | Not mentioned |
+
+### 0.6.3 Boundary Clarifications
+
+**Middleware Scope:**
+
+| Middleware | Included | Notes |
+|------------|----------|-------|
+| helmet | ✅ Yes | Security headers |
+| morgan | ✅ Yes | Request logging |
+| cors | ✅ Yes | CORS support |
+| compression | ✅ Yes | Response compression |
+| express-rate-limit | ❌ No | Recommended but not explicitly requested |
+| express-validator | ❌ No | Not mentioned |
+| body-parser | ❌ No | Express built-in sufficient |
+
+**Routing Scope:**
+
+| Route Enhancement | Included | Notes |
+|-------------------|----------|-------|
+| Health check endpoint | ✅ Yes | Required for PM2/load balancer |
+| Route modularization | ⚠️ Optional | Can remain in server.js |
+| API versioning | ❌ No | Not mentioned |
+| Route documentation | ✅ Yes | README update |
+
+**PM2 Configuration Scope:**
+
+| PM2 Feature | Included | Notes |
+|-------------|----------|-------|
+| Basic ecosystem.config.js | ✅ Yes | Core requirement |
+| Cluster mode | ✅ Yes | Best practice for production |
+| Environment configs | ✅ Yes | dev/production environments |
+| Log rotation | ⚠️ Optional | pm2-logrotate module |
+| Remote deployment | ❌ No | Local deployment only |
+
+### 0.6.4 Exclusion Rationale
+
+| Exclusion Category | Rationale |
+|-------------------|-----------|
+| Database integration | User provided DB_Host as environment variable; integration not requested |
+| Authentication | Security middleware (helmet) requested, not auth system |
+| Advanced monitoring | PM2 provides built-in monitoring; external APM not requested |
+| Container orchestration | PM2 explicitly requested for deployment |
+| Code refactoring | User requested enhancement, not architectural changes |
+
+
+## 0.7 Execution Parameters
+
+This section documents special execution instructions and constraints for the implementation.
+
+### 0.7.1 Special Execution Instructions
+
+**Process-Specific Requirements:**
+
+| Requirement | Description | Command/Action |
+|-------------|-------------|----------------|
+| Dependency Installation | Install new production packages | `npm install helmet morgan cors compression dotenv` |
+| PM2 Global Installation | Install PM2 globally on production server | `npm install -g pm2` |
+| Environment Setup | Create .env from template | `cp .env.example .env && edit .env` |
+| Test Execution | Verify all tests pass after changes | `npm test` |
+| Production Start | Start with PM2 in production mode | `npm run start:prod` or `pm2 start ecosystem.config.js --env production` |
+
+**Tools and Platforms:**
+
+| Tool | Version | Purpose | Required |
+|------|---------|---------|----------|
+| Node.js | v20.19.6 | Runtime | ✅ Installed |
+| npm | v11.1.0 | Package manager | ✅ Installed |
+| PM2 | ^6.0.14 | Process manager | ⚠️ Global install needed |
+| Jest | ^29.7.0 | Testing | ✅ Installed |
+| Git | Any | Version control | ✅ Assumed |
+
+**Quality/Style Requirements:**
+
+| Requirement | Description |
+|-------------|-------------|
+| Code Comments | Maintain JSDoc-style block comments for new code |
+| CommonJS Modules | Use `require()` and `module.exports` (existing pattern) |
+| Arrow Functions | Use arrow functions for route handlers (existing pattern) |
+| 'use strict' | Maintain strict mode declaration |
+
+### 0.7.2 Constraints and Boundaries
+
+**Technical Constraints:**
+
+| Constraint | Description | Impact |
+|------------|-------------|--------|
+| Node.js ≥18.0.0 | Engine requirement in package.json | All packages compatible |
+| CommonJS modules | Existing codebase uses require() | Maintain pattern |
+| Flat structure | Single server.js entry point | Minimal refactoring |
+| Express 4.x | Current framework version | Middleware compatibility verified |
+
+**Process Constraints:**
+
+| Constraint | Description |
+|------------|-------------|
+| Preserve existing endpoints | Root (/) and evening (/evening) routes must remain functional |
+| Maintain test compatibility | Existing tests must continue passing |
+| Non-breaking changes | Application should work with/without .env file present |
+| Backward compatible | Default values for all environment variables |
+
+**Output Constraints:**
+
+| Output | Constraint |
+|--------|------------|
+| Response format | Maintain plain text responses for existing endpoints |
+| Health endpoint | JSON response format for monitoring compatibility |
+| Log output | Console output in development, file-based in production |
+
+**Compatibility Requirements:**
+
+| Requirement | Description |
+|-------------|-------------|
+| Supertest compatibility | Tests must work without starting actual server |
+| Environment agnostic | Work in development and production |
+| Middleware order | Maintain correct middleware execution order |
+
+### 0.7.3 Deployment Considerations
+
+**Development Environment:**
+
+```bash
+# Start in development mode
+npm start
+# Or with dotenv
+node -r dotenv/config server.js
+```
+
+**Production Environment:**
+
+```bash
+# Start with PM2 cluster mode
+pm2 start ecosystem.config.js --env production
+
+#### Monitor running processes
+pm2 monit
+
+#### View logs
+pm2 logs
+
+#### Restart with zero downtime
+pm2 reload ecosystem.config.js
+```
+
+**PM2 Startup Configuration (Optional):**
+
+```bash
+# Generate startup script for OS boot
+pm2 startup
+
+#### Save current process list
+pm2 save
+```
+
+### 0.7.4 Environment Variables Reference
+
+| Variable | Default | Description | Required |
+|----------|---------|-------------|----------|
+| NODE_ENV | development | Application environment | No |
+| PORT | 3000 | Server listening port | No |
+| LOG_LEVEL | info | Logging verbosity | No |
+| DB_Host | (none) | Database host (user-provided) | No |
+| API_KEY | (none) | API authentication key (user-provided) | No |
+
+### 0.7.5 Validation Checklist
+
+**Pre-Implementation Validation:**
+
+- [ ] Node.js version ≥18.0.0 verified
+- [ ] npm available and functional
+- [ ] All existing tests passing
+- [ ] .env.example template present
+
+**Post-Implementation Validation:**
+
+- [ ] All new packages installed successfully
+- [ ] Server starts without errors
+- [ ] All existing tests still passing
+- [ ] New health endpoint test passing
+- [ ] Health endpoint returns 200 OK
+- [ ] Morgan logs appearing in console
+- [ ] Helmet security headers present in responses
+- [ ] CORS headers present when applicable
+- [ ] PM2 starts server in cluster mode
+- [ ] PM2 shows correct number of instances
+
+
+## 0.8 Rules
+
+This section captures task-specific rules and requirements explicitly emphasized for implementation.
+
+### 0.8.1 Implementation Rules
+
+**Code Pattern Rules:**
+
+| Rule | Description | Example |
+|------|-------------|---------|
+| Follow existing patterns in `server.js` | Maintain CommonJS imports, JSDoc comments, arrow function handlers | `const pkg = require('pkg')` not `import pkg from 'pkg'` |
+| Maintain backward compatibility | All existing functionality must continue working | Existing tests must pass |
+| Use environment variable defaults | All env vars must have sensible defaults | `process.env.PORT \|\| 3000` |
+| Conditional middleware configuration | Environment-aware settings | `morgan(NODE_ENV === 'production' ? 'combined' : 'dev')` |
+
+**Middleware Rules:**
+
+| Rule | Description | Rationale |
+|------|-------------|-----------|
+| helmet() must be first middleware | Security headers applied before any response | Express.js security best practice |
+| compression() before routes | Compress all responses | Performance optimization |
+| cors() before route handlers | Handle preflight requests | CORS specification requirement |
+| morgan() after security middleware | Log after security checks | Avoid logging sensitive data |
+
+**Configuration Rules:**
+
+| Rule | Description |
+|------|-------------|
+| Never commit .env file | Keep secrets out of version control |
+| Always update .env.example | Document all environment variables |
+| Use semantic version ranges | `^major.minor.patch` in package.json |
+| PM2 ecosystem file ends in .config.js | PM2 convention for configuration files |
+
+### 0.8.2 Quality Rules
+
+**Testing Requirements:**
+
+| Rule | Description |
+|------|-------------|
+| All tests must pass | No regression in existing functionality |
+| New endpoints need tests | Health endpoint requires test coverage |
+| Use Supertest for HTTP testing | Maintain existing test pattern |
+| Test both success and failure cases | Comprehensive test coverage |
+
+**Documentation Requirements:**
+
+| Rule | Description |
+|------|-------------|
+| Update README for new features | Document middleware, PM2, health endpoint |
+| Update Postman collection | Add health endpoint request |
+| Document all environment variables | In .env.example and README |
+| Include usage examples | Show PM2 commands and curl examples |
+
+### 0.8.3 Security Rules
+
+| Rule | Description |
+|------|-------------|
+| Use helmet with default configuration | Accept secure defaults |
+| Exclude .env from version control | Already in .gitignore |
+| Set NODE_ENV=production in production | Enables security optimizations |
+| Use environment variables for secrets | Never hardcode sensitive values |
+
+### 0.8.4 Deployment Rules
+
+| Rule | Description |
+|------|-------------|
+| Use PM2 for production deployment | As specified by user |
+| Configure cluster mode | Utilize all CPU cores |
+| Set up environment-specific configs | Separate dev/production settings |
+| Enable auto-restart on crash | PM2 default behavior |
+
+### 0.8.5 Files Not to Modify
+
+| File | Reason |
+|------|--------|
+| `tests/server.test.js` (existing tests) | Only add new tests, don't modify existing |
+| `package-lock.json` (manual) | Auto-generated by npm |
+| `.git/*` | Version control internals |
+| `node_modules/*` | Managed by npm |
+| `blitzy/documentation/*` (structure) | Only update content, not structure |
+
+### 0.8.6 Error Handling Rules
+
+| Rule | Description |
+|------|-------------|
+| Use try-catch for async operations | Prevent unhandled rejections |
+| Return appropriate HTTP status codes | 200 for success, 500 for errors |
+| Log errors before responding | Morgan captures request, add error logging |
+| Graceful degradation | Server should handle missing .env gracefully |
+
+
+## 0.9 References
+
+This section documents all sources, files, and external resources used to derive the Agent Action Plan.
+
+### 0.9.1 Repository Files Analyzed
+
+**Source Code Files:**
+
+| File Path | Lines | Purpose |
+|-----------|-------|---------|
+| `/tmp/blitzy/Repo-Test-Sud/010126/server.js` | 54 | Main Express.js application entry point |
+| `/tmp/blitzy/Repo-Test-Sud/010126/tests/server.test.js` | 45 | Jest test suite for endpoints |
 
 **Configuration Files:**
 
-| Pattern | Files Matched | Purpose |
-|---------|---------------|---------|
-| `.env.example` | 1 file | Environment variable template (PORT=3000) |
-| `postman.json` | 1 file | API collection for manual/automated testing |
+| File Path | Lines | Purpose |
+|-----------|-------|---------|
+| `/tmp/blitzy/Repo-Test-Sud/010126/package.json` | 21 | npm dependency manifest |
+| `/tmp/blitzy/Repo-Test-Sud/010126/.env.example` | 14 | Environment variable template |
+| `/tmp/blitzy/Repo-Test-Sud/010126/.gitignore` | - | Version control exclusions |
 
 **Documentation Files:**
 
-| Pattern | Files Matched | Purpose |
-|---------|---------------|---------|
-| `README.md` | 1 file | Project documentation with endpoint table |
-| `blitzy/documentation/*.md` | 2 files | Technical specifications and project guide |
+| File Path | Lines | Purpose |
+|-----------|-------|---------|
+| `/tmp/blitzy/Repo-Test-Sud/010126/README.md` | 32 | Project readme |
+| `/tmp/blitzy/Repo-Test-Sud/010126/blitzy/documentation/Project Guide.md` | 316 | Development and validation guide |
+| `/tmp/blitzy/Repo-Test-Sud/010126/blitzy/documentation/Technical Specifications.md` | 100+ | Technical specification document |
+| `/tmp/blitzy/Repo-Test-Sud/010126/postman.json` | 29 | API collection |
 
-### 0.6.2 Complete In-Scope File Inventory
+### 0.9.2 External Web Resources Consulted
 
-| File Path | Lines | Type | Modification Status |
-|-----------|-------|------|---------------------|
-| `server.js` | 54 | Source | ✅ Modified |
-| `package.json` | 21 | Config | ✅ Modified |
-| `package-lock.json` | ~12000 | Config | ✅ Auto-generated |
-| `tests/server.test.js` | 45 | Test | ✅ Modified |
-| `README.md` | 32 | Documentation | ✅ Modified |
-| `postman.json` | 29 | Config | ✅ Modified |
-| `.env.example` | 14 | Config | ✅ Complete |
+**Official Documentation:**
 
-### 0.6.3 Integration Points In Scope
+| Source | URL | Information Retrieved |
+|--------|-----|----------------------|
+| Express.js Performance Best Practices | expressjs.com | PM2 usage, NODE_ENV optimization, middleware patterns |
+| PM2 Documentation | pm2.keymetrics.io | Ecosystem file configuration, cluster mode, environment variables |
+| PM2 Best Practices | pm2.io | Environment variable management, startup configuration |
+| Morgan Documentation | expressjs.com, npmjs.com | Format options, file logging, custom tokens |
+| Helmet Documentation | npmjs.com, helmetjs.github.io | Security header configuration, default settings |
+| dotenv Documentation | npmjs.com | Configuration options, best practices |
 
-| Integration Point | Location | Change Type |
-|-------------------|----------|-------------|
-| Express App Initialization | `server.js:15-18` | Added |
-| Root Route Handler | `server.js:30-32` | Added |
-| Evening Route Handler | `server.js:41-43` | Added |
-| Server Startup Logic | `server.js:46-50` | Added |
-| Module Export | `server.js:53` | Added |
-| Express Dependency | `package.json:13-15` | Added |
-| Test Imports | `tests/server.test.js:15-18` | Added |
-| Test Assertions | `tests/server.test.js:20-44` | Added |
+**Package Version Sources:**
 
-### 0.6.4 Explicitly Out of Scope
+| Package | Source | Version Verified |
+|---------|--------|-----------------|
+| dotenv | npm registry | 17.2.3 |
+| helmet | npm registry | 8.1.0 |
+| morgan | npm registry | 1.10.1 |
+| cors | npm registry | 2.8.5 |
+| compression | npm registry | 1.8.1 |
+| express-rate-limit | npm registry | 8.2.1 |
+| pm2 | npm registry | 6.0.14 |
 
-**Unrelated Infrastructure Files:**
+### 0.9.3 User-Provided Attachments
 
-| File | Reason for Exclusion |
-|------|---------------------|
-| `amazon_cloudformation.yaml` | AWS infrastructure template - not related to endpoint feature |
-| `apache.conf` | Apache web server configuration - separate service |
-| `datadog.yaml` | Observability agent configuration - monitoring setup |
+| Attachment | Type | Size | Description |
+|------------|------|------|-------------|
+| s1.png | image/png | 49,680 bytes | Project-related image (no description provided) |
+| tech_spec.pdf | application/pdf | 648,521 bytes | Technical specification document |
 
-**Sample/Demo Files (Not Part of Feature):**
+### 0.9.4 Environment Variables Provided
 
-| File | Reason for Exclusion |
-|------|---------------------|
-| `dotnet.cs` | C# demo file - different language |
-| `php.php` | PHP demo file - different language |
-| `junit.java` | Java test demo - different ecosystem |
-| `maven.xml` | Maven configuration - Java build tool |
-| `mysql.sql` | MySQL schema demo - database sample |
-| `oracle.sql` | Oracle schema demo - database sample |
-| `script.sh` | Shell script demo - utility example |
-| `dummy_qtest.csv` | Test data sample - unrelated |
-| `notion.md` | Markdown demo - documentation sample |
-| `eclipse.xml` | Eclipse IDE configuration - tooling |
+**User-Provided Environment Variables:**
 
-### 0.6.5 Feature Boundaries
+| Variable | Type | Description |
+|----------|------|-------------|
+| DB_Host | Environment Variable | Database host configuration |
+| API_KEY | Secret | External API authentication key |
 
-**Included Functionality:**
+### 0.9.5 Build Instructions Provided
 
-| Feature | Included | Implementation |
-|---------|----------|----------------|
-| Express.js framework integration | ✅ Yes | `const express = require('express')` |
-| GET / endpoint | ✅ Yes | Returns "Hello world" |
-| GET /evening endpoint | ✅ Yes | Returns "Good evening" |
-| Configurable port | ✅ Yes | `PORT` environment variable |
-| Test coverage | ✅ Yes | Jest + Supertest assertions |
-| API documentation | ✅ Yes | README and Postman collection |
-
-**Excluded Functionality:**
-
-| Feature | Included | Reason |
-|---------|----------|--------|
-| Additional endpoints | ❌ No | Not requested in requirements |
-| Database integration | ❌ No | Not part of feature scope |
-| Authentication/Authorization | ❌ No | Not specified in requirements |
-| Middleware (helmet, cors, morgan) | ❌ No | Optional production hardening |
-| Health check endpoint | ❌ No | Not specified in requirements |
-| Error handling middleware | ❌ No | Basic implementation sufficient |
-| Request logging | ❌ No | Not specified in requirements |
-| API versioning | ❌ No | Tutorial scope - single version |
-
-### 0.6.6 Environment Variables Scope
-
-**In Scope:**
-
-| Variable | Purpose | Status |
-|----------|---------|--------|
-| PORT | Server listening port | ✅ Implemented |
-
-**Out of Scope (Available but unused):**
-
-| Variable | Purpose | Status |
-|----------|---------|--------|
-| DB | Database connection string | ⚠️ Documented but not used |
-| Api Key | External API authentication | ⚠️ Available in environment |
-| Token | Authentication token | ⚠️ Available in environment |
-
-### 0.6.7 Scope Verification Checklist
-
-| Scope Item | Requirement | Verification | Status |
-|------------|-------------|--------------|--------|
-| Express.js added | Add Express framework | `require('express')` in server.js | ✅ |
-| Evening endpoint | Return "Good evening" | GET /evening → "Good evening" | ✅ |
-| Hello world preserved | Maintain existing endpoint | GET / → "Hello world" | ✅ |
-| Tests updated | Verify both endpoints | 2 passing tests | ✅ |
-| Documentation complete | Document new endpoint | README + Postman updated | ✅ |
-
-
-## 0.7 Special Instructions
-
-This section captures all feature-specific requirements, patterns, and special considerations explicitly emphasized by the user or identified during analysis.
-
-### 0.7.1 User-Specified Requirements
-
-**Original User Request (Preserved Exactly):**
-
-> "this is a tutorial of node js server hosting one endpoint that returns the response 'Hello world'. Could you add expressjs into the project and add another endpoint that return the reponse of 'Good evening'?"
-
-**Requirement Interpretation:**
-
-| User Statement | Technical Interpretation |
-|----------------|-------------------------|
-| "tutorial of node js server" | Educational project with clear, simple code |
-| "hosting one endpoint" | Existing GET / endpoint returning "Hello world" |
-| "add expressjs into the project" | Integrate Express.js as HTTP framework |
-| "add another endpoint" | Create new GET /evening route |
-| "return the reponse of 'Good evening'" | Response body: exact string "Good evening" |
-
-### 0.7.2 Patterns and Conventions to Follow
-
-**Code Style Conventions:**
-
-| Convention | Implementation | Example |
-|------------|----------------|---------|
-| Module System | CommonJS | `require()` / `module.exports` |
-| Strict Mode | Enabled | `'use strict';` at file start |
-| Arrow Functions | Route handlers | `(req, res) => { ... }` |
-| Const Declarations | Immutable bindings | `const express = require('express');` |
-| JSDoc Comments | Function documentation | Multi-line `/** ... */` blocks |
-
-**Express.js Patterns:**
-
-| Pattern | Implementation | Purpose |
-|---------|----------------|---------|
-| App Factory | `const app = express();` | Create Express application |
-| Route Definition | `app.get(path, handler)` | Define HTTP route handlers |
-| Response Methods | `res.send(string)` | Send plain text response |
-| Conditional Startup | `require.main === module` | Enable testability |
-| Module Export | `module.exports = app` | Enable in-process testing |
-
-### 0.7.3 Integration Requirements
-
-**Existing Feature Preservation:**
-
-| Feature | Requirement | Verification |
-|---------|-------------|--------------|
-| Hello World Endpoint | Must remain functional | Test: GET / → "Hello world" |
-| Port Configuration | Must support PORT env var | `process.env.PORT \|\| 3000` |
-| Startup Logging | Must log port on startup | Console message on listen |
-
-**Test Integration:**
-
-| Requirement | Implementation |
-|-------------|----------------|
-| In-process testing | Supertest mounts app without network binding |
-| Assertion style | Jest expect with toBe for strict equality |
-| Test organization | Nested describe blocks per endpoint |
-
-### 0.7.4 Performance and Scalability Considerations
-
-**Current Implementation Characteristics:**
-
-| Aspect | Implementation | Notes |
-|--------|----------------|-------|
-| Response Type | Static strings | No computation overhead |
-| State Management | Stateless | No memory accumulation |
-| Connection Handling | Express default | Single-threaded event loop |
-| Response Time | <100ms typical | Immediate response delivery |
-
-**Not Required for Tutorial Scope:**
-
-- Load balancing configuration
-- Clustering for multi-core utilization
-- Rate limiting
-- Response caching
-- Connection pooling
-
-### 0.7.5 Security Requirements
-
-**Implemented Security Measures:**
-
-| Measure | Status | Implementation |
-|---------|--------|----------------|
-| Port Isolation | ✅ | Default port 3000 (non-privileged) |
-| Environment Config | ✅ | Sensitive values via env vars |
-| No Secret Exposure | ✅ | .env excluded from version control |
-
-**Not Required for Tutorial Scope:**
-
-| Security Feature | Reason for Exclusion |
-|------------------|---------------------|
-| HTTPS/TLS | Tutorial runs on localhost |
-| Authentication | Public endpoints, no user data |
-| CORS Configuration | Single-origin development |
-| Helmet.js | Production hardening optional |
-| Rate Limiting | No abuse protection needed |
-| Input Validation | No user input accepted |
-
-### 0.7.6 Environment Setup Instructions
-
-**User-Provided Setup Command:**
+**User-Specified Build Command:**
 
 ```bash
-npm run
+npm run build
 ```
 
-**Complete Setup Sequence:**
+Note: The current `package.json` does not define a `build` script. For this Node.js Express project, no build/transpilation step is required as the code runs directly on Node.js runtime.
 
-```bash
-# 1. Verify Node.js version (>=18.0.0)
-node --version
+### 0.9.6 Search Queries Executed
 
-##### 2. Install dependencies
-npm install
+| Query | Purpose | Key Findings |
+|-------|---------|--------------|
+| "Express.js production best practices PM2" | Production deployment patterns | PM2 cluster mode, NODE_ENV optimization |
+| "Express.js middleware helmet morgan dotenv" | Middleware configuration | Security headers, logging formats |
+| "dotenv npm latest version" | Version verification | v17.2.3 latest stable |
+| "PM2 ecosystem.config.js" | Configuration patterns | Environment-specific configs, cluster mode |
+| "morgan npm compression cors express-rate-limit" | Package versions | Latest versions for all middleware |
 
-##### 3. Run tests to verify implementation
-npm test
+### 0.9.7 Repository Commands Executed
 
-##### 4. Start the server
-npm start
-```
+| Command | Purpose | Result |
+|---------|---------|--------|
+| `npm show [package] version` | Verify latest package versions | All versions confirmed |
+| `find . -type f -not -path './node_modules/*'` | Inventory project files | 24 relevant files identified |
+| `node --version && npm --version` | Verify runtime versions | v20.19.6, v11.1.0 |
+| `npm test` | Verify existing tests | 2/2 tests passing |
+| `npm install` | Install dependencies | 355 packages, 0 vulnerabilities |
 
-**Environment Variables Available:**
+### 0.9.8 Technical Specification Sections Referenced
 
-| Variable | Value | Usage |
-|----------|-------|-------|
-| Api Key | (provided) | Available in environment |
-| Token | (provided) | Available in environment |
-| https://8008 | (provided) | Available in environment |
-
-### 0.7.7 Verification and Acceptance Criteria
-
-**Automated Verification:**
-
-| Test | Command | Expected Result |
-|------|---------|-----------------|
-| Unit Tests | `npm test` | 2/2 tests pass |
-| Hello World | GET http://localhost:3000/ | "Hello world" |
-| Good Evening | GET http://localhost:3000/evening | "Good evening" |
-
-**Manual Verification (curl):**
-
-```bash
-# Test root endpoint
-curl -i http://localhost:3000/
-# Expected: HTTP/1.1 200 OK, Body: Hello world
-
-#### Test evening endpoint
-curl -i http://localhost:3000/evening
-#### Expected: HTTP/1.1 200 OK, Body: Good evening
-```
-
-### 0.7.8 Implementation Completion Status
-
-**Feature Status Summary:**
-
-| Requirement | Status | Evidence |
-|-------------|--------|----------|
-| Express.js Integration | ✅ COMPLETE | `server.js` line 15: `require('express')` |
-| Hello World Endpoint | ✅ COMPLETE | `server.js` lines 30-32 |
-| Good Evening Endpoint | ✅ COMPLETE | `server.js` lines 41-43 |
-| Test Coverage | ✅ COMPLETE | `tests/server.test.js` - 2 tests |
-| Documentation | ✅ COMPLETE | README.md, postman.json |
-
-**Final Verification Results:**
-
-```
-npm test
-PASS tests/server.test.js
-  Express Server Endpoints
-    GET /
-      ✓ GET / returns Hello world (32 ms)
-    GET /evening
-      ✓ GET /evening returns Good evening (11 ms)
-
-Test Suites: 1 passed, 1 total
-Tests:       2 passed, 2 total
-```
-
-**Conclusion:** All requested features have been successfully implemented and verified. The repository is ready for deployment with both endpoints functional and tested.
+| Section | Content Used |
+|---------|--------------|
+| 0. Agent Action Plan (existing) | Current implementation status |
+| 1.1 Executive Summary | Project overview |
+| 3.3 Frameworks & Libraries | Express.js selection criteria |
+| 8.3 Deployment Environment | Production configuration patterns |
 
 
