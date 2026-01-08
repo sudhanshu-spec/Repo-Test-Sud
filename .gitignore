@@ -1,7 +1,7 @@
 # Dependencies
 node_modules/
 
-# Environment files (contain secrets)
+# Environment files
 .env
 .env.local
 .env.*.local
@@ -10,18 +10,5 @@ node_modules/
 *.log
 logs/
 
-# PM2
+# PM2 Process Manager
 .pm2/
-
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Test coverage
-coverage/
