@@ -6,7 +6,7 @@
   },
   "item": [
     {
-      "name": "Health Check",
+      "name": "Health Check Endpoint",
       "request": {
         "method": "GET",
         "url": "http://localhost:3000/health",
