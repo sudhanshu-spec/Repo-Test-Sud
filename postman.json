@@ -1,28 +1,40 @@
 {
   "info": {
-    "name": "Postman Collection Demo",
+    "name": "Express Server API Collection",
+    "description": "API endpoints for the Express.js production server",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
-      "name": "GET Example",
+      "name": "Health Check",
       "request": {
         "method": "GET",
-        "url": "https://api.example.com/data"
+        "url": "http://localhost:3000/health",
+        "description": "Health check endpoint for monitoring and load balancer integration. Returns JSON with status, timestamp, and uptime."
       }
     },
     {
       "name": "Hello World Endpoint",
       "request": {
         "method": "GET",
-        "url": "http://localhost:3000/"
+        "url": "http://localhost:3000/",
+        "description": "Root endpoint returning 'Hello world'"
       }
     },
     {
       "name": "Good Evening Endpoint",
       "request": {
         "method": "GET",
-        "url": "http://localhost:3000/evening"
+        "url": "http://localhost:3000/evening",
+        "description": "Evening greeting endpoint returning 'Good evening'"
+      }
+    },
+    {
+      "name": "GET Example",
+      "request": {
+        "method": "GET",
+        "url": "https://api.example.com/data",
+        "description": "External API example request"
       }
     }
   ]
