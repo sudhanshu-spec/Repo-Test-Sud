@@ -34,6 +34,8 @@ const SECURITY_PATTERNS = {
  */
 const checkSqlInjection = (value) => {
   if (value && typeof value === 'string') {
+    // Reset lastIndex to ensure consistent matching with global flag
+    SECURITY_PATTERNS.sqlInjection.lastIndex = 0;
     if (SECURITY_PATTERNS.sqlInjection.test(value)) {
       throw new Error('Potentially malicious input detected');
     }
@@ -49,6 +51,8 @@ const checkSqlInjection = (value) => {
  */
 const checkXssPayload = (value) => {
   if (value && typeof value === 'string') {
+    // Reset lastIndex to ensure consistent matching with global flag
+    SECURITY_PATTERNS.xssPayload.lastIndex = 0;
     if (SECURITY_PATTERNS.xssPayload.test(value)) {
       throw new Error('Invalid characters in input');
     }
@@ -64,6 +68,8 @@ const checkXssPayload = (value) => {
  */
 const checkPathTraversal = (value) => {
   if (value && typeof value === 'string') {
+    // Reset lastIndex to ensure consistent matching with global flag
+    SECURITY_PATTERNS.pathTraversal.lastIndex = 0;
     if (SECURITY_PATTERNS.pathTraversal.test(value)) {
       throw new Error('Invalid path characters detected');
     }
