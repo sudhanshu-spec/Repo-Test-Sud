@@ -18,6 +18,15 @@ const { cleanupServer, createTestApp } = require('../helpers/test-utils');
 const { STATUS_CODES } = require('../fixtures/constants');
 
 /**
+ * Generate a random port number between 10000 and 60000 to avoid conflicts.
+ * Using port 0 would also work but this gives more control for specific tests.
+ * @returns {number} A random port number
+ */
+function getRandomPort() {
+  return Math.floor(Math.random() * 50000) + 10000;
+}
+
+/**
  * Test suite for server lifecycle operations including startup, shutdown,
  * and port conflict handling. Uses the http module directly for lifecycle
  * testing to have full control over server instances.
@@ -31,9 +40,6 @@ describe('Server Lifecycle Tests', () => {
   
   /** @type {jest.SpyInstance|null} Spy for console.log calls */
   let consoleSpy = null;
-  
-  /** @type {number} Test port number */
-  const TEST_PORT = 3000;
 
   /**
    * Setup before each test - initialize console spy
@@ -43,7 +49,7 @@ describe('Server Lifecycle Tests', () => {
   });
 
   /**
-   * Cleanup after each test - restore mocks and close servers
+   * Cleanup after each test - restore mocks and close servers with proper waiting
    */
   afterEach(async () => {
     // Restore console mock
@@ -52,17 +58,20 @@ describe('Server Lifecycle Tests', () => {
       consoleSpy = null;
     }
 
+    // Clean up conflict test server first
+    if (conflictServer) {
+      await cleanupServer(conflictServer);
+      conflictServer = null;
+    }
+
     // Clean up primary server
     if (server) {
       await cleanupServer(server);
       server = null;
     }
-
-    // Clean up conflict test server
-    if (conflictServer) {
-      await cleanupServer(conflictServer);
-      conflictServer = null;
-    }
+    
+    // Small delay to ensure port is fully released
+    await new Promise(resolve => setTimeout(resolve, 100));
   });
 
   /**
@@ -81,18 +90,19 @@ describe('Server Lifecycle Tests', () => {
     /**
      * Test that server listens on the specified port when started
      */
-    it('should listen on port 3000 when started', (done) => {
+    it('should listen on port when started', (done) => {
       const app = createTestApp();
       server = http.createServer(app);
+      const testPort = getRandomPort();
 
-      server.listen(TEST_PORT, () => {
+      server.listen(testPort, () => {
         // Verify server is listening
         expect(server.listening).toBe(true);
         
-        // Verify the server is bound to the correct port
+        // Verify the server is bound to a port
         const address = server.address();
         expect(address).not.toBeNull();
-        expect(address.port).toBe(TEST_PORT);
+        expect(address.port).toBe(testPort);
         
         done();
       });
@@ -104,18 +114,19 @@ describe('Server Lifecycle Tests', () => {
     it('should output startup message to console', (done) => {
       const app = createTestApp();
       server = http.createServer(app);
+      const testPort = getRandomPort();
       
       // Restore and re-spy to capture actual output
       consoleSpy.mockRestore();
       consoleSpy = jest.spyOn(console, 'log');
 
-      server.listen(TEST_PORT, () => {
+      server.listen(testPort, () => {
         // Simulate typical startup log message
-        console.log(`Server listening on port ${TEST_PORT}`);
+        console.log(`Server listening on port ${testPort}`);
         
         expect(consoleSpy).toHaveBeenCalled();
         expect(consoleSpy).toHaveBeenCalledWith(
-          expect.stringContaining(String(TEST_PORT))
+          expect.stringContaining(String(testPort))
         );
         
         done();
@@ -128,7 +139,7 @@ describe('Server Lifecycle Tests', () => {
     it('should bind to specified port successfully', (done) => {
       const app = createTestApp();
       server = http.createServer(app);
-      const customPort = 3001;
+      const customPort = getRandomPort();
 
       server.listen(customPort, () => {
         const address = server.address();
@@ -150,8 +161,9 @@ describe('Server Lifecycle Tests', () => {
     it('should release port when server.close() is called', (done) => {
       const app = createTestApp();
       server = http.createServer(app);
+      const testPort = getRandomPort();
 
-      server.listen(TEST_PORT, () => {
+      server.listen(testPort, () => {
         // Verify server is listening before close
         expect(server.listening).toBe(true);
 
@@ -161,7 +173,7 @@ describe('Server Lifecycle Tests', () => {
           
           // Verify we can create a new server on the same port
           const newServer = http.createServer(app);
-          newServer.listen(TEST_PORT, () => {
+          newServer.listen(testPort, () => {
             expect(newServer.listening).toBe(true);
             
             newServer.close(() => {
@@ -179,8 +191,9 @@ describe('Server Lifecycle Tests', () => {
       const app = createTestApp();
       server = http.createServer(app);
       const closeCallback = jest.fn();
+      const testPort = getRandomPort();
 
-      server.listen(TEST_PORT, () => {
+      server.listen(testPort, () => {
         server.close(() => {
           closeCallback();
           
@@ -196,10 +209,11 @@ describe('Server Lifecycle Tests', () => {
     it('should handle already-closed server gracefully', async () => {
       const app = createTestApp();
       server = http.createServer(app);
+      const testPort = getRandomPort();
 
       // Start and immediately close the server
       await new Promise((resolve) => {
-        server.listen(TEST_PORT, resolve);
+        server.listen(testPort, resolve);
       });
 
       // First close should succeed
@@ -220,21 +234,22 @@ describe('Server Lifecycle Tests', () => {
      */
     it('should handle EADDRINUSE error when port is occupied', (done) => {
       const app = createTestApp();
+      const conflictTestPort = getRandomPort();
       
       // Start first server on the port
       server = http.createServer(app);
-      server.listen(TEST_PORT, () => {
+      server.listen(conflictTestPort, () => {
         // Attempt to start second server on same port
         conflictServer = http.createServer(app);
         
         conflictServer.on('error', (err) => {
           expect(err.code).toBe('EADDRINUSE');
-          expect(err.message).toContain(String(TEST_PORT));
+          expect(err.message).toContain(String(conflictTestPort));
           
           done();
         });
 
-        conflictServer.listen(TEST_PORT);
+        conflictServer.listen(conflictTestPort);
       });
     });
 
@@ -244,10 +259,11 @@ describe('Server Lifecycle Tests', () => {
     it('should emit error event on port conflict', (done) => {
       const app = createTestApp();
       const errorHandler = jest.fn();
+      const conflictTestPort = getRandomPort();
       
       // Start first server on the port
       server = http.createServer(app);
-      server.listen(TEST_PORT, () => {
+      server.listen(conflictTestPort, () => {
         // Set up second server with error handler
         conflictServer = http.createServer(app);
         conflictServer.on('error', errorHandler);
@@ -267,7 +283,7 @@ describe('Server Lifecycle Tests', () => {
           });
         });
 
-        conflictServer.listen(TEST_PORT);
+        conflictServer.listen(conflictTestPort);
       });
     });
   });
