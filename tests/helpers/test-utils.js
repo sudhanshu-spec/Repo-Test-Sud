@@ -7,13 +7,12 @@
 
 'use strict';
 
-const express = require('express');
 const { ENDPOINTS, EXPECTED_RESPONSES } = require('../fixtures/constants');
 
 /**
- * Creates and configures an Express application instance for testing.
- * Sets up routes for /hello and /evening endpoints without starting the server,
- * enabling Supertest to use the app directly without port binding.
+ * Returns the Express application instance for testing.
+ * Imports the actual app.js module to enable Supertest to test the real application
+ * without starting the server.
  * 
  * @returns {express.Application} Configured Express application instance ready for Supertest
  * @example
@@ -23,23 +22,9 @@ const { ENDPOINTS, EXPECTED_RESPONSES } = require('../fixtures/constants');
  * await request(app).get('/hello').expect(200);
  */
 function createTestApp() {
-  const app = express();
-
-  // Configure /hello endpoint handler
-  app.get(ENDPOINTS.HELLO, (req, res) => {
-    res.status(200).send(EXPECTED_RESPONSES.HELLO);
-  });
-
-  // Configure /evening endpoint handler
-  app.get(ENDPOINTS.EVENING, (req, res) => {
-    res.status(200).send(EXPECTED_RESPONSES.EVENING);
-  });
-
-  // 404 handler for undefined routes - must be last
-  app.use((req, res) => {
-    res.status(404).send('Not Found');
-  });
-
+  // Import the actual app.js module for testing
+  // This ensures we're testing the real application code
+  const app = require('../../app');
   return app;
 }
 

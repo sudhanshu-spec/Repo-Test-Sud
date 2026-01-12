@@ -20,8 +20,9 @@ module.exports = {
   coverageDirectory: 'coverage',
 
   // Source files to collect coverage from
+  // app.js contains the Express routes and handlers - the actual business logic
+  // server.js is the production entry point (starts server) - not directly testable
   collectCoverageFrom: [
-    'server.js',
     'app.js'
   ],
 
