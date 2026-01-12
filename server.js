@@ -126,14 +126,10 @@ app.use(express.urlencoded({
 // API ROUTES
 // =============================================================================
 
-// Mount API router at /api prefix
-// Routes: GET /api/hello, GET /api/evening, GET /api/health
-app.use('/api', apiRouter);
-
-// Root endpoint redirect to health check
-app.get('/', (req, res) => {
-  res.redirect('/api/health');
-});
+// Mount API router at root level for direct endpoint access
+// Routes: GET /hello, GET /evening, GET /health
+// This preserves backward compatibility with the original endpoint paths
+app.use('/', apiRouter);
 
 // =============================================================================
 // ERROR HANDLING
@@ -268,9 +264,9 @@ function startServer() {
       console.log(`Environment: ${config.nodeEnv}`);
       console.log(`HTTPS Server: https://localhost:${config.httpsPort}`);
       console.log('\nEndpoints:');
-      console.log(`  - GET https://localhost:${config.httpsPort}/api/hello`);
-      console.log(`  - GET https://localhost:${config.httpsPort}/api/evening`);
-      console.log(`  - GET https://localhost:${config.httpsPort}/api/health`);
+      console.log(`  - GET https://localhost:${config.httpsPort}/hello`);
+      console.log(`  - GET https://localhost:${config.httpsPort}/evening`);
+      console.log(`  - GET https://localhost:${config.httpsPort}/health`);
       console.log('\nSecurity Features:');
       console.log('  ✓ HTTPS/TLS encryption enabled');
       console.log('  ✓ Security headers via Helmet.js');
@@ -307,9 +303,9 @@ function startServer() {
       console.log(`Environment: ${config.nodeEnv}`);
       console.log(`HTTP Server: http://localhost:${config.httpPort}`);
       console.log('\nEndpoints:');
-      console.log(`  - GET http://localhost:${config.httpPort}/api/hello`);
-      console.log(`  - GET http://localhost:${config.httpPort}/api/evening`);
-      console.log(`  - GET http://localhost:${config.httpPort}/api/health`);
+      console.log(`  - GET http://localhost:${config.httpPort}/hello`);
+      console.log(`  - GET http://localhost:${config.httpPort}/evening`);
+      console.log(`  - GET http://localhost:${config.httpPort}/health`);
       console.log('\nSecurity Features:');
       console.log('  ✗ HTTPS disabled (certificates not found)');
       console.log('  ✓ Security headers via Helmet.js');
