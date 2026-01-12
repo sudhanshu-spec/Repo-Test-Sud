@@ -421,20 +421,13 @@ const rateLimitConfig = {
       return true;
     }
     return false;
-  },
-  
-  /**
-   * Key generator function for identifying unique clients
-   * Uses IP address by default
-   * Supports proxied requests via X-Forwarded-For header
-   * 
-   * @param {Object} req - Express request object
-   * @returns {string} Unique identifier for the client
-   */
-  keyGenerator: (req) => {
-    // Use X-Forwarded-For header if behind a proxy, otherwise use IP
-    return req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
   }
+  
+  // Note: keyGenerator is intentionally omitted to use the library's default behavior
+  // which properly handles IPv6 addresses per ERR_ERL_KEY_GEN_IPV6 recommendation.
+  // The default uses req.ip which respects Express's 'trust proxy' setting.
+  // When behind a reverse proxy (nginx, load balancer), ensure Express
+  // trust proxy is configured: app.set('trust proxy', 1)
 };
 
 /**
