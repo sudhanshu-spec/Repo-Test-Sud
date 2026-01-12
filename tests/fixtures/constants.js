@@ -57,14 +57,17 @@ const CONTENT_TYPES = Object.freeze({
 
 /**
  * Array of invalid route paths for 404 error handling tests.
- * Includes various edge cases: unknown routes, deeply nested paths, and trailing slash variants.
+ * Includes various edge cases: unknown routes, deeply nested paths, and special characters.
+ * Note: Trailing slash routes (e.g., /hello/) are NOT included here because Express
+ * by default treats them as equivalent to routes without trailing slashes.
+ * Trailing slash behavior is tested separately in dedicated test cases.
  * @constant {string[]}
  */
 const INVALID_ROUTES = Object.freeze([
   '/unknown',
   '/notfound',
   '/a/b/c/d',
-  '/hello/'
+  '/api/nonexistent'
 ]);
 
 module.exports = {
