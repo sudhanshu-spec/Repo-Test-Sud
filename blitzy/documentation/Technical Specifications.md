@@ -861,6 +861,7 @@ app.listen(3000);
 ```bash
 npm run test:coverage
 # OR
+
 npx jest --coverage
 ```
 
@@ -868,6 +869,7 @@ npx jest --coverage
 ```bash
 node --inspect-brk node_modules/.bin/jest --runInBand
 # Connect Chrome DevTools to debug tests
+
 ```
 
 ### 0.9.2 Package.json Scripts Configuration
@@ -925,6 +927,7 @@ testPathIgnorePatterns: [
 **Environment Variables for Testing**:
 ```bash
 # Optional but recommended
+
 NODE_ENV=test npm test
 CI=true npm run test:ci  # For CI/CD environments
 ```
@@ -940,6 +943,7 @@ CI=true npm run test:ci  # For CI/CD environments
 ```bash
 npm test -- --runInBand
 # Use when tests have port conflicts
+
 ```
 
 **Test Timeout Configuration**:
@@ -1077,12 +1081,14 @@ consoleSpy.mockRestore();
 **Non-Interactive Execution**:
 ```bash
 # Always use non-interactive flags in CI
+
 CI=true npm test -- --watchAll=false --coverage
 ```
 
 **Timeout Handling**:
 ```bash
 # Prevent hanging tests in CI
+
 timeout 300 npm test
 ```
 
