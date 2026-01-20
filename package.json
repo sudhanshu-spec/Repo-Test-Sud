@@ -1,0 +1,28 @@
+{
+  "name": "server-tests",
+  "version": "1.0.0",
+  "description": "HTTP server with comprehensive unit tests",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "jest --passWithNoTests",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:verbose": "jest --verbose"
+  },
+  "keywords": [
+    "http",
+    "server",
+    "testing",
+    "jest"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "jest": "^30.2.0",
+    "supertest": "^7.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
