@@ -1,211 +1,182 @@
 /**
  * @fileoverview Secure Express.js Server Entry Point
- * @description Main application entry point implementing a secure HTTPS Express server
- *              with comprehensive security middleware stack including Helmet.js for
- *              security headers, express-rate-limit for DoS protection, CORS middleware
- *              for cross-origin control, and express-validator for input validation.
- *              Serves /hello and /evening endpoints with optional personalization.
+ * 
+ * Main application file implementing a secure HTTPS Express server with a
+ * comprehensive security middleware stack:
+ *   - Helmet.js:          Security headers (CSP, HSTS, X-Frame-Options, etc.)
+ *   - express-rate-limit: DoS/brute-force protection
+ *   - CORS middleware:    Cross-origin request control
+ *   - express-validator:  Input validation and sanitization
+ * 
+ * Endpoints served: /hello, /evening, /health
  * 
  * @module server
- * @requires express
- * @requires https
- * @requires http
- * @requires fs
- * @requires path
- * @requires dotenv
- * @requires helmet
- * @requires ./config/security
- * @requires ./middleware/rateLimiter
- * @requires ./middleware/cors
- * @requires ./routes/api
  */
 
 'use strict';
 
-// =============================================================================
+// ─────────────────────────────────────────────────────────────────────────────
 // EXTERNAL DEPENDENCIES
-// =============================================================================
+// ─────────────────────────────────────────────────────────────────────────────
 
-const express = require('express');
-const https = require('https');
-const http = require('http');
-const fs = require('fs');
-const path = require('path');
-const helmet = require('helmet');
+const express = require('express');     // Web application framework
+const https = require('https');         // Native HTTPS server module
+const http = require('http');           // Native HTTP server module (for redirects)
+const fs = require('fs');               // File system access (certificate loading)
+const path = require('path');           // Path resolution utilities
+const helmet = require('helmet');       // Security headers middleware
 
-// =============================================================================
+// ─────────────────────────────────────────────────────────────────────────────
 // ENVIRONMENT CONFIGURATION
-// =============================================================================
+// ─────────────────────────────────────────────────────────────────────────────
 
-// Load environment variables from .env file
-// Must be done before accessing process.env values
+// Load environment variables BEFORE accessing process.env
 require('dotenv').config();
 
-// =============================================================================
+// ─────────────────────────────────────────────────────────────────────────────
 // INTERNAL DEPENDENCIES
-// =============================================================================
+// ─────────────────────────────────────────────────────────────────────────────
 
 const { helmetConfig, validateSecurityConfig } = require('./config/security');
 const rateLimiter = require('./middleware/rateLimiter');
 const corsMiddleware = require('./middleware/cors');
 const apiRouter = require('./routes/api');
 
-// =============================================================================
-// CONFIGURATION
-// =============================================================================
+// ─────────────────────────────────────────────────────────────────────────────
+// SERVER CONFIGURATION
+// ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Server configuration parsed from environment variables with defaults
+ * Server configuration with environment variable overrides and sensible defaults.
  * @type {Object}
  */
 const config = {
-  // Server ports
-  httpsPort: parseInt(process.env.HTTPS_PORT, 10) || 3443,
-  httpPort: parseInt(process.env.HTTP_PORT, 10) || 3000,
+  // Network binding
+  httpsPort:           parseInt(process.env.HTTPS_PORT, 10) || 3443,
+  httpPort:            parseInt(process.env.HTTP_PORT, 10) || 3000,
   
-  // SSL certificate paths
-  sslKeyPath: process.env.SSL_KEY_PATH || './certificates/key.pem',
-  sslCertPath: process.env.SSL_CERT_PATH || './certificates/cert.pem',
+  // SSL/TLS certificate paths
+  sslKeyPath:          process.env.SSL_KEY_PATH  || './certificates/key.pem',
+  sslCertPath:         process.env.SSL_CERT_PATH || './certificates/cert.pem',
   
-  // Environment mode
-  nodeEnv: process.env.NODE_ENV || 'development',
+  // Runtime environment
+  nodeEnv:             process.env.NODE_ENV || 'development',
   
-  // Enable HTTP-to-HTTPS redirect (enabled in production by default)
-  enableHttpsRedirect: process.env.ENABLE_HTTPS_REDIRECT === 'true' || 
-                        process.env.NODE_ENV === 'production'
+  // Auto-redirect HTTP → HTTPS (always enabled in production)
+  enableHttpsRedirect: process.env.ENABLE_HTTPS_REDIRECT === 'true' ||
+                       process.env.NODE_ENV === 'production'
 };
 
-// =============================================================================
+// ─────────────────────────────────────────────────────────────────────────────
 // EXPRESS APPLICATION INITIALIZATION
-// =============================================================================
+// ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Express application instance
- * @type {express.Application}
- */
+/** @type {express.Application} Express app instance */
 const app = express();
 
-// Trust proxy for proper IP detection behind reverse proxies
-// Required for express-rate-limit to work correctly behind nginx, load balancers, etc.
+// Enable proxy trust in production for correct client IP detection
+// (required for rate-limiter behind nginx/load-balancer)
 if (config.nodeEnv === 'production') {
   app.set('trust proxy', 1);
 }
 
-// =============================================================================
+// ─────────────────────────────────────────────────────────────────────────────
 // SECURITY MIDDLEWARE STACK
-// Order matters: Rate Limiter → CORS → Helmet → Body Parser → Routes
-// =============================================================================
+// Execution order: Rate Limiter → CORS → Helmet → Body Parser → Routes
+// ─────────────────────────────────────────────────────────────────────────────
 
-// 1. Rate Limiting - First line of defense against DoS attacks
-// Must be applied before other middleware to protect against abuse
+// [1] Rate Limiter - first line of defense against DoS/brute-force
 app.use(rateLimiter);
 
-// 2. CORS - Cross-Origin Resource Sharing control
-// Controls which origins can access the API
+// [2] CORS - control which origins may call this API
 app.use(corsMiddleware);
 
-// 3. Helmet.js - Security Headers
-// Adds 13 security headers including CSP, HSTS, X-Frame-Options, etc.
-// Also removes X-Powered-By header to prevent server fingerprinting
+// [3] Helmet - set 13 security headers; removes X-Powered-By
 app.use(helmet(helmetConfig));
 
-// 4. Body Parser Middleware
-// Parse JSON request bodies with size limit for security
-app.use(express.json({ 
-  limit: '10kb',  // Limit body size to prevent payload attacks
-  strict: true    // Only accept arrays and objects
+// [4] Body Parsers - accept JSON and URL-encoded payloads (size-limited)
+app.use(express.json({
+  limit: '10kb',   // mitigate large-payload attacks
+  strict: true     // accept only arrays and objects
 }));
 
-// Parse URL-encoded bodies with size limit
-app.use(express.urlencoded({ 
+app.use(express.urlencoded({
   extended: true,
   limit: '10kb'
 }));
 
-// =============================================================================
+// ─────────────────────────────────────────────────────────────────────────────
 // API ROUTES
-// =============================================================================
+// ─────────────────────────────────────────────────────────────────────────────
 
-// Mount API router at root level for direct endpoint access
-// Routes: GET /hello, GET /evening, GET /health
-// This preserves backward compatibility with the original endpoint paths
+// Mount API router at root (preserves original /hello, /evening paths)
 app.use('/', apiRouter);
 
-// =============================================================================
+// ─────────────────────────────────────────────────────────────────────────────
 // ERROR HANDLING
-// =============================================================================
+// ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * 404 Not Found handler for unmatched routes
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
+ * 404 handler for unmatched routes.
  */
 app.use((req, res) => {
   res.status(404).json({
-    success: false,
-    error: 'Not Found',
-    message: `Cannot ${req.method} ${req.originalUrl}`,
+    success:   false,
+    error:     'Not Found',
+    message:   `Cannot ${req.method} ${req.originalUrl}`,
     timestamp: new Date().toISOString()
   });
 });
 
 /**
- * Global error handler
- * Catches all unhandled errors and returns standardized error response
- * @param {Error} err - Error object
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Express next middleware function
+ * Global error handler - returns standardized JSON error responses.
+ * Stack traces are only exposed in development mode.
  */
-app.use((err, req, res, next) => {
-  // Log error for debugging (use proper logging in production)
+app.use((err, req, res, _next) => {
   console.error('[Error]', err.message);
-  
-  // Determine status code
+
   const statusCode = err.status || err.statusCode || 500;
-  
-  // Build error response
+
   const errorResponse = {
-    success: false,
-    error: err.name || 'Internal Server Error',
-    message: config.nodeEnv === 'development' ? err.message : 'An unexpected error occurred',
+    success:   false,
+    error:     err.name || 'Internal Server Error',
+    message:   config.nodeEnv === 'development' ? err.message : 'An unexpected error occurred',
     timestamp: new Date().toISOString()
   };
-  
-  // Include stack trace in development mode only
+
+  // Expose stack trace in development only
   if (config.nodeEnv === 'development') {
     errorResponse.stack = err.stack;
   }
-  
+
   res.status(statusCode).json(errorResponse);
 });
 
-// =============================================================================
+// ─────────────────────────────────────────────────────────────────────────────
 // SSL CERTIFICATE HANDLING
-// =============================================================================
+// ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Loads SSL certificates from file system
- * @returns {Object|null} SSL options object or null if certificates not found
+ * Attempts to load SSL/TLS certificates from the file system.
+ * @returns {Object|null} { key, cert } buffers or null if unavailable.
  */
 function loadSSLCertificates() {
-  const keyPath = path.resolve(config.sslKeyPath);
+  const keyPath  = path.resolve(config.sslKeyPath);
   const certPath = path.resolve(config.sslCertPath);
-  
-  // Check if certificate files exist
+
   if (!fs.existsSync(keyPath)) {
-    console.warn(`[Warning] SSL key file not found: ${keyPath}`);
+    console.warn(`[Warn] SSL key not found: ${keyPath}`);
     return null;
   }
-  
+
   if (!fs.existsSync(certPath)) {
-    console.warn(`[Warning] SSL certificate file not found: ${certPath}`);
+    console.warn(`[Warn] SSL cert not found: ${certPath}`);
     return null;
   }
-  
+
   try {
     return {
-      key: fs.readFileSync(keyPath),
+      key:  fs.readFileSync(keyPath),
       cert: fs.readFileSync(certPath)
     };
   } catch (err) {
@@ -214,149 +185,149 @@ function loadSSLCertificates() {
   }
 }
 
-// =============================================================================
-// HTTP-TO-HTTPS REDIRECT SERVER
-// =============================================================================
+// ─────────────────────────────────────────────────────────────────────────────
+// HTTP → HTTPS REDIRECT SERVER
+// ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Creates an HTTP server that redirects all requests to HTTPS
- * @returns {http.Server} HTTP redirect server
+ * Creates a lightweight HTTP server that 301-redirects all traffic to HTTPS.
+ * @returns {http.Server}
  */
 function createHttpRedirectServer() {
   return http.createServer((req, res) => {
-    const host = req.headers.host?.replace(/:\d+$/, '') || 'localhost';
+    const host     = req.headers.host?.replace(/:\d+$/, '') || 'localhost';
     const httpsUrl = `https://${host}:${config.httpsPort}${req.url}`;
-    
+
     res.writeHead(301, { Location: httpsUrl });
     res.end();
   });
 }
 
-// =============================================================================
-// SERVER STARTUP
-// =============================================================================
+// ─────────────────────────────────────────────────────────────────────────────
+// STARTUP HELPERS
+// ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Starts the server with HTTPS if certificates are available,
- * falls back to HTTP in development mode
+ * Prints a nicely formatted startup banner with environment and endpoint info.
+ * @param {Object} opts
+ * @param {string} opts.protocol   - 'https' or 'http'
+ * @param {number} opts.port       - Server port number
+ * @param {boolean} opts.httpsEnabled - Whether TLS encryption is active
+ */
+function printStartupBanner({ protocol, port, httpsEnabled }) {
+  const baseUrl = `${protocol}://localhost:${port}`;
+
+  console.log(`
+════════════════════════════════════════
+   ${httpsEnabled ? 'Secure ' : ''}Express Server Started
+════════════════════════════════════════
+  Environment : ${config.nodeEnv}
+  URL         : ${baseUrl}
+
+  Endpoints:
+    GET ${baseUrl}/hello
+    GET ${baseUrl}/evening
+    GET ${baseUrl}/health
+
+  Security Features:
+    ${httpsEnabled ? '✓' : '✗'} HTTPS/TLS encryption ${httpsEnabled ? 'enabled' : '(certs not found)'}
+    ✓ Security headers via Helmet.js
+    ✓ Rate limiting enabled
+    ✓ CORS configured
+    ✓ Input validation enabled
+════════════════════════════════════════
+`);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SERVER STARTUP
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Initializes and starts the server:
+ *   - HTTPS if certificates are present
+ *   - HTTP fallback in development mode
+ *   - Exits with error if certs missing in production
  */
 function startServer() {
-  // Validate security configuration
+  // Emit any security configuration warnings
   const securityValidation = validateSecurityConfig();
   if (!securityValidation.valid) {
     console.warn('[Security Warnings]');
-    securityValidation.warnings.forEach(warning => {
-      console.warn(`  - ${warning}`);
-    });
+    securityValidation.warnings.forEach(w => console.warn(`  - ${w}`));
   }
-  
-  // Attempt to load SSL certificates
+
   const sslOptions = loadSSLCertificates();
-  
+
+  // ── HTTPS mode (certificates found) ────────────────────────────────────────
   if (sslOptions) {
-    // Start HTTPS server
     const httpsServer = https.createServer(sslOptions, app);
-    
+
     httpsServer.listen(config.httpsPort, () => {
-      console.log('\n====================================');
-      console.log('    Secure Express Server Started');
-      console.log('====================================');
-      console.log(`Environment: ${config.nodeEnv}`);
-      console.log(`HTTPS Server: https://localhost:${config.httpsPort}`);
-      console.log('\nEndpoints:');
-      console.log(`  - GET https://localhost:${config.httpsPort}/hello`);
-      console.log(`  - GET https://localhost:${config.httpsPort}/evening`);
-      console.log(`  - GET https://localhost:${config.httpsPort}/health`);
-      console.log('\nSecurity Features:');
-      console.log('  ✓ HTTPS/TLS encryption enabled');
-      console.log('  ✓ Security headers via Helmet.js');
-      console.log('  ✓ Rate limiting enabled');
-      console.log('  ✓ CORS configured');
-      console.log('  ✓ Input validation enabled');
-      console.log('====================================\n');
+      printStartupBanner({ protocol: 'https', port: config.httpsPort, httpsEnabled: true });
     });
-    
-    // Start HTTP redirect server if enabled
+
+    // Optional HTTP→HTTPS redirect server
     if (config.enableHttpsRedirect) {
-      const httpRedirectServer = createHttpRedirectServer();
-      
-      httpRedirectServer.listen(config.httpPort, () => {
-        console.log(`[HTTP Redirect] Redirecting HTTP:${config.httpPort} → HTTPS:${config.httpsPort}`);
+      createHttpRedirectServer().listen(config.httpPort, () => {
+        console.log(`[Redirect] HTTP:${config.httpPort} → HTTPS:${config.httpsPort}`);
       });
     }
-    
-  } else if (config.nodeEnv === 'development') {
-    // Fallback to HTTP in development mode
-    console.warn('\n[Development Mode] SSL certificates not found.');
-    console.warn('Starting HTTP server instead of HTTPS.\n');
-    console.warn('To generate self-signed certificates:');
-    console.warn('  mkdir -p certificates');
-    console.warn('  openssl req -x509 -newkey rsa:4096 -keyout certificates/key.pem \\');
-    console.warn('    -out certificates/cert.pem -days 365 -nodes -subj "/CN=localhost"\n');
-    
-    const httpServer = http.createServer(app);
-    
-    httpServer.listen(config.httpPort, () => {
-      console.log('\n====================================');
-      console.log('    Express Server Started (HTTP)');
-      console.log('====================================');
-      console.log(`Environment: ${config.nodeEnv}`);
-      console.log(`HTTP Server: http://localhost:${config.httpPort}`);
-      console.log('\nEndpoints:');
-      console.log(`  - GET http://localhost:${config.httpPort}/hello`);
-      console.log(`  - GET http://localhost:${config.httpPort}/evening`);
-      console.log(`  - GET http://localhost:${config.httpPort}/health`);
-      console.log('\nSecurity Features:');
-      console.log('  ✗ HTTPS disabled (certificates not found)');
-      console.log('  ✓ Security headers via Helmet.js');
-      console.log('  ✓ Rate limiting enabled');
-      console.log('  ✓ CORS configured');
-      console.log('  ✓ Input validation enabled');
-      console.log('====================================\n');
-    });
-    
-  } else {
-    // Production mode requires SSL certificates
-    console.error('\n[Fatal Error] SSL certificates not found in production mode.');
-    console.error('HTTPS is required for production deployments.');
-    console.error(`Expected key: ${path.resolve(config.sslKeyPath)}`);
-    console.error(`Expected cert: ${path.resolve(config.sslCertPath)}`);
-    console.error('\nPlease provide valid SSL certificates or use development mode.\n');
-    process.exit(1);
+
+    return;
   }
+
+  // ── Development fallback (HTTP) ────────────────────────────────────────────
+  if (config.nodeEnv === 'development') {
+    console.warn(`
+[Dev Mode] SSL certificates not found – starting HTTP server.
+To generate self-signed certs run:
+  mkdir -p certificates
+  openssl req -x509 -newkey rsa:4096 \\
+    -keyout certificates/key.pem \\
+    -out certificates/cert.pem \\
+    -days 365 -nodes -subj "/CN=localhost"
+`);
+
+    http.createServer(app).listen(config.httpPort, () => {
+      printStartupBanner({ protocol: 'http', port: config.httpPort, httpsEnabled: false });
+    });
+
+    return;
+  }
+
+  // ── Production mode: certs required ────────────────────────────────────────
+  console.error(`
+[Fatal] SSL certificates not found – HTTPS required in production.
+  Expected key  : ${path.resolve(config.sslKeyPath)}
+  Expected cert : ${path.resolve(config.sslCertPath)}
+
+Provide valid certificates or switch to development mode (NODE_ENV=development).
+`);
+  process.exit(1);
 }
 
-// =============================================================================
+// ─────────────────────────────────────────────────────────────────────────────
 // GRACEFUL SHUTDOWN
-// =============================================================================
+// ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Handles graceful shutdown on SIGTERM/SIGINT signals
- * Allows active connections to complete before exiting
- */
-process.on('SIGTERM', () => {
-  console.log('\n[Server] SIGTERM received. Shutting down gracefully...');
+/** Handle shutdown signals to allow in-flight requests to complete. */
+const handleShutdown = (signal) => {
+  console.log(`\n[Server] ${signal} received – shutting down gracefully...`);
   process.exit(0);
-});
+};
 
-process.on('SIGINT', () => {
-  console.log('\n[Server] SIGINT received. Shutting down gracefully...');
-  process.exit(0);
-});
+process.on('SIGTERM', () => handleShutdown('SIGTERM'));
+process.on('SIGINT',  () => handleShutdown('SIGINT'));
 
-// =============================================================================
-// START SERVER
-// =============================================================================
+// ─────────────────────────────────────────────────────────────────────────────
+// ENTRYPOINT
+// ─────────────────────────────────────────────────────────────────────────────
 
-// Start the server
 startServer();
 
-// =============================================================================
-// MODULE EXPORTS
-// =============================================================================
+// ─────────────────────────────────────────────────────────────────────────────
+// EXPORTS (for testing)
+// ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Export the Express application for testing purposes
- * @type {express.Application}
- */
 module.exports = app;
