@@ -896,18 +896,21 @@ npm install
 ```bash
 npm audit
 # Expected: 0 vulnerabilities
+
 ```
 
 **Start Secure Server (Development)**:
 ```bash
 npm run dev
 # Server starts on HTTPS with self-signed certificate
+
 ```
 
 **Start Secure Server (Production)**:
 ```bash
 NODE_ENV=production npm start
 # Server enforces HTTPS with production certificate
+
 ```
 
 **Generate Self-Signed Certificate (Development)**:
@@ -923,12 +926,14 @@ openssl req -x509 -newkey rsa:4096 \
 ```bash
 curl -k -I https://localhost:3443
 # Verify security headers in response
+
 ```
 
 **Test Rate Limiting**:
 ```bash
 for i in {1..105}; do curl -k -s -o /dev/null -w "%{http_code}\n" https://localhost:3443; done
 # Should see 429 after request 100
+
 ```
 
 ### 0.10.2 Research Documentation
