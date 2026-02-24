@@ -1,7 +1,14 @@
 {
     "name": "hello_world",
     "version": "1.0.0",
-    "description": "Hello world in Node.js",
+    "description": "Express.js Hello World server with modular architecture",
+    "keywords": [
+        "express",
+        "hello-world",
+        "nodejs",
+        "server",
+        "modular"
+    ],
     "main": "server.js",
     "scripts": {
         "start": "node server.js",
@@ -12,6 +19,9 @@
     },
     "author": "hxu",
     "license": "MIT",
+    "engines": {
+        "node": ">=20.0.0"
+    },
     "dependencies": {
         "express": "^5.1.0"
     },
