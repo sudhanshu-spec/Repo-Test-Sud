@@ -4,522 +4,418 @@
 
 ## 0.1 Intent Clarification
 
-### 0.1.1 Core Refactoring Objective
+### 0.1.1 Core Objective
 
-Based on the prompt, the Blitzy platform understands that the refactoring objective is to take the existing `hello_world` Node.js server — which already employs Express.js 5.2.1 as its HTTP framework — and perform a comprehensive Express.js-centric structural refactor. The user's instruction to "rewrite this Node.js server into an express.js refactor, keeping every feature and functionality exactly as in the original Node.js project" indicates that the codebase must be reorganized and improved while maintaining byte-for-byte behavioral equivalence across all HTTP response bodies, status codes, headers, server lifecycle events, and error handling flows.
+Based on the provided requirements, the Blitzy platform understands that the objective is to **develop a greenfield Java console application** — an Age Calculator — that computes a user's exact age in years, months, and days from their entered Date of Birth (DOB). The application will be built from scratch within an existing, essentially empty repository (`21stgitOLDOne`) that currently contains only a `README.md` placeholder file.
 
-- **Refactoring type:** Code structure — restructure the existing modular layered Express.js application for improved maintainability, Express.js idiomatic patterns, and extensibility while preserving all 63 passing tests and 100% code coverage
-- **Target repository:** Same repository — all changes occur in-place within the current project directory
-- **Key refactoring goals:**
-  - Preserve the Factory Pattern in `src/app.js` that decouples Express app creation from HTTP server binding
-  - Maintain the Barrel/Aggregator Pattern in `src/routes/index.js` for centralized route exports
-  - Retain the Twelve-Factor App configuration model in `src/config/index.js`
-  - Ensure `GET /` returns `Hello, World!\n` (with trailing newline) and `GET /evening` returns `Good evening` (without trailing newline) — exact string matches
-  - Preserve all HTTP header contracts: `X-Powered-By: Express`, `Content-Type: text/html; charset=utf-8`, `ETag`, and accurate `Content-Length` values
-  - Maintain server lifecycle behavior: `app.listen()` binding, `console.log()` startup message format, error suppression for `EADDRINUSE`/`EACCES`/generic errors, and graceful shutdown via `server.close()`
-  - Keep all test infrastructure operational: unit tests (22), integration tests (26), and lifecycle tests (15) must continue to pass with no modifications to test logic
-- **Implicit requirements surfaced:**
-  - Maintain all public API contracts (HTTP endpoints, response formats, status codes)
-  - Preserve CommonJS module system (`require()` / `module.exports`) throughout
-  - Retain all JSDoc annotations and `'use strict'` directives as per existing coding standards
-  - Keep the dual-consumption model where `src/app.js` exports are consumed by both `server.js` (production) and `tests/integration/endpoints.test.js` (Supertest testing) without modification
+The requirements translate to the following discrete deliverables:
 
-### 0.1.2 Technical Interpretation
+- **Console-based user input**: Accept Date of Birth as a string in the exact format `DD/MM/YYYY` via standard input (`System.in`)
+- **System date retrieval**: Automatically obtain the current date using `java.time.LocalDate.now()` with no user intervention
+- **Precise age computation**: Calculate the elapsed time between DOB and the current date, decomposed into exact years, months, and days using `java.time.Period.between()`
+- **Formatted output**: Display the result in the exact format: `Your age is X years, Y months, and Z days.`
+- **Robust input validation**:
+  - Reject future dates (DOB after the current system date)
+  - Reject structurally invalid dates (e.g., `31/02/2020`, `00/13/1999`, non-numeric input)
+  - Display meaningful, user-friendly error messages for each type of incorrect input
+- **Object-Oriented Design**: Structure the application using OOP principles including encapsulation, separation of concerns, and clean class design
+- **Exception handling**: Implement `try-catch` blocks to gracefully handle `DateTimeParseException`, `IllegalArgumentException`, and any other runtime errors
 
-This refactoring translates to the following technical transformation strategy:
+**Implicit requirements detected:**
+- The repository requires a complete Java project structure to be created (source directories, package hierarchy)
+- The `README.md` must be updated to document the new application
+- The `DD/MM/YYYY` format requires a custom `DateTimeFormatter` using the pattern `"dd/MM/yyyy"` since Java's default `LocalDate.parse()` uses `ISO_LOCAL_DATE` (`yyyy-MM-dd`)
+- Resource management for `Scanner` objects used for console input (proper closing)
+- Edge case handling for leap year dates (e.g., `29/02/2000` is valid but `29/02/1900` is not)
 
-- **Current architecture:** A modular layered Express.js 5.2.1 application comprising three tiers — Server Lifecycle Layer (`server.js`), Application Layer (`src/app.js`), and Supporting Layer (`src/config/index.js`, `src/routes/index.js`, `src/routes/main.routes.js`) — totaling five source files and approximately 180 lines of code
-- **Target architecture:** The same modular layered Express.js 5.2.1 application with structural improvements applied to each layer while preserving the three-tier separation and all external behavioral contracts
-- **Transformation rules:**
-  - Every source file update must preserve its module's exported API surface exactly
-  - All `require()` import paths must resolve correctly after refactoring
-  - No new npm dependencies may be introduced (the zero-new-dependency constraint remains in effect)
-  - All test file import paths must be updated to reflect any structural changes
-  - The `jest.config.js` coverage collection patterns and test discovery globs must continue to capture all source and test files
-- **Architectural constraints preserved:**
-  - `src/app.js` must never call `app.listen()` — this responsibility belongs exclusively to `server.js`
-  - `src/config/index.js` must continue to produce valid output for every possible input combination (no error states)
-  - Route handler responses must use synchronous `res.send()` with hardcoded string literals — no async I/O
-  - The single-process, single-event-loop model is maintained with no introduction of clustering or worker threads
+### 0.1.2 Task Categorization
 
-## 0.2 Source Analysis
+- **Primary task type**: New Product / Greenfield Development
+- **Secondary aspects**: Console Application, Date/Time Computation, Input Validation
+- **Scope classification**: Isolated change — a self-contained console application with no external integrations, no database, no network calls, and no dependency on external services
 
-### 0.2.1 Comprehensive Source File Discovery
+### 0.1.3 Special Instructions and Constraints
 
-The repository has been exhaustively analyzed. All source, configuration, test, and documentation files have been cataloged through recursive directory traversal and direct file inspection. The following enumerates every file identified as requiring refactoring attention.
+The user has specified the following explicit technical directives:
 
-**Current Structure Mapping:**
+- **Mandatory Java APIs**:
+  - `java.time.LocalDate` — for representing dates without time zones
+  - `java.time.Period` — for calculating the difference between two dates in years, months, and days
+  - `java.time.format.DateTimeFormatter` — for parsing the `DD/MM/YYYY` input format
+- **Mandatory design principles**:
+  - Object-Oriented Programming principles (encapsulation, separation of concerns, clean class hierarchy)
+  - Proper exception handling using `try-catch` blocks
+  - Clean and readable coding standards (meaningful variable names, consistent formatting, comments)
+- **Input format constraint**: Dates must be entered in `DD/MM/YYYY` format exclusively
+- **Output format constraint**: Results must be displayed as: `Your age is X years, Y months, and Z days.`
 
-```
-hello_world/
-├── .gitignore                          (11 lines — dependency/coverage/env/OS/IDE exclusions)
-├── README.md                           (2 lines — minimal project marker)
-├── jest.config.js                      (27 lines — Jest test runner configuration)
-├── package.json                        (22 lines — npm manifest with express, jest, supertest)
-├── package-lock.json                   (lockfileVersion 3 — resolved dependency graph)
-├── server.js                           (52 lines — HTTP server bootstrap and lifecycle)
-├── src/
-│   ├── app.js                          (27 lines — Express Factory Pattern, route mounting)
-│   ├── config/
-│   │   └── index.js                    (41 lines — Twelve-Factor config: host, port, env)
-│   └── routes/
-│       ├── index.js                    (19 lines — Barrel/Aggregator for route exports)
-│       └── main.routes.js             (41 lines — GET / and GET /evening handlers)
-├── tests/
-│   ├── unit/
-│   │   ├── config.test.js              (140 lines — 15 config module unit tests)
-│   │   └── routes.test.js             (94 lines — 7 route handler unit tests)
-│   ├── integration/
-│   │   └── endpoints.test.js          (199 lines — 26 HTTP integration tests)
-│   └── lifecycle/
-│       └── server.test.js             (375 lines — 15 server lifecycle tests)
-└── blitzy/
-    └── documentation/
-        ├── Project Guide.md            (sprint report and development guide)
-        └── Technical Specifications.md (agent action plan and implementation blueprint)
-```
+### 0.1.4 Technical Interpretation
 
-### 0.2.2 Source File Inventory
+These requirements translate to the following technical implementation strategy:
 
-| File Path | Lines | Role | Refactoring Relevance |
-|-----------|-------|------|-----------------------|
-| `server.js` | 52 | HTTP server entry point — calls `app.listen()` with config | Core — server lifecycle layer to be refactored |
-| `src/app.js` | 27 | Express app factory — mounts routes, exports app | Core — application layer to be refactored |
-| `src/config/index.js` | 41 | Configuration with env var overrides and defaults | Core — supporting layer to be refactored |
-| `src/routes/index.js` | 19 | Barrel re-export of `mainRoutes` | Core — route aggregation to be refactored |
-| `src/routes/main.routes.js` | 41 | Route definitions: `GET /` and `GET /evening` | Core — route handlers to be refactored |
-| `jest.config.js` | 27 | Test runner config with coverage thresholds | Config — must be updated if paths change |
-| `package.json` | 22 | npm manifest with scripts, deps, entry point | Config — must reflect updated entry point/scripts |
-| `package-lock.json` | ~228K | Resolved dependency graph | Config — auto-regenerated on install |
-| `.gitignore` | ~20 | Git exclusion patterns | Config — may need updates for new directories |
-| `README.md` | 2 | Minimal project marker | Documentation — to be updated |
-| `tests/unit/config.test.js` | 140 | Config module unit tests (15 tests) | Test — import paths must track source changes |
-| `tests/unit/routes.test.js` | 94 | Route handler unit tests (7 tests) | Test — import paths must track source changes |
-| `tests/integration/endpoints.test.js` | 199 | HTTP integration tests (26 tests) | Test — import paths must track source changes |
-| `tests/lifecycle/server.test.js` | 375 | Server lifecycle tests (15 tests) | Test — mock paths must track source changes |
+- To **accept and parse user input**, we will create a dedicated input handler class that reads from `System.in` using `java.util.Scanner` and parses the string using `DateTimeFormatter.ofPattern("dd/MM/yyyy")` with strict resolver style
+- To **validate the date of birth**, we will implement validation logic that checks for `DateTimeParseException` (malformed input) and compares the parsed `LocalDate` against `LocalDate.now()` to reject future dates
+- To **calculate exact age**, we will use `Period.between(dateOfBirth, LocalDate.now())` and extract years, months, and days via `getYears()`, `getMonths()`, and `getDays()`
+- To **display the result**, we will format the output string using `String.format()` or `System.out.printf()` to produce the exact required output pattern
+- To **follow OOP principles**, we will separate the application into distinct classes: a main entry point class, an age calculator service class, and a date input validator class, each with single responsibility
+- To **handle exceptions gracefully**, we will wrap date parsing and validation in `try-catch` blocks catching `DateTimeParseException` and `IllegalArgumentException`, providing clear error messages to guide the user
 
-### 0.2.3 Module Dependency Graph
+## 0.2 Repository Scope Discovery
 
-The following dependency chain is linear and deterministic with no circular dependencies:
+### 0.2.1 Comprehensive File Analysis
 
-```mermaid
-graph TD
-    SRV["server.js"] -->|"require('./src/app')"| APP["src/app.js"]
-    SRV -->|"require('./src/config')"| CFG["src/config/index.js"]
-    APP -->|"require('./routes')"| RTI["src/routes/index.js"]
-    APP -->|"require('express')"| EXP["express 5.2.1"]
-    RTI -->|"require('./main.routes')"| RTM["src/routes/main.routes.js"]
-    RTM -->|"require('express').Router()"| EXP
-    
-    T1["tests/unit/config.test.js"] -->|"require('../../src/config')"| CFG
-    T2["tests/unit/routes.test.js"] -->|"require('../../src/routes/main.routes')"| RTM
-    T3["tests/integration/endpoints.test.js"] -->|"require('../../src/app')"| APP
-    T4["tests/lifecycle/server.test.js"] -->|"jest.doMock('../../src/app')"| APP
-    T4 -->|"jest.doMock('../../src/config')"| CFG
-    T4 -->|"require('../../server')"| SRV
-```
+The repository `21stgitOLDOne` is a **greenfield project** containing no existing source code, build configuration, or project structure. The complete current repository state is:
 
-### 0.2.4 Behavioral Contracts to Preserve
+| Path | Type | Content | Status |
+|------|------|---------|--------|
+| `README.md` | File | Contains only `# 21stgitOLDOne` (single heading, ~20 bytes) | Exists — requires update |
 
-| Contract | Verified By | Source File |
-|----------|-------------|-------------|
-| `GET /` returns `Hello, World!\n` with status 200 | `tests/integration/endpoints.test.js` | `src/routes/main.routes.js` |
-| `GET /evening` returns `Good evening` with status 200 | `tests/integration/endpoints.test.js` | `src/routes/main.routes.js` |
-| `Content-Type: text/html; charset=utf-8` on success | `tests/integration/endpoints.test.js` | Express automatic header |
-| `X-Powered-By: Express` header present | `tests/integration/endpoints.test.js` | Express default behavior |
-| `ETag` header present on cacheable GETs | `tests/integration/endpoints.test.js` | Express automatic header |
-| Accurate `Content-Length` header | `tests/integration/endpoints.test.js` | Express automatic header |
-| 404 for undefined routes and unsupported methods | `tests/integration/endpoints.test.js` | Express default handler |
-| `OPTIONS /evening` returns 200 with `Allow` header | `tests/integration/endpoints.test.js` | Express automatic behavior |
-| Server binds to `config.port` and `config.host` | `tests/lifecycle/server.test.js` | `server.js` |
-| Logs `Server running at http://{host}:{port}/` | `tests/lifecycle/server.test.js` | `server.js` |
-| Error suppression for EADDRINUSE, EACCES, generic | `tests/lifecycle/server.test.js` | `server.js` |
-| Graceful shutdown via `server.close()` | `tests/lifecycle/server.test.js` | `server.js` |
-| Config defaults: host=127.0.0.1, port=3000, env=development | `tests/unit/config.test.js` | `src/config/index.js` |
-| Port sanitization: invalid strings → 3000, trimming, truncation | `tests/unit/config.test.js` | `src/config/index.js` |
-| Router exports two GET layers: `/` then `/evening` | `tests/unit/routes.test.js` | `src/routes/main.routes.js` |
+**No existing files match any standard search patterns:**
+- Source code: No `src/**/*.*`, `lib/**/*.*`, `app/**/*.*`, `**/*.java` files exist
+- Configuration: No `**/*.config.*`, `**/*.json`, `**/*.yaml`, `**/*.toml`, `**/*.xml`, `.env*` files exist
+- Build/Deploy: No `Dockerfile*`, `docker-compose*`, `.github/workflows/*`, `Makefile*`, `pom.xml`, `build.gradle` exist
+- Tests: No `tests/**/*.*`, `**/*test*.*`, `**/*spec*.*` exist
+- Scripts: No `scripts/**/*.*`, `bin/**/*.*`, `tools/**/*.*` exist
+- Documentation: Only `README.md` exists; no `docs/**/*.*`, `CONTRIBUTING*`, `**/*.rst` files
+
+Since this is a greenfield project, **all files must be created from scratch**. The file transformation plan must account for establishing the full Java project structure, source code, and documentation.
+
+### 0.2.2 Web Search Research Conducted
+
+The following research was conducted to inform the implementation approach:
+
+- **Java age calculation best practices**: Confirmed that `Period.between(birthDate, currentDate)` is the idiomatic Java 8+ approach, returning a `Period` object from which `getYears()`, `getMonths()`, and `getDays()` extract the decomposed age. The `Period` class correctly handles leap years and varying month lengths.
+- **DateTimeFormatter with DD/MM/YYYY pattern**: The custom pattern `"dd/MM/yyyy"` must be used with `DateTimeFormatter.ofPattern()`. Using `ResolverStyle.STRICT` is recommended for robust validation that rejects dates like `31/02/2020`. By default, `ResolverStyle.SMART` is used which may silently adjust invalid dates.
+- **Input validation for Java date parsing**: `DateTimeParseException` is thrown when input does not match the expected pattern or resolves to an invalid calendar date. Wrapping `LocalDate.parse(input, formatter)` in a `try-catch` block is the standard approach.
+- **Java console application OOP structure**: Best practice for console Java applications includes separating the main entry point from business logic classes, using encapsulation with private fields and public methods, and maintaining single-responsibility principle across classes.
+- **Future date validation**: Comparing `parsedDate.isAfter(LocalDate.now())` is the standard mechanism to detect and reject future dates.
+
+### 0.2.3 Existing Infrastructure Assessment
+
+- **Current project structure**: Flat — single `README.md` at repository root with no subdirectories
+- **Existing patterns and conventions**: None established — the project has no code history to derive patterns from
+- **Build and deployment configurations**: None present — a standard Java source directory structure (`src/main/java/...`) and direct `javac` compilation will be established
+- **Testing infrastructure**: None present — unit tests will be created following standard Java conventions
+- **Documentation system**: Only a bare `README.md` — will be expanded to document the Age Calculator application, build instructions, and usage examples
+- **Java runtime**: OpenJDK 17.0.18 installed and verified (supports all required `java.time` APIs introduced in Java 8)
 
 ## 0.3 Scope Boundaries
 
 ### 0.3.1 Exhaustively In Scope
 
-**Source Transformations:**
-- `server.js` — Refactor HTTP server bootstrap, listen binding, error handling, and shutdown logic
-- `src/app.js` — Refactor Express application factory with route mounting
-- `src/config/index.js` — Refactor Twelve-Factor configuration module
-- `src/routes/index.js` — Refactor route barrel/aggregator
-- `src/routes/main.routes.js` — Refactor GET `/` and GET `/evening` route handler definitions
+- **Source code (new creation)**:
+  - `src/main/java/com/agecalculator/AgeCalculatorApp.java` — Main application entry point with `main()` method
+  - `src/main/java/com/agecalculator/service/AgeCalculatorService.java` — Core age calculation business logic
+  - `src/main/java/com/agecalculator/util/DateValidator.java` — Date input validation utility
+  - `src/main/java/com/agecalculator/util/DateParser.java` — Date parsing from string input with DD/MM/YYYY formatter
+  - `src/main/java/com/agecalculator/model/AgeResult.java` — Model class encapsulating years, months, days result
 
-**Test Updates:**
-- `tests/unit/config.test.js` — Update import paths to track any source file location changes
-- `tests/unit/routes.test.js` — Update import paths to track any route file location changes
-- `tests/integration/endpoints.test.js` — Update import path to track `src/app.js` location changes
-- `tests/lifecycle/server.test.js` — Update `require()` paths and `jest.doMock()` paths for `server.js`, `src/app`, and `src/config`
+- **Test code (new creation)**:
+  - `src/test/java/com/agecalculator/service/AgeCalculatorServiceTest.java` — Unit tests for age calculation logic
+  - `src/test/java/com/agecalculator/util/DateValidatorTest.java` — Unit tests for date validation
+  - `src/test/java/com/agecalculator/util/DateParserTest.java` — Unit tests for date parsing
 
-**Configuration Updates:**
-- `package.json` — Update `main` entry point, npm scripts, and metadata if structural changes require it
-- `jest.config.js` — Update `testMatch`, `collectCoverageFrom`, and `coveragePathIgnorePatterns` if directory structure changes
-- `.gitignore` — Update exclusion patterns if new directories are introduced
+- **Documentation (update and new creation)**:
+  - `README.md` — Update with project description, build/run instructions, usage examples
+  - `docs/USAGE.md` — Detailed usage documentation with examples
 
-**Documentation Updates:**
-- `README.md` — Update project documentation to reflect refactored structure and usage instructions
-
-**Import Corrections:**
-- Every file containing `require('./src/app')`, `require('./src/config')`, `require('./routes')`, `require('./main.routes')`, `require('../../src/config')`, `require('../../src/routes/main.routes')`, `require('../../src/app')`, `require('../../server')` — all import paths must be verified and corrected to match post-refactor structure
+- **Configuration (new creation)**:
+  - `.gitignore` — Java-specific gitignore patterns (`.class`, `*.jar`, `out/`, `build/`, `target/`)
 
 ### 0.3.2 Explicitly Out of Scope
 
-| Exclusion | Rationale |
-|-----------|-----------|
-| New feature additions (new endpoints, middleware) | User explicitly requires exact behavioral preservation |
-| TypeScript migration | Project uses CommonJS JavaScript; no TypeScript conversion requested |
-| Module system migration (ESM) | Project uses CommonJS; no ESM migration requested |
-| New npm dependency additions | Zero-new-dependency constraint applies — only `express`, `jest`, `supertest` |
-| CI/CD pipeline configuration | No GitHub Actions, Jenkins, or automation pipeline requested |
-| Docker or container configuration | No containerization requested |
-| Database or external service integration | Application is self-contained with no external dependencies |
-| Performance optimization or load testing | Not requested by user |
-| Security hardening (e.g., disabling `X-Powered-By`) | Not requested; existing behavior must be preserved |
-| `npm audit fix` for `qs` vulnerability | Existing known issue — not part of refactoring scope |
-| `blitzy/documentation/` folder modifications | Planning artifacts are reference-only, not part of application source |
-| `package-lock.json` manual editing | Auto-regenerated by npm; no manual changes required |
-| Node.js version upgrade | Node.js 20.x LTS remains the target runtime |
-| Express version upgrade | Express 5.2.1 (resolved from `^5.1.0`) remains the production dependency |
+- **GUI or web interface**: The application is strictly a console-based program; no Swing, JavaFX, or web UI is required
+- **Database or persistent storage**: No data persistence; the application is a stateless single-execution tool
+- **Build tool integration**: No Maven (`pom.xml`) or Gradle (`build.gradle`) is explicitly required — the project uses direct `javac` compilation; however, a simple compilation script may be provided for convenience
+- **External library dependencies**: The application uses only Java Standard Library APIs (`java.time.*`, `java.util.Scanner`); no third-party JARs are needed
+- **Localization or timezone handling**: The application uses the system default timezone via `LocalDate.now()`; multi-timezone support is not required
+- **CI/CD pipeline configuration**: No `.github/workflows/`, Jenkins, or other CI/CD configuration is part of this scope
+- **Containerization**: No `Dockerfile` or `docker-compose` configuration is required
+- **Performance optimization**: The application is a simple single-user tool; no performance tuning or benchmarking is necessary
+- **Security enhancements beyond input validation**: No authentication, authorization, or encryption is needed
+- **Age calculation in hours, minutes, or seconds**: Only years, months, and days are required per the specification
 
-## 0.4 Target Design
+## 0.4 Dependency Inventory
 
-### 0.4.1 Refactored Structure Planning
+### 0.4.1 Key Private and Public Packages
 
-The target architecture preserves the existing three-tier modular layered design — Server Lifecycle Layer, Application Layer, and Supporting Layer — while applying Express.js idiomatic improvements to each layer. The directory structure retains the same conceptual organization established in the original codebase, as the existing separation of concerns already follows Express.js best practices.
+This application is designed as a **zero-external-dependency project** using only the Java Standard Library. All required functionality is provided by built-in JDK packages.
 
-**Target Architecture:**
+| Registry | Package Name | Version | Purpose |
+|----------|-------------|---------|---------|
+| JDK (built-in) | `java.time.LocalDate` | JDK 17 (17.0.18) | Immutable date representation without time or timezone for DOB and current date |
+| JDK (built-in) | `java.time.Period` | JDK 17 (17.0.18) | Calculate the difference between two `LocalDate` instances in years, months, and days |
+| JDK (built-in) | `java.time.format.DateTimeFormatter` | JDK 17 (17.0.18) | Parse date strings in custom `DD/MM/YYYY` format into `LocalDate` objects |
+| JDK (built-in) | `java.time.format.DateTimeParseException` | JDK 17 (17.0.18) | Exception thrown when a date string cannot be parsed by the formatter |
+| JDK (built-in) | `java.time.format.ResolverStyle` | JDK 17 (17.0.18) | Strict date resolution to reject invalid calendar dates like `31/02/2020` |
+| JDK (built-in) | `java.util.Scanner` | JDK 17 (17.0.18) | Read user input from the console (`System.in`) |
 
+### 0.4.2 Runtime Environment
+
+| Component | Version | Source | Notes |
+|-----------|---------|--------|-------|
+| OpenJDK | 17.0.18 | `apt` (openjdk-17-jdk-headless) | LTS release; installed and verified in environment |
+| Java Compiler (`javac`) | 17.0.18 | Bundled with OpenJDK 17 | Used for direct source compilation |
+
+### 0.4.3 Dependency Updates
+
+- **New dependencies to add**: None — this is a greenfield project with no existing dependencies, and the application relies exclusively on the Java Standard Library
+- **Dependencies to update**: Not applicable — no prior dependencies exist
+- **Dependencies to remove**: Not applicable — no prior dependencies exist
+- **Import/Reference Updates**: Not applicable — all imports will be established fresh in newly created source files
+
+## 0.5 Implementation Design
+
+### 0.5.1 Technical Approach
+
+**Primary objectives with implementation approach:**
+
+- Achieve **user input capture** by creating an `AgeCalculatorApp` entry-point class that instantiates a `Scanner` on `System.in`, prompts for DOB, and delegates processing to service classes
+- Achieve **date parsing and validation** by creating a `DateParser` utility that wraps `DateTimeFormatter.ofPattern("dd/MM/yyyy")` with `ResolverStyle.STRICT` to reject malformed and calendar-invalid dates, and a `DateValidator` that enforces business rules such as no future dates
+- Achieve **precise age computation** by creating an `AgeCalculatorService` class that accepts a `LocalDate` DOB, calls `Period.between(dob, LocalDate.now())`, and returns an `AgeResult` model containing years, months, and days
+- Achieve **formatted output** by encapsulating the result in an `AgeResult` model with a `toString()` method that returns the exact format `Your age is X years, Y months, and Z days.`
+- Achieve **robust error handling** by wrapping all date parsing in `try-catch` blocks catching `DateTimeParseException` and using conditional checks with `isAfter()` for future-date validation, displaying clear error messages to guide the user
+
+**Logical implementation flow:**
+
+- First, establish the **project directory structure** by creating the standard Java source layout (`src/main/java/com/agecalculator/...`) and package hierarchy
+- Next, implement the **model layer** by creating the `AgeResult` class that encapsulates the years, months, and days output
+- Then, implement the **utility layer** by creating `DateParser` (string-to-`LocalDate` conversion with format enforcement) and `DateValidator` (business rule validation including future-date rejection)
+- Then, implement the **service layer** by creating `AgeCalculatorService` that orchestrates parsing, validation, and age computation
+- Then, implement the **application entry point** by creating `AgeCalculatorApp` with the `main()` method that handles user interaction via `Scanner`, invokes the service, and displays results
+- Finally, ensure **quality and correctness** by creating unit tests covering valid dates, invalid formats, future dates, leap years, and edge cases
+
+### 0.5.2 Component Impact Analysis
+
+**Direct modifications required:**
+- `README.md`: Transform from a bare placeholder to comprehensive project documentation including build instructions, usage examples, and project description
+
+**New components introduction:**
+
+- `AgeCalculatorApp` (Entry Point): Main class with `main()` method; responsible for console I/O and orchestrating the user interaction loop. Rationale: separates presentation concerns from business logic
+- `AgeCalculatorService` (Service): Core business logic for age calculation using `Period.between()`. Rationale: single-responsibility principle — encapsulates the calculation algorithm independently of I/O
+- `AgeResult` (Model): Immutable data class holding years, months, days with `toString()` producing the required output format. Rationale: encapsulation of result data and formatted output in one cohesive object
+- `DateParser` (Utility): Parses `DD/MM/YYYY` strings into `LocalDate` using strict `DateTimeFormatter`. Rationale: isolates date format handling for reuse and testability
+- `DateValidator` (Utility): Validates parsed dates against business rules (no future dates, reasonable date ranges). Rationale: separates validation logic from parsing logic for clarity
+
+**Component relationship diagram:**
+
+```mermaid
+graph TD
+    A[AgeCalculatorApp] -->|creates & uses| B[AgeCalculatorService]
+    A -->|reads input| C[Scanner - System.in]
+    A -->|displays| D[System.out]
+    B -->|uses| E[DateParser]
+    B -->|uses| F[DateValidator]
+    B -->|returns| G[AgeResult]
+    E -->|uses| H[DateTimeFormatter]
+    E -->|produces| I[LocalDate]
+    F -->|validates| I
+    B -->|uses| J[Period.between]
+    J -->|produces| G
 ```
-hello_world/
-├── .gitignore                          (updated exclusion patterns)
-├── README.md                           (updated project documentation)
-├── jest.config.js                      (updated test/coverage configuration)
-├── package.json                        (updated metadata and scripts)
-├── package-lock.json                   (auto-regenerated)
-├── server.js                           (refactored server lifecycle)
-├── src/
-│   ├── app.js                          (refactored Express factory)
-│   ├── config/
-│   │   └── index.js                    (refactored Twelve-Factor config)
-│   └── routes/
-│       ├── index.js                    (refactored route barrel)
-│       └── main.routes.js             (refactored route handlers)
-├── tests/
-│   ├── unit/
-│   │   ├── config.test.js              (updated import paths)
-│   │   └── routes.test.js             (updated import paths)
-│   ├── integration/
-│   │   └── endpoints.test.js          (updated import paths)
-│   └── lifecycle/
-│       └── server.test.js             (updated mock/import paths)
-└── blitzy/
-    └── documentation/
-        ├── Project Guide.md            (reference only — not modified)
-        └── Technical Specifications.md (reference only — not modified)
-```
-
-### 0.4.2 Web Search Research Conducted
-
-- Express.js 5 project structure best practices (2025) — confirmed that the existing modular pattern with separated `app.js` factory, `config/`, and `routes/` directories aligns with industry-standard Express.js project organization
-- Express.js separation of concerns patterns — validated the Factory Pattern approach where `app.js` exports a configured Express instance without calling `listen()`
-- Express.js route barrel pattern — confirmed the aggregator/barrel pattern in `src/routes/index.js` as the recommended approach for centralizing route exports
-- Twelve-Factor App configuration in Express.js — verified that environment variable-driven configuration with fallback defaults is the established best practice
-
-### 0.4.3 Design Pattern Applications
-
-The following design patterns are preserved and reinforced during the refactoring:
-
-| Pattern | Current Implementation | Refactored Application |
-|---------|----------------------|------------------------|
-| Factory Pattern | `src/app.js` creates Express app without port binding | Maintained — `src/app.js` continues to export configured app without `listen()` |
-| Barrel/Aggregator Pattern | `src/routes/index.js` centralizes route exports | Maintained — single aggregation point for route module onboarding |
-| Twelve-Factor Configuration | `src/config/index.js` externalizes settings via env vars | Maintained — `HOST`, `PORT`, `NODE_ENV` with sensible defaults |
-| Separation of Concerns | Server lifecycle decoupled from app creation and routing | Maintained — three-tier layer independence preserved |
-| Module Pattern | CommonJS `require()` / `module.exports` throughout | Maintained — consistent CommonJS semantics across all files |
-
-### 0.4.4 Refactoring Transformation Strategy
-
-The refactoring applies targeted improvements to each architectural layer while maintaining the existing module boundaries:
-
-**Server Lifecycle Layer (`server.js`):**
-- Refactor to maintain the HTTP bootstrap: requiring `src/app`, `src/config`, invoking `app.listen()`, and logging the startup URL
-- Preserve error event handling for `EADDRINUSE`, `EACCES`, and generic errors
-- Retain the `console.log()` format: `Server running at http://${host}:${port}/`
-
-**Application Layer (`src/app.js`):**
-- Refactor the Express factory to continue instantiating `express()`, mounting `mainRoutes` at root path, and exporting the configured app
-- Ensure the factory never calls `app.listen()` — the critical contract for Supertest testability
-
-**Supporting Layer:**
-- `src/config/index.js` — Refactor configuration module to preserve `host`, `port`, `env` properties with identical resolution logic (`process.env` → fallback defaults)
-- `src/routes/index.js` — Refactor barrel to continue re-exporting `{ mainRoutes }` for destructured import in `src/app.js`
-- `src/routes/main.routes.js` — Refactor route handlers to preserve exact response strings: `Hello, World!\n` and `Good evening`
-
-## 0.5 Transformation Mapping
-
-### 0.5.1 File-by-File Transformation Plan
-
-The following table maps every target file to its source file with the specific transformation mode and key changes required. All files are included in a single execution phase.
-
-| Target File | Transformation | Source File | Key Changes |
-|------------|----------------|-------------|-------------|
-| `server.js` | UPDATE | `server.js` | Refactor HTTP server entry point; preserve `app.listen(config.port, config.host, callback)` invocation, `console.log` startup message format, and error handling behavior |
-| `src/app.js` | UPDATE | `src/app.js` | Refactor Express factory pattern; preserve `express()` instantiation, `app.use('/', mainRoutes)` mounting, and `module.exports = app` export contract |
-| `src/config/index.js` | UPDATE | `src/config/index.js` | Refactor configuration module; preserve `host`, `port`, `env` property exports with identical `process.env` resolution and fallback defaults |
-| `src/routes/index.js` | UPDATE | `src/routes/index.js` | Refactor barrel aggregator; preserve `{ mainRoutes }` named export for destructured import |
-| `src/routes/main.routes.js` | UPDATE | `src/routes/main.routes.js` | Refactor route handlers; preserve `router.get('/')` returning `'Hello, World!\n'` and `router.get('/evening')` returning `'Good evening'` |
-| `package.json` | UPDATE | `package.json` | Update metadata, verify `main` points to `server.js`, confirm scripts and dependency declarations remain accurate |
-| `jest.config.js` | UPDATE | `jest.config.js` | Verify `testMatch`, `collectCoverageFrom` patterns, coverage thresholds (75% branch, 90% function, 80% line/statement) |
-| `.gitignore` | UPDATE | `.gitignore` | Verify exclusion patterns remain comprehensive for node_modules, coverage, env, logs, OS, IDE files |
-| `README.md` | UPDATE | `README.md` | Update project documentation to reflect refactored structure, usage instructions, and architecture |
-| `tests/unit/config.test.js` | UPDATE | `tests/unit/config.test.js` | Update `require('../../src/config')` import paths if source structure changes; preserve all 15 test cases |
-| `tests/unit/routes.test.js` | UPDATE | `tests/unit/routes.test.js` | Update `require('../../src/routes/main.routes')` import path if source structure changes; preserve all 7 test cases |
-| `tests/integration/endpoints.test.js` | UPDATE | `tests/integration/endpoints.test.js` | Update `require('../../src/app')` import path if source structure changes; preserve all 26 test cases |
-| `tests/lifecycle/server.test.js` | UPDATE | `tests/lifecycle/server.test.js` | Update `jest.doMock('../../src/app')`, `jest.doMock('../../src/config')`, and `require('../../server')` paths if structure changes; preserve all 15 test cases |
-
-### 0.5.2 Cross-File Dependencies
-
-**Import statement updates required across the codebase:**
-
-- `server.js`:
-  - `require('./src/app')` — must resolve to the refactored Express factory module
-  - `require('./src/config')` — must resolve to the refactored configuration module
-- `src/app.js`:
-  - `require('express')` — unchanged (npm package)
-  - `require('./routes')` — must resolve to the refactored route barrel
-- `src/routes/index.js`:
-  - `require('./main.routes')` — must resolve to the refactored route handler module
-- `src/routes/main.routes.js`:
-  - `require('express')` — unchanged (npm package)
-- `tests/unit/config.test.js`:
-  - `require('../../src/config')` — must resolve to the refactored config module
-- `tests/unit/routes.test.js`:
-  - `require('../../src/routes/main.routes')` — must resolve to the refactored route handler module
-- `tests/integration/endpoints.test.js`:
-  - `require('supertest')` — unchanged (npm package)
-  - `require('../../src/app')` — must resolve to the refactored Express factory module
-- `tests/lifecycle/server.test.js`:
-  - `jest.doMock('../../src/app', ...)` — mock path must match refactored app module location
-  - `jest.doMock('../../src/config', ...)` — mock path must match refactored config module location
-  - `require('../../server')` — must resolve to the refactored server entry point
 
-### 0.5.3 Configuration and Documentation Updates
-
-| File | Update Required |
-|------|----------------|
-| `package.json` | Verify `"main": "server.js"` entry point, confirm `"start": "node server.js"` script, validate dependency declarations |
-| `jest.config.js` | Verify `testMatch: ['**/tests/**/*.test.js']` captures all tests, confirm `collectCoverageFrom: ['server.js', 'src/**/*.js']` captures all source |
-| `.gitignore` | Verify `node_modules/`, `coverage/`, `.env`, `logs/`, OS and IDE patterns remain comprehensive |
-| `README.md` | Update to document refactored project structure, installation, startup, and testing instructions |
-
-### 0.5.4 Wildcard Patterns
-
-- `src/**/*.js` — All source files requiring refactoring (5 files)
-- `tests/**/*.test.js` — All test files requiring import path updates (4 files)
-- `*.js` (root) — Root-level JavaScript files: `server.js`, `jest.config.js`
-
-### 0.5.5 One-Phase Execution
-
-The entire refactor is executed by Blitzy in a single phase. All 13 files listed in the transformation plan above are processed together to ensure atomic consistency of import paths, module exports, and behavioral contracts across the entire codebase.
-
-## 0.6 Dependency Inventory
-
-### 0.6.1 Key Packages
-
-The following table enumerates all direct dependencies declared in `package.json`, verified against the installed versions resolved in `package-lock.json` and confirmed via runtime inspection.
-
-| Registry | Package | Declared Version | Resolved Version | Type | Purpose |
-|----------|---------|-----------------|-----------------|------|---------|
-| npmjs.org | `express` | `^5.1.0` | 5.2.1 | `dependencies` | Express.js HTTP framework — routing engine, middleware pipeline, response handling |
-| npmjs.org | `jest` | `^30.2.0` | 30.2.0 | `devDependencies` | Test runner, assertion library, mocking framework, coverage reporter |
-| npmjs.org | `supertest` | `^7.1.4` | 7.2.2 | `devDependencies` | HTTP assertion library for integration testing against Express app without TCP binding |
-
-**Runtime environment:**
-
-| Component | Version | Source |
-|-----------|---------|--------|
-| Node.js | 20.20.0 | `node --version` output; compatible with Node.js 20.x LTS (Codename: Iron) |
-| npm | 11.1.0 | `npm --version` output; lockfileVersion 3 |
-
-**No new dependencies are introduced by this refactoring.** The zero-new-dependency constraint is preserved. The existing three direct npm packages remain the complete dependency surface.
-
-### 0.6.2 Dependency Updates
-
-**Import Refactoring:**
-
-Files requiring import path verification and potential updates following the refactoring:
-
-- `server.js` — Update internal imports to `src/app` and `src/config`
-- `src/app.js` — Update internal imports to `./routes`
-- `src/routes/index.js` — Update internal imports to `./main.routes`
-- `tests/**/*.test.js` — Update all test file imports to track source file locations
-
-Import transformation rules:
-
-- Current: `const app = require('./src/app');` (in `server.js`)
-- Refactored: Same path — `const app = require('./src/app');`
-- Apply to: `server.js`
-
-- Current: `const config = require('./src/config');` (in `server.js`)
-- Refactored: Same path — `const config = require('./src/config');`
-- Apply to: `server.js`
-
-- Current: `const { mainRoutes } = require('./routes');` (in `src/app.js`)
-- Refactored: Same path — `const { mainRoutes } = require('./routes');`
-- Apply to: `src/app.js`
-
-- Current: `const mainRoutes = require('./main.routes');` (in `src/routes/index.js`)
-- Refactored: Same path — `const mainRoutes = require('./main.routes');`
-- Apply to: `src/routes/index.js`
-
-**External Reference Updates:**
-
-| File Pattern | Update Required |
-|-------------|----------------|
-| `package.json` | Verify `"main": "server.js"` and all npm scripts |
-| `jest.config.js` | Verify test discovery and coverage collection patterns |
-| `README.md` | Update project structure documentation |
-
-### 0.6.3 Transitive Dependencies of Note
-
-The following key transitive dependencies of Express 5.2.1 are relevant to behavioral preservation during refactoring:
-
-| Package | Version | Relevance to Refactoring |
-|---------|---------|--------------------------|
-| `router` | 2.2.0 | Express routing core — underlies `express.Router()` used in `main.routes.js` |
-| `path-to-regexp` | 8.3.0 | Route path pattern matching — affects route registration in `main.routes.js` |
-| `etag` | 1.8.1 | ETag generation — tests assert ETag presence on cacheable GET responses |
-| `qs` | 6.14.1 | Query string parsing — tests verify query parameter handling behavior |
-| `content-type` | 1.0.5 | Content-Type header parsing — tests assert `text/html; charset=utf-8` |
-| `send` | 1.2.1 | Response streaming — underlies `res.send()` used in route handlers |
-
-These transitive dependencies are not modified by the refactoring but their behavior is exercised by the test suite and must continue to function identically.
-
-## 0.7 Refactoring Rules
-
-### 0.7.1 Refactoring-Specific Rules
-
-The following rules are derived from the user's explicit instruction to "keep every feature and functionality exactly as in the original Node.js project" and "ensure the rewritten version fully matches the behavior and logic of the current implementation":
-
-- **Maintain all public API contracts** — The two HTTP endpoints (`GET /` and `GET /evening`) must return identical response bodies, status codes, and headers before and after refactoring
-- **Preserve all existing functionality** — Every behavioral contract documented in the test suite (63 tests) must continue to pass without modification to test assertions
-- **Ensure all tests continue passing** — All 63 tests across 4 test files must pass with 100% code coverage maintained across all four Jest coverage dimensions (statements, branches, functions, lines)
-- **Follow Express.js patterns** — The Factory Pattern (`src/app.js`), Barrel Pattern (`src/routes/index.js`), and Twelve-Factor Configuration (`src/config/index.js`) must be preserved
-- **Maintain backward compatibility** — All import paths, module exports, and configuration defaults must produce identical runtime behavior
-- **Preserve the CommonJS module system** — All files must continue using `require()` / `module.exports` semantics with `'use strict'` directives
-- **No new dependencies** — The refactoring must not introduce any new npm packages; only `express`, `jest`, and `supertest` are permitted
-
-### 0.7.2 Special Instructions and Constraints
-
-- **Response string literals are immutable contracts:**
-  - `GET /` must return exactly `'Hello, World!\n'` (14 bytes including trailing newline)
-  - `GET /evening` must return exactly `'Good evening'` (12 bytes, no trailing newline)
-- **Server startup log format is a tested contract:**
-  - Must output exactly: `` `Server running at http://${config.host}:${config.port}/` ``
-  - Only one `console.log()` call during normal startup
-- **Configuration defaults are tested contracts:**
-  - `host` defaults to `'127.0.0.1'` when `HOST` env var is unset
-  - `port` defaults to `3000` when `PORT` env var is unset or invalid
-  - `env` defaults to `'development'` when `NODE_ENV` env var is unset
-- **Port parsing behavior is a tested contract:**
-  - Invalid PORT strings (e.g., `'abc'`, `''`) fall back to `3000`
-  - Whitespace-padded PORT (e.g., `'  9000  '`) is trimmed to numeric value
-  - Decimal PORT (e.g., `'3000.5'`) is truncated to integer `3000`
-- **Error handling behavior is a tested contract:**
-  - `EADDRINUSE`, `EACCES`, and generic errors must not crash the process
-  - Server lifecycle must support boundary ports: `0` (OS-assigned) and `65535` (maximum)
-- **JSDoc annotations and coding conventions:**
-  - All files must include JSDoc module-level and function-level documentation
-  - `'use strict'` directive required in all source and test files where currently present
-  - Test descriptions must follow the `should <behavior>` naming convention
-  - Test functions must use `test()` (not `it()`) per existing convention
-
-### 0.7.3 Validation Criteria
-
-The refactoring is considered successful when all of the following criteria are met:
-
-| Criterion | Measurement | Threshold |
-|-----------|-------------|-----------|
-| All tests pass | `npx jest --ci --watchAll=false` | 63/63 tests, 4/4 suites |
-| Statement coverage | Jest coverage report | ≥ 80% (currently 100%) |
-| Branch coverage | Jest coverage report | ≥ 75% (currently 100%) |
-| Function coverage | Jest coverage report | ≥ 90% (currently 100%) |
-| Line coverage | Jest coverage report | ≥ 80% (currently 100%) |
-| No new dependencies | `package.json` diff | Zero additions to `dependencies` or `devDependencies` |
-| Behavioral equivalence | HTTP response comparison | Identical bodies, status codes, headers for all endpoints |
-| Test execution time | Jest timing output | ≤ 5 seconds (currently ~1.1 seconds) |
-
-## 0.8 References
-
-### 0.8.1 Codebase Files and Folders Searched
-
-The following files and folders were directly retrieved and analyzed to derive the conclusions in this Agent Action Plan:
-
-**Source Files Inspected (read_file):**
-| File Path | Purpose |
-|-----------|---------|
-| `server.js` | HTTP server entry point — reviewed listen binding, error handling, startup logging |
-| `src/app.js` | Express application factory — reviewed Factory Pattern, route mounting, export contract |
-| `src/config/index.js` | Configuration module — reviewed env var resolution, fallback defaults, type guarantees |
-| `src/routes/index.js` | Route barrel — reviewed aggregator re-export pattern |
-| `src/routes/main.routes.js` | Route handlers — reviewed GET `/` and GET `/evening` definitions and response strings |
-| `package.json` | npm manifest — reviewed dependencies, scripts, entry point, metadata |
-| `jest.config.js` | Jest configuration — reviewed test environment, patterns, coverage thresholds |
-| `README.md` | Project marker — reviewed minimal content |
-| `.gitignore` | Git exclusions — reviewed patterns for node_modules, coverage, env, IDE |
-| `tests/unit/config.test.js` | Config unit tests — reviewed 15 test cases, helper functions, env manipulation |
-| `tests/unit/routes.test.js` | Route unit tests — reviewed 7 test cases, Router introspection helpers |
-| `tests/integration/endpoints.test.js` | Integration tests — reviewed 26 test cases, Supertest helpers, HTTP assertions |
-| `tests/lifecycle/server.test.js` | Lifecycle tests — reviewed 15 test cases, mock factories, jest.doMock patterns |
-
-**Folders Inspected (get_source_folder_contents):**
-| Folder Path | Children Discovered |
-|-------------|---------------------|
-| (root) | `README.md`, `jest.config.js`, `package-lock.json`, `package.json`, `server.js`, `blitzy/`, `src/`, `tests/` |
-| `src/` | `app.js`, `config/`, `routes/` |
-| `src/config/` | `index.js` |
-| `src/routes/` | `index.js`, `main.routes.js` |
-| `tests/` | `integration/`, `lifecycle/`, `unit/` |
-| `tests/unit/` | `config.test.js`, `routes.test.js` |
-| `tests/integration/` | `endpoints.test.js` |
-| `tests/lifecycle/` | `server.test.js` |
-| `blitzy/` | `documentation/` |
-
-**Tech Spec Sections Retrieved (get_tech_spec_section):**
-| Section | Key Information Extracted |
-|---------|--------------------------|
-| 1.1 Executive Summary | Project overview, test suite scope (63 tests), 100% coverage, zero source modifications |
-| 1.3 Scope | In-scope features, out-of-scope exclusions, implementation boundaries |
-| 3.1 Technology Stack Overview | Node.js 20.x LTS, npm 11.x, Express 5.2.1, Jest 30.2.0, Supertest 7.2.2 |
-| 3.4 Open Source Dependencies | Direct and transitive dependency inventory, license distribution, security status |
-| 5.1 High-Level Architecture | Modular layered architecture, three tiers, Factory/Barrel/Twelve-Factor patterns |
-| 5.2 Component Details | Per-component responsibilities, interfaces, behavioral characteristics |
-| 6.1 Core Services Architecture | Single-process modular architecture confirmation, non-applicability of microservices |
-
-### 0.8.2 Environment Verification
-
-| Verification Step | Result |
-|-------------------|--------|
-| Node.js version | v20.20.0 (compatible with Node.js 20.x LTS) |
-| npm version | 11.1.0 (lockfileVersion 3) |
-| Express installed version | 5.2.1 (resolved from `^5.1.0`) |
-| Jest installed version | 30.2.0 (resolved from `^30.2.0`) |
-| Supertest installed version | 7.2.2 (resolved from `^7.1.4`) |
-| `npm ci` | Completed successfully (379 packages installed) |
-| `npx jest --ci --watchAll=false` | 63 passed, 0 failed, 4 suites — 100% coverage on all metrics |
-
-### 0.8.3 Web Research Conducted
-
-| Search Query | Key Insight |
-|-------------|-------------|
-| "Express.js 5 project structure best practices 2025" | Confirmed that separated `app.js` factory, `config/`, and `routes/` directories align with the industry-standard Express.js modular organization pattern |
-
-### 0.8.4 Attachments
-
-No external attachments, Figma URLs, or supplementary files were provided for this project.
+### 0.5.3 Critical Implementation Details
+
+**Design patterns employed:**
+- **Service Pattern**: `AgeCalculatorService` encapsulates business logic behind a clean public API
+- **Value Object Pattern**: `AgeResult` is an immutable data carrier with no identity beyond its values
+- **Utility Class Pattern**: `DateParser` and `DateValidator` provide stateless helper methods
+
+**Key algorithms:**
+- **Age calculation**: `Period.between(dob, LocalDate.now())` — the `Period` class internally handles month-length variations, leap years, and day carry-over to produce accurate year/month/day decomposition
+- **Date parsing**: `DateTimeFormatter.ofPattern("dd/MM/yyyy").withResolverStyle(ResolverStyle.STRICT)` — strict resolution ensures that `31/02/2020` throws a `DateTimeParseException` instead of silently adjusting to a valid date
+
+**Error handling and edge cases:**
+- `DateTimeParseException` — caught when input does not match `DD/MM/YYYY` pattern or resolves to an invalid calendar date
+- Future date check — `parsedDate.isAfter(LocalDate.now())` rejects dates beyond today
+- Empty or null input — handled before parsing with a direct string check
+- Leap year edge case — `29/02/2000` is valid (leap year), `29/02/1900` is invalid (not a leap year despite being divisible by 100); the strict `DateTimeFormatter` handles this correctly
+- Same-day birth — `Period.between()` returns `0 years, 0 months, 0 days` for today's date, which is valid output
+
+## 0.6 File Transformation Mapping
+
+### 0.6.1 File-by-File Execution Plan
+
+| Target File | Transformation | Source File/Reference | Purpose/Changes |
+|-------------|----------------|----------------------|-----------------|
+| `src/main/java/com/agecalculator/AgeCalculatorApp.java` | CREATE | N/A (new file) | Main entry point class with `main()` method; handles console input via `Scanner`, invokes `AgeCalculatorService`, displays results or error messages |
+| `src/main/java/com/agecalculator/service/AgeCalculatorService.java` | CREATE | N/A (new file) | Core business logic class; orchestrates date parsing, validation, and age computation using `Period.between()` |
+| `src/main/java/com/agecalculator/model/AgeResult.java` | CREATE | N/A (new file) | Immutable model class encapsulating years, months, days; includes `toString()` returning `Your age is X years, Y months, and Z days.` |
+| `src/main/java/com/agecalculator/util/DateParser.java` | CREATE | N/A (new file) | Utility class for parsing `DD/MM/YYYY` strings to `LocalDate` using `DateTimeFormatter` with strict resolver |
+| `src/main/java/com/agecalculator/util/DateValidator.java` | CREATE | N/A (new file) | Utility class for validating parsed dates (no future dates, reasonable range checks) |
+| `src/test/java/com/agecalculator/service/AgeCalculatorServiceTest.java` | CREATE | N/A (new file) | Unit tests for `AgeCalculatorService` covering valid calculations, leap years, same-day birth, edge cases |
+| `src/test/java/com/agecalculator/util/DateValidatorTest.java` | CREATE | N/A (new file) | Unit tests for `DateValidator` covering future dates, null/empty input, boundary dates |
+| `src/test/java/com/agecalculator/util/DateParserTest.java` | CREATE | N/A (new file) | Unit tests for `DateParser` covering valid formats, invalid formats, invalid calendar dates |
+| `README.md` | UPDATE | `README.md` | Update from bare placeholder to full project documentation with description, build/run instructions, usage examples |
+| `.gitignore` | CREATE | N/A (new file) | Java-specific gitignore patterns for compiled classes, IDE files, and build artifacts |
+| `docs/USAGE.md` | CREATE | N/A (new file) | Detailed usage documentation with input/output examples and error scenarios |
+
+### 0.6.2 New Files Detail
+
+- **`src/main/java/com/agecalculator/AgeCalculatorApp.java`** — Application entry point
+  - Content type: Source code (Java)
+  - Based on: Standard Java console application pattern
+  - Key methods: `main(String[] args)` — prompts user, reads DOB input via `Scanner`, invokes service, prints result or error
+
+- **`src/main/java/com/agecalculator/service/AgeCalculatorService.java`** — Age calculation service
+  - Content type: Source code (Java)
+  - Based on: Service pattern for business logic encapsulation
+  - Key methods: `calculateAge(String dobString)` — parses, validates, computes, returns `AgeResult`; `calculateAge(LocalDate dob)` — computes age from a pre-parsed `LocalDate`
+
+- **`src/main/java/com/agecalculator/model/AgeResult.java`** — Result model
+  - Content type: Source code (Java)
+  - Based on: Value Object / immutable data class pattern
+  - Key elements: Private final fields (`years`, `months`, `days`), constructor, getters, `toString()` producing `Your age is X years, Y months, and Z days.`
+
+- **`src/main/java/com/agecalculator/util/DateParser.java`** — Date parsing utility
+  - Content type: Source code (Java)
+  - Based on: Utility class pattern
+  - Key elements: Static `DateTimeFormatter` constant with `dd/MM/yyyy` pattern and `ResolverStyle.STRICT`; method `parse(String dateString)` returning `LocalDate`
+
+- **`src/main/java/com/agecalculator/util/DateValidator.java`** — Date validation utility
+  - Content type: Source code (Java)
+  - Based on: Utility class pattern
+  - Key elements: Method `validate(LocalDate date)` checking against `LocalDate.now()`; method `isNotFutureDate(LocalDate date)` returning boolean
+
+- **`src/test/java/com/agecalculator/service/AgeCalculatorServiceTest.java`** — Service tests
+  - Content type: Test code (Java)
+  - Key test cases: Valid DOB calculation, leap year DOB (29/02/2000), same-day birth, boundary month/day transitions
+
+- **`src/test/java/com/agecalculator/util/DateValidatorTest.java`** — Validator tests
+  - Content type: Test code (Java)
+  - Key test cases: Future date rejection, today's date acceptance, past date acceptance
+
+- **`src/test/java/com/agecalculator/util/DateParserTest.java`** — Parser tests
+  - Content type: Test code (Java)
+  - Key test cases: Valid `DD/MM/YYYY` parsing, invalid format rejection (e.g., `2020-01-01`), invalid calendar date rejection (e.g., `31/02/2020`), empty string handling
+
+- **`.gitignore`** — Version control exclusions
+  - Content type: Configuration
+  - Key patterns: `*.class`, `*.jar`, `*.war`, `out/`, `build/`, `target/`, `.idea/`, `*.iml`, `.vscode/`, `.DS_Store`
+
+- **`docs/USAGE.md`** — Usage documentation
+  - Content type: Documentation (Markdown)
+  - Key sections: Prerequisites, How to compile, How to run, Example input/output, Error scenarios
+
+### 0.6.3 Files to Modify Detail
+
+- **`README.md`** — Transform from placeholder to project documentation
+  - Sections to update: Replace the single `# 21stgitOLDOne` heading entirely
+  - New content to add: Project title and description, features list, prerequisites (Java 17+), build and run instructions (`javac` and `java` commands), usage examples with sample input/output, project structure overview
+  - Content to remove: The bare `# 21stgitOLDOne` heading (to be replaced with the new project title)
+
+### 0.6.4 Configuration and Documentation Updates
+
+- **Configuration changes:**
+  - `.gitignore`: New file establishing Java-specific exclusion patterns to keep the repository clean of compiled artifacts and IDE-specific files
+  - Impact: Prevents accidental commits of `.class` files, build output directories, and IDE configuration
+
+- **Documentation updates:**
+  - `README.md`: Complete overhaul from placeholder to comprehensive project landing page
+  - `docs/USAGE.md`: New detailed usage guide for end users
+  - Cross-references: `README.md` will link to `docs/USAGE.md` for detailed usage information
+
+### 0.6.5 Cross-File Dependencies
+
+- `AgeCalculatorApp.java` imports and depends on `AgeCalculatorService`, `AgeResult`
+- `AgeCalculatorService.java` imports and depends on `DateParser`, `DateValidator`, `AgeResult`
+- `DateParser.java` imports `java.time.LocalDate`, `java.time.format.DateTimeFormatter`, `java.time.format.ResolverStyle`
+- `DateValidator.java` imports `java.time.LocalDate`
+- `AgeResult.java` is a standalone model with no project-internal dependencies
+- All test files depend on their corresponding source classes and the Java testing framework
+- `README.md` references the source directory structure and compilation commands
+- `docs/USAGE.md` references the main class name and expected I/O formats
+
+## 0.7 Rules
+
+### 0.7.1 Task-Specific Rules
+
+The following rules are derived directly from the user's explicit requirements and must be strictly observed during implementation:
+
+- **Mandatory API usage**: The implementation must use `java.time.LocalDate`, `java.time.Period`, and `java.time.format.DateTimeFormatter` — no legacy `java.util.Date`, `java.util.Calendar`, or `java.text.SimpleDateFormat` classes are permitted
+- **OOP principles required**: The code must follow Object-Oriented Programming principles including encapsulation (private fields with public accessors), separation of concerns (distinct classes for input, service, model, utility), and clean readable class design
+- **Exception handling via try-catch**: All error-prone operations (date parsing, validation) must be enclosed in `try-catch` blocks — no uncaught exceptions should propagate to the user
+- **Input format**: The application must accept Date of Birth exclusively in `DD/MM/YYYY` format (two-digit day, two-digit month, four-digit year, separated by forward slashes)
+- **Output format**: The age must be displayed exactly as: `Your age is X years, Y months, and Z days.`
+- **Future date rejection**: DOB must not be a future date; if a future date is entered, a meaningful error message must be displayed
+- **Invalid date handling**: Invalid dates such as `31/02/2020` must be detected and rejected with a meaningful error message
+- **Clean and readable coding standards**: Code must use meaningful variable and method names, consistent indentation, and appropriate inline documentation
+
+## 0.8 Special Instructions
+
+### 0.8.1 Special Execution Instructions
+
+- **Compilation approach**: The project uses direct `javac` compilation without a build tool (no Maven or Gradle). Source files are compiled from the `src/main/java` directory with output to an `out/` or `build/` directory
+- **Runtime**: Java 17 (OpenJDK 17.0.18) is the target runtime — all `java.time` APIs are fully supported
+- **No external dependencies**: The application relies exclusively on the Java Standard Library; no third-party JARs, Maven Central downloads, or package manager installations are required
+- **Console-only execution**: The application runs as a standalone console program via `java com.agecalculator.AgeCalculatorApp` — no application server, container, or framework runtime is needed
+- **No deployment pipeline**: This is a local development project; no CI/CD, Docker, or cloud deployment configuration is required
+
+### 0.8.2 Constraints and Boundaries
+
+- **Technical constraints**:
+  - Java 17 LTS as the compilation and runtime target
+  - Only Java Standard Library APIs permitted (no third-party libraries)
+  - Console-based I/O only (`System.in` / `System.out`)
+- **Process constraints**:
+  - Unit tests should be created for the core calculation and validation logic
+  - Code must be compilable with standard `javac` without any build tool
+- **Output constraints**:
+  - The output format `Your age is X years, Y months, and Z days.` must be reproduced exactly
+  - Error messages must be descriptive and user-friendly (e.g., "Error: Invalid date format. Please enter date in DD/MM/YYYY format." rather than raw exception stack traces)
+- **Compatibility requirements**:
+  - The application must be compatible with Java 17+ (uses `java.time` APIs available since Java 8, compiled for Java 17 target)
+
+## 0.9 References
+
+### 0.9.1 Repository Files and Folders Searched
+
+The following repository files and folders were inspected during analysis:
+
+| Path | Type | Findings |
+|------|------|----------|
+| `/` (repository root) | Folder | Contains only `README.md`; no source code, configuration, or build files |
+| `README.md` | File | Single line content: `# 21stgitOLDOne`; bare placeholder with no project documentation |
+
+**Additional repository searches yielded no results for:**
+- `.blitzyignore` files (none found)
+- Java source files (`**/*.java`)
+- Build configuration files (`pom.xml`, `build.gradle`, `Makefile`)
+- CI/CD configuration (`.github/workflows/`, `.gitlab-ci.yml`)
+- Test files (`**/*Test.java`, `**/*Spec.java`)
+- Documentation files beyond `README.md`
+
+### 0.9.2 Technical Specification Sections Referenced
+
+| Section | Key Takeaway |
+|---------|-------------|
+| 1.1 Executive Summary | Repository is a minimal placeholder with no implemented functionality |
+| 1.3 Scope | Explicitly lists source code, application runtime, and testing frameworks as out of current scope (to be created) |
+| 2.1 Feature Catalog | Only features are Repository Identification (F-001), Basic Documentation (F-002), and Version Control (F-003) |
+| 2.2 Functional Requirements Table | Requirements are limited to README presence, Markdown rendering, and Git structure |
+| 3.2 Programming Languages | No programming languages currently implemented in the repository |
+| 3.3 Frameworks & Libraries | No frameworks or libraries currently utilized |
+| 3.4 Open Source Dependencies | Zero-dependency architecture; no package managers configured |
+| 5.1 High-Level Architecture | Static content architecture with platform-delegated services — will transition to application architecture |
+| 6.1 Core Services Architecture | Core services are not currently applicable — greenfield development needed |
+
+### 0.9.3 External Research Sources
+
+| Source | Topic | Key Insight |
+|--------|-------|-------------|
+| Baeldung — Calculate Age in Java | `java.time` age calculation | `Period.between(birthDate, currentDate)` is the idiomatic Java 8+ approach for age calculation |
+| Oracle Java Tutorials — Period and Duration | `Period` class usage | `Period` uses date-based values (years, months, days) for date differences |
+| GeeksforGeeks — Calculate Age from Birthdate | Age calculator implementation | Demonstrated `LocalDate`, `Period`, and `DateTimeFormatter` working together for age computation |
+| GeeksforGeeks — Validate Date Input in Java | Date format validation | `DateTimeFormatter.ofPattern("dd/MM/yyyy")` with try-catch on `DateTimeParseException` is the standard validation approach |
+| Baeldung — Check If String Is Valid Date | Date validation best practices | `ResolverStyle.STRICT` is recommended for robust date validation over default `SMART` mode |
+| Oracle JavaDoc — DateTimeFormatter | Formatter specification | Two-phase parsing (text parsing then field resolution) with configurable `ResolverStyle` |
+| HowToDoInJava — Date Validation | `ResolverStyle.STRICT` usage | Strict mode prevents silent date adjustment and ensures calendar-accurate validation |
+
+### 0.9.4 Attachments and External Resources
+
+- **No Figma designs provided**: This is a console application with no graphical user interface
+- **No external attachments**: No supplementary files, diagrams, or specifications were attached to this project
+- **No environment-specific files**: The `/tmp/environments_files/` directory contained no user-provided files
+- **Environments**: Four environments were attached, none with specific setup instructions (Environments 1–3 had no instructions; Environment 4 contained only the character "d" which appears to be accidental input)
 
