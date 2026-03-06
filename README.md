@@ -1,124 +1,107 @@
-# Hello World — Express.js Server
+# Age Calculator
 
-A modular Express.js 5.2.1 HTTP server demonstrating best-practice project structure with the Factory Pattern, Barrel/Aggregator routing, and Twelve-Factor App configuration. Built on Node.js 20.x LTS with 63 tests providing 100% code coverage.
+A Java console application that calculates a user's exact age in years, months, and days from their entered Date of Birth (DOB). Built using the Java `java.time` API — specifically `java.time.LocalDate`, `java.time.Period`, and `java.time.format.DateTimeFormatter` — the application provides precise age computation with robust input validation and clear, user-friendly output.
 
-## Architecture
+## Features
 
-The application follows a three-tier modular layered architecture:
+- Accepts Date of Birth in `DD/MM/YYYY` format
+- Calculates exact age in years, months, and days
+- Robust input validation (rejects future dates, invalid calendar dates like `31/02/2020`)
+- Handles leap year dates correctly (e.g., `29/02/2000` is accepted, `29/02/1900` is rejected)
+- User-friendly error messages for all invalid input scenarios
+- Object-Oriented Design with clean separation of concerns
 
-| Layer | File(s) | Responsibility |
-|-------|---------|----------------|
-| **Server Lifecycle** | `server.js` | HTTP bootstrap, listen binding, error handling, graceful shutdown |
-| **Application** | `src/app.js` | Express Factory Pattern — creates and configures the app, mounts routes, exports without calling `listen()` |
-| **Supporting** | `src/config/index.js`, `src/routes/index.js`, `src/routes/main.routes.js` | Twelve-Factor configuration, barrel route exports, route handler definitions |
+## Prerequisites
+
+- **Java 17** or higher (OpenJDK 17+ recommended)
+- No external dependencies required (uses only the Java Standard Library)
 
 ## Project Structure
 
 ```
-hello_world/
-├── server.js              # HTTP server entry point
 ├── src/
-│   ├── app.js             # Express application factory
-│   ├── config/
-│   │   └── index.js       # Environment-driven configuration
-│   └── routes/
-│       ├── index.js       # Route barrel/aggregator
-│       └── main.routes.js # GET / and GET /evening handlers
-├── tests/
-│   ├── unit/              # Unit tests for config and routes
-│   ├── integration/       # HTTP integration tests via Supertest
-│   └── lifecycle/         # Server lifecycle tests
-├── package.json
-└── jest.config.js
+│   ├── main/java/com/agecalculator/
+│   │   ├── AgeCalculatorApp.java          (Entry point)
+│   │   ├── model/
+│   │   │   └── AgeResult.java             (Result model)
+│   │   ├── service/
+│   │   │   └── AgeCalculatorService.java  (Business logic)
+│   │   └── util/
+│   │       ├── DateParser.java            (Date parsing)
+│   │       └── DateValidator.java         (Date validation)
+│   └── test/java/com/agecalculator/
+│       ├── service/
+│       │   └── AgeCalculatorServiceTest.java
+│       └── util/
+│           ├── DateParserTest.java
+│           └── DateValidatorTest.java
+├── docs/
+│   └── USAGE.md
+├── .gitignore
+└── README.md
 ```
 
-## Prerequisites
+## Build and Run Instructions
 
-- **Node.js** 20.x LTS
-- **npm** 11.x
+### Step 1: Compile the Source Files
 
-## Installation
+From the project root directory, compile all Java source files into the `out/` output directory:
 
 ```bash
-npm ci
+javac -d out src/main/java/com/agecalculator/model/AgeResult.java \
+             src/main/java/com/agecalculator/util/DateParser.java \
+             src/main/java/com/agecalculator/util/DateValidator.java \
+             src/main/java/com/agecalculator/service/AgeCalculatorService.java \
+             src/main/java/com/agecalculator/AgeCalculatorApp.java
 ```
 
-## Usage
-
-Start the server with default settings or override via environment variables:
+### Step 2: Run the Application
 
 ```bash
-npm start                              # Default: http://127.0.0.1:3000/
-HOST=0.0.0.0 PORT=8080 npm start       # Custom binding
+java -cp out com.agecalculator.AgeCalculatorApp
 ```
 
-The server logs its bound address on startup:
+### Step 3 (Optional): Compile and Run Tests
 
-```
-Server running at http://127.0.0.1:3000/
-```
-
-## API Endpoints
-
-| Method | Path | Response Body | Status | Content-Type |
-|--------|------|---------------|--------|--------------|
-| `GET` | `/` | `Hello, World!\n` | 200 | `text/html; charset=utf-8` |
-| `GET` | `/evening` | `Good evening` | 200 | `text/html; charset=utf-8` |
-
-Undefined routes return `404 Not Found`. The `X-Powered-By: Express` and `ETag` headers are present on all successful responses.
-
-## Testing
+Compile the test files:
 
 ```bash
-npm test              # Run all 63 tests with coverage
-npm run test:watch    # Watch mode
-npm run test:coverage # Coverage report
-npm run test:ci       # CI mode with reporters
+javac -d out -cp out src/test/java/com/agecalculator/util/DateParserTest.java \
+                     src/test/java/com/agecalculator/util/DateValidatorTest.java \
+                     src/test/java/com/agecalculator/service/AgeCalculatorServiceTest.java
 ```
 
-The test suite comprises 63 tests across 4 suites:
+Run the tests with assertions enabled:
 
-| Suite | Location | Tests | Scope |
-|-------|----------|-------|-------|
-| Unit — Config | `tests/unit/config.test.js` | 15 | Configuration module defaults and env var parsing |
-| Unit — Routes | `tests/unit/routes.test.js` | 7 | Router layer introspection and handler registration |
-| Integration | `tests/integration/endpoints.test.js` | 26 | HTTP response bodies, status codes, and headers |
-| Lifecycle | `tests/lifecycle/server.test.js` | 15 | Server binding, startup logging, error suppression, shutdown |
+```bash
+java -cp out -ea com.agecalculator.util.DateParserTest
+java -cp out -ea com.agecalculator.util.DateValidatorTest
+java -cp out -ea com.agecalculator.service.AgeCalculatorServiceTest
+```
 
-Coverage thresholds enforced by Jest:
+## Usage Example
 
-| Metric | Threshold |
-|--------|-----------|
-| Branches | 75% |
-| Functions | 90% |
-| Lines | 80% |
-| Statements | 80% |
+### Successful Age Calculation
 
-## Environment Variables
+```
+Enter your Date of Birth (DD/MM/YYYY): 15/08/1995
+Your age is 30 years, 6 months, and 19 days.
+```
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `HOST` | `127.0.0.1` | Server bind address |
-| `PORT` | `3000` | Server listen port (invalid values fall back to `3000`) |
-| `NODE_ENV` | `development` | Runtime environment identifier |
+### Invalid Calendar Date
 
-## Design Patterns
+```
+Enter your Date of Birth (DD/MM/YYYY): 31/02/2020
+Error: Invalid date. The date 31/02/2020 does not exist. Please enter a valid date in DD/MM/YYYY format.
+```
 
-- **Factory Pattern** (`src/app.js`) — Decouples Express app creation from HTTP server binding, enabling Supertest integration testing without TCP listeners.
-- **Barrel/Aggregator Pattern** (`src/routes/index.js`) — Centralizes route module exports for clean, single-point imports.
-- **Twelve-Factor App Configuration** (`src/config/index.js`) — Externalizes host, port, and environment settings via environment variables with sensible defaults.
-- **Separation of Concerns** — Three-tier architecture isolates server lifecycle, application logic, and supporting modules.
+### Future Date
 
-## Dependencies
+```
+Enter your Date of Birth (DD/MM/YYYY): 25/12/2030
+Error: Date of birth cannot be in the future. Please enter a past date.
+```
 
-| Package | Version | Type | Purpose |
-|---------|---------|------|---------|
-| `express` | `^5.1.0` | runtime | HTTP framework — routing, middleware, response handling |
-| `jest` | `^30.2.0` | dev | Test runner, assertions, mocking, coverage |
-| `supertest` | `^7.1.4` | dev | HTTP integration testing without TCP binding |
+## Documentation
 
-No additional dependencies are required. The application has zero runtime dependencies beyond Express.
-
-## License
-
-MIT
+For detailed usage documentation, including all supported input scenarios and error messages, see [docs/USAGE.md](docs/USAGE.md).
