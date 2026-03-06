@@ -1,24 +1,43 @@
-# Dependencies
-node_modules/
+# Compiled class files
+*.class
 
-# Test coverage
-coverage/
+# Package files
+*.jar
+*.war
+*.ear
 
-# Environment variables
-.env
-.env.local
+# Build output
+out/
+build/
+target/
+bin/
 
-# Logs
-logs/
-*.log
-npm-debug.log*
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# IDE
-.vscode/
+# IntelliJ IDEA
 .idea/
-*.swp
-*.swo
+*.iml
+*.iws
+*.ipr
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# VS Code
+.vscode/
+
+# NetBeans
+nbproject/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+Thumbs.db
+ehthumbs.db
+
+# Log files
+*.log
+
+# Virtual machine crash logs
+hs_err_pid*
+replay_pid*
