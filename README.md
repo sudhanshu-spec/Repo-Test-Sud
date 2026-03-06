@@ -92,7 +92,7 @@ Your age is 30 years, 6 months, and 19 days.
 
 ```
 Enter your Date of Birth (DD/MM/YYYY): 31/02/2020
-Error: Invalid date. The date 31/02/2020 does not exist. Please enter a valid date in DD/MM/YYYY format.
+Error: Invalid date format. Please enter date in DD/MM/YYYY format.
 ```
 
 ### Future Date

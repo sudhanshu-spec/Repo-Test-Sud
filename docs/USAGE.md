@@ -205,7 +205,7 @@ When the user enters a date that uses the correct format but does not exist on t
 
 ```
 Enter your Date of Birth (DD/MM/YYYY): 31/02/2020
-Error: Invalid date. The date 31/02/2020 does not exist. Please enter a valid date in DD/MM/YYYY format.
+Error: Invalid date format. Please enter date in DD/MM/YYYY format.
 ```
 
 **Example — month 13 does not exist:**
@@ -250,7 +250,7 @@ Your age is 26 years, 0 months, and 5 days.
 
 ```
 Enter your Date of Birth (DD/MM/YYYY): 29/02/1900
-Error: Invalid date. The date 29/02/1900 does not exist. Please enter a valid date in DD/MM/YYYY format.
+Error: Invalid date format. Please enter date in DD/MM/YYYY format.
 ```
 
 ### Born Today
