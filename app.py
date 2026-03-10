@@ -8,6 +8,8 @@ Endpoints:
   GET /evening - Returns "Good evening"
 """
 
+import os
+
 from flask import Flask
 
 # Phase 1: Basic Flask application instance creation
@@ -40,7 +42,17 @@ def evening():
 
 # Server initialization and startup
 if __name__ == '__main__':
+    # Suppress detailed version disclosure from the development server
+    from werkzeug.serving import WSGIRequestHandler
+    WSGIRequestHandler.version_string = lambda self: 'Flask'
+
     port = 3000
     print(f'* Server running on http://127.0.0.1:{port}/')
     print(f'* Press CTRL+C to quit')
-    app.run(host='127.0.0.1', port=port, debug=True)
+    # Debug mode is controlled via FLASK_DEBUG environment variable.
+    # Set FLASK_DEBUG=true for development; never enable in production
+    # as the Werkzeug debugger allows arbitrary code execution.
+    debug_mode = os.environ.get(
+        'FLASK_DEBUG', 'false'
+    ).lower() == 'true'
+    app.run(host='127.0.0.1', port=port, debug=debug_mode)
