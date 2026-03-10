@@ -21,7 +21,8 @@ def hello():
     """
     Handle GET requests to /hello endpoint
     Returns: Plain text "Hello world"
-    Equivalent to Express: app.get('/hello', (req, res) => res.send('Hello world'))
+    Equivalent to Express:
+    app.get('/hello', (req, res) => res.send('Hello world'))
     """
     return 'Hello world'
 
@@ -31,7 +32,8 @@ def evening():
     """
     Handle GET requests to /evening endpoint
     Returns: Plain text "Good evening"
-    Equivalent to Express: app.get('/evening', (req, res) => res.send('Good evening'))
+    Equivalent to Express:
+    app.get('/evening', (req, res) => res.send('Good evening'))
     """
     return 'Good evening'
 
