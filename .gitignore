@@ -1,5 +1,12 @@
-# Dependencies
-node_modules/
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environments
+venv/
+.venv/
+env/
 
 # Environment files
 .env
@@ -10,5 +17,11 @@ node_modules/
 *.log
 logs/
 
-# PM2 Process Manager
-.pm2/
+# Python packaging
+*.egg-info/
+*.egg
+dist/
+build/
+
+# pytest
+.pytest_cache/
