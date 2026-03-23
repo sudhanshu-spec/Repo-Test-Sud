@@ -1,471 +1,393 @@
-# Project Guide — Express.js Hello World Server Refactoring
+# Blitzy Project Guide — Age Calculator Java Console Application
+
+---
 
 ## 1. Executive Summary
 
-This project delivers a comprehensive Express.js-centric structural refactoring of the hello_world Node.js server. The codebase has been reorganized into a modular three-tier layered architecture while maintaining byte-for-byte behavioral equivalence across all HTTP responses, status codes, headers, server lifecycle events, and error handling flows.
+### 1.1 Project Overview
 
-**Completion: 18 hours completed out of 22 total hours = 81.8% complete**
+The Age Calculator is a greenfield Java console application that computes a user's exact age in years, months, and days from their entered Date of Birth (DOB). Built entirely from scratch within a previously empty repository, the application leverages the Java `java.time` API — specifically `LocalDate`, `Period`, and `DateTimeFormatter` with `ResolverStyle.STRICT` — to deliver precise age computation with robust input validation and user-friendly error messages. The application targets Java 17+, uses zero external dependencies, and follows Object-Oriented Design principles with clean separation of concerns across five source classes, three test suites, and comprehensive documentation.
 
-All 13 in-scope files have been implemented, all 63 tests pass with 100% code coverage, and runtime behavior has been verified. The remaining 4 hours represent post-implementation operational tasks requiring human review and configuration.
-
-### Key Achievements
-- 13 files refactored/created (5 source, 4 tests, 3 config, 1 documentation)
-- 63/63 tests passing across 4 test suites
-- 100% code coverage on all four Jest dimensions (statements, branches, functions, lines)
-- Zero new npm dependencies introduced
-- All behavioral contracts preserved (HTTP endpoints, headers, error handling, server lifecycle)
-- Zero issues found during validation — no fixes required
-
-### Critical Unresolved Issues
-- **None blocking.** All validation gates passed. The only advisory item is 18 high-severity npm audit findings in Jest 30.2.0 transitive dependencies (minimatch ReDoS), which affect the development toolchain only and do not impact production runtime.
-
----
-
-## 2. Validation Results Summary
-
-### 2.1 Final Validator Outcome
-
-The Final Validator confirmed **PRODUCTION-READY** status with all four validation gates passed:
-
-| Gate | Status | Details |
-|------|--------|---------|
-| Test Pass Rate | ✅ PASS | 63/63 tests, 4/4 suites, 100% coverage |
-| Application Runtime | ✅ PASS | Server starts, endpoints respond correctly, graceful shutdown works |
-| Zero Errors | ✅ PASS | All 10 JS files pass `node -c` syntax check |
-| All Files Validated | ✅ PASS | All 13 in-scope files verified |
-
-### 2.2 Compilation Results
-
-All 10 JavaScript files pass Node.js syntax validation (`node -c`):
-
-| File | Syntax Check | Status |
-|------|-------------|--------|
-| `server.js` | Pass | ✅ |
-| `src/app.js` | Pass | ✅ |
-| `src/config/index.js` | Pass | ✅ |
-| `src/routes/index.js` | Pass | ✅ |
-| `src/routes/main.routes.js` | Pass | ✅ |
-| `jest.config.js` | Pass | ✅ |
-| `tests/unit/config.test.js` | Pass | ✅ |
-| `tests/unit/routes.test.js` | Pass | ✅ |
-| `tests/integration/endpoints.test.js` | Pass | ✅ |
-| `tests/lifecycle/server.test.js` | Pass | ✅ |
-
-### 2.3 Test Results
-
-```
-Test Suites: 4 passed, 4 total
-Tests:       63 passed, 63 total
-Time:        1.242 s
-```
-
-| Suite | File | Tests | Status |
-|-------|------|-------|--------|
-| Unit — Config | `tests/unit/config.test.js` | 15 | ✅ All pass |
-| Unit — Routes | `tests/unit/routes.test.js` | 7 | ✅ All pass |
-| Integration | `tests/integration/endpoints.test.js` | 26 | ✅ All pass |
-| Lifecycle | `tests/lifecycle/server.test.js` | 15 | ✅ All pass |
-
-### 2.4 Coverage Report
-
-```
-----------------------------|---------|----------|---------|---------|
-File                        | % Stmts | % Branch | % Funcs | % Lines |
-----------------------------|---------|----------|---------|---------|
-All files                   |     100 |      100 |     100 |     100 |
-  server.js                 |     100 |      100 |     100 |     100 |
-  src/app.js                |     100 |      100 |     100 |     100 |
-  src/config/index.js       |     100 |      100 |     100 |     100 |
-  src/routes/index.js       |     100 |      100 |     100 |     100 |
-  src/routes/main.routes.js |     100 |      100 |     100 |     100 |
-----------------------------|---------|----------|---------|---------|
-```
-
-All metrics exceed the configured thresholds (branches ≥ 75%, functions ≥ 90%, lines ≥ 80%, statements ≥ 80%).
-
-### 2.5 Runtime Verification
-
-| Test | Expected | Actual | Status |
-|------|----------|--------|--------|
-| `GET /` body | `Hello, World!\n` (14 bytes) | `Hello, World!\n` (14 bytes) | ✅ |
-| `GET /` status | 200 | 200 | ✅ |
-| `GET /evening` body | `Good evening` (12 bytes) | `Good evening` (12 bytes) | ✅ |
-| `GET /evening` status | 200 | 200 | ✅ |
-| `GET /nonexistent` status | 404 | 404 | ✅ |
-| Server startup log | `Server running at http://127.0.0.1:PORT/` | Matches | ✅ |
-| Graceful shutdown | `server.close()` succeeds | Confirmed | ✅ |
-
-### 2.6 Dependency Status
-
-| Package | Declared | Resolved | Type | Status |
-|---------|----------|----------|------|--------|
-| express | ^5.1.0 | 5.2.1 | runtime | ✅ Installed |
-| jest | ^30.2.0 | 30.2.0 | dev | ✅ Installed |
-| supertest | ^7.1.4 | 7.2.2 | dev | ✅ Installed |
-
-Zero new dependencies introduced. 379 total packages installed via `npm ci`.
-
-### 2.7 Fixes Applied During Validation
-
-**None.** All files were correctly implemented by the implementation agents. The Final Validator found zero issues across all 13 in-scope files.
-
----
-
-## 3. Hours Breakdown and Completion Assessment
-
-### 3.1 Completed Hours Calculation (18h)
-
-| Component | Files | Lines | Hours | Notes |
-|-----------|-------|-------|-------|-------|
-| Server lifecycle layer | `server.js` | 88 | 2.5 | HTTP bootstrap, error handling, JSDoc |
-| Application factory | `src/app.js` | 67 | 1.5 | Factory Pattern, route mounting |
-| Configuration module | `src/config/index.js` | 59 | 1.5 | Twelve-Factor config, edge cases |
-| Route barrel | `src/routes/index.js` | 28 | 0.5 | Barrel/Aggregator pattern |
-| Route handlers | `src/routes/main.routes.js` | 48 | 1.0 | GET endpoints, exact contracts |
-| Config unit tests | `tests/unit/config.test.js` | 141 | 1.5 | 15 tests, env manipulation |
-| Route unit tests | `tests/unit/routes.test.js` | 95 | 1.0 | 7 tests, Router introspection |
-| Integration tests | `tests/integration/endpoints.test.js` | 244 | 2.5 | 26 tests, Supertest HTTP assertions |
-| Lifecycle tests | `tests/lifecycle/server.test.js` | 410 | 3.0 | 15 tests, mock factories, jest.doMock |
-| Package manifest | `package.json` | 32 | 0.5 | Scripts, deps, engines, metadata |
-| Jest configuration | `jest.config.js` | 56 | 0.5 | Coverage thresholds, test discovery |
-| Git exclusions | `.gitignore` | 24 | 0.5 | Dependency, coverage, env, IDE patterns |
-| Documentation | `README.md` | 124 | 1.0 | Architecture, usage, API, testing guide |
-| Validation & QA | — | — | 0.5 | Syntax checks, runtime verification |
-| **Total Completed** | **13 files** | **1,416** | **18.0** | |
-
-### 3.2 Remaining Hours Calculation (4h)
-
-| Task | Hours | Priority | Confidence |
-|------|-------|----------|------------|
-| Code review of refactored source files | 1.5 | High | High |
-| npm audit vulnerability triage and resolution | 1.0 | Medium | Medium |
-| Production environment variable configuration | 0.5 | Medium | High |
-| Post-review merge and integration testing | 1.0 | High | High |
-| **Total Remaining** | **4.0** | | |
-
-Enterprise multipliers (1.10x compliance × 1.10x uncertainty = 1.21x) have been factored into individual task estimates above.
-
-### 3.3 Completion Calculation
-
-```
-Completed Hours:  18
-Remaining Hours:   4
-Total Hours:      22
-Completion:       18 / 22 = 81.8%
-```
-
-### 3.4 Visual Representation
+### 1.2 Completion Status
 
 ```mermaid
-pie title Project Hours Breakdown
-    "Completed Work" : 18
-    "Remaining Work" : 4
+pie title Completion Status
+    "Completed (33h)" : 33
+    "Remaining (6h)" : 6
 ```
+
+| Metric | Value |
+|--------|-------|
+| **Total Project Hours** | 39 |
+| **Completed Hours (AI)** | 33 |
+| **Remaining Hours** | 6 |
+| **Completion Percentage** | **84.6%** |
+
+**Calculation**: 33 completed hours / (33 + 6) total hours = 33 / 39 = **84.6% complete**
+
+### 1.3 Key Accomplishments
+
+- ✅ All 11 AAP-scoped files created/updated (5 source, 3 test, 3 documentation/config)
+- ✅ 5 production-ready Java source files with comprehensive JavaDoc and OOP design (563 LOC)
+- ✅ 32 unit tests written and passing at 100% pass rate across 3 test suites (845 LOC)
+- ✅ 7 runtime validation scenarios tested and verified (valid date, invalid format, invalid calendar date, future date, empty input, valid leap year, invalid leap year)
+- ✅ Full compilation with 0 errors and 0 warnings across all 8 source and test files
+- ✅ README.md fully rewritten with build/run instructions, usage examples, and project structure
+- ✅ Detailed USAGE.md documentation created (344 lines) covering all input/output scenarios
+- ✅ Java-specific `.gitignore` configured with IDE, build output, and OS patterns
+- ✅ Mandatory Java APIs used: `LocalDate`, `Period`, `DateTimeFormatter`, `ResolverStyle.STRICT`
+- ✅ Exact output format implemented: `Your age is X years, Y months, and Z days.`
+
+### 1.4 Critical Unresolved Issues
+
+| Issue | Impact | Owner | ETA |
+|-------|--------|-------|-----|
+| No critical unresolved issues | N/A | N/A | N/A |
+
+All AAP-scoped work has been completed, validated, and committed. No compilation errors, test failures, or runtime issues remain.
+
+### 1.5 Access Issues
+
+No access issues identified. The project is a self-contained Java console application with zero external dependencies, no database connections, no API integrations, and no third-party service credentials required.
+
+### 1.6 Recommended Next Steps
+
+1. **[High] Human Code Review** — Review all 5 source files for production code quality, OOP adherence, and edge case coverage
+2. **[High] Production Environment Validation** — Verify compilation and execution on the target production JDK (Java 17+)
+3. **[Medium] Documentation Review** — Proofread README.md and docs/USAGE.md for accuracy and completeness
+4. **[Low] Build Automation** — Create optional `compile.sh` and `run.sh` shell scripts for one-command compilation and execution
 
 ---
 
-## 4. Detailed Task Table for Human Developers
+## 2. Project Hours Breakdown
 
-| # | Task | Description | Action Steps | Hours | Priority | Severity |
-|---|------|-------------|-------------|-------|----------|----------|
-| 1 | Code review of refactored source files | Review all 13 refactored files (~1,416 lines) for code quality, Express.js best practices, JSDoc accuracy, and behavioral correctness | 1. Review 5 source files for logic correctness 2. Review 4 test files for assertion completeness 3. Review config files for accuracy 4. Verify import path consistency 5. Approve or request changes | 1.5 | High | Medium |
-| 2 | npm audit vulnerability triage | Assess 18 high-severity findings in Jest 30.2.0 transitive dependencies (minimatch ReDoS via glob). Dev-only — does not affect production runtime. | 1. Run `npm audit` and review findings 2. Confirm all vulnerabilities are in devDependencies chain 3. Evaluate if Jest upgrade or `npm audit fix` is appropriate 4. Document triage decision 5. Apply fix if deemed necessary | 1.0 | Medium | Low |
-| 3 | Production environment configuration | Configure HOST, PORT, and NODE_ENV environment variables for the target production deployment environment | 1. Determine production host binding (e.g., 0.0.0.0) 2. Set production PORT 3. Set NODE_ENV=production 4. Create .env file or configure in deployment platform 5. Verify server starts with production config | 0.5 | Medium | Medium |
-| 4 | Post-review merge and integration testing | Merge feature branch to main and verify application works in target environment | 1. Approve PR after code review 2. Merge branch to main 3. Run `npm ci && npm test` on main 4. Start server and verify endpoints 5. Confirm graceful shutdown works | 1.0 | High | Medium |
-| | **Total Remaining Hours** | | | **4.0** | | |
+### 2.1 Completed Work Detail
+
+| Component | Hours | Description |
+|-----------|-------|-------------|
+| AgeCalculatorApp.java | 3.0 | Main entry point class with Scanner-based console I/O, try-with-resources, tiered exception handling, and orchestration to service layer (121 LOC) |
+| AgeCalculatorService.java | 4.0 | Core business logic service with overloaded `calculateAge()` methods, `Period.between()` computation, delegation to parser/validator utilities (164 LOC) |
+| AgeResult.java | 1.5 | Immutable value object model with private final fields, getters, and `toString()` producing exact output format (86 LOC) |
+| DateParser.java | 3.0 | Date parsing utility with `DateTimeFormatter.ofPattern("dd/MM/uuuu")` and `ResolverStyle.STRICT`, null/empty guards, whitespace trimming (117 LOC) |
+| DateValidator.java | 2.0 | Business rule validation utility with `validate()` and `isNotFutureDate()` methods, null handling, future-date rejection (75 LOC) |
+| AgeCalculatorServiceTest.java | 4.0 | 9 comprehensive unit tests covering valid calculation, leap year DOB, same-day birth, boundary transitions, invalid input propagation, future date rejection, null handling, toString format (320 LOC) |
+| DateParserTest.java | 4.0 | 11 comprehensive unit tests covering valid parsing, format rejection, calendar validation, leap years, null/empty handling, whitespace, non-numeric, single-digit rejection, two-digit year rejection (309 LOC) |
+| DateValidatorTest.java | 3.0 | 12 comprehensive unit tests covering future date rejection, today acceptance, past acceptance, null handling, boolean checks, far future, very old dates, error messages (216 LOC) |
+| README.md | 2.0 | Complete rewrite from placeholder to full project documentation with features, prerequisites, project structure, build/run instructions, usage examples (107 LOC) |
+| .gitignore | 0.5 | Java-specific gitignore with compiled classes, packages, build output, IDE, OS, and VM crash log patterns (43 LOC) |
+| docs/USAGE.md | 3.0 | Detailed usage documentation covering prerequisites, compilation steps, runtime usage, all input scenarios, error handling examples (344 LOC) |
+| Project Setup & Validation | 3.0 | Directory structure creation, package hierarchy establishment, compilation verification, runtime validation (7 scenarios), fix iterations (2 commits) |
+| **Total** | **33.0** | |
+
+### 2.2 Remaining Work Detail
+
+| Category | Base Hours | Priority | After Multiplier |
+|----------|-----------|----------|-----------------|
+| Human Code Review & QA | 2.0 | High | 2.4 |
+| Production Environment Validation | 1.0 | High | 1.2 |
+| Documentation Review & Polish | 1.0 | Medium | 1.2 |
+| Build Automation Script Creation | 1.0 | Low | 1.2 |
+| **Total** | **5.0** | | **6.0** |
+
+### 2.3 Enterprise Multipliers Applied
+
+| Multiplier | Value | Rationale |
+|------------|-------|-----------|
+| Compliance Review | 1.10x | Standard code review and quality assurance overhead for production readiness |
+| Uncertainty Buffer | 1.10x | Minor buffer for environment-specific issues during production deployment |
+| **Combined** | **1.21x** | Applied to all remaining task base hours |
 
 ---
 
-## 5. Comprehensive Development Guide
+## 3. Test Results
 
-### 5.1 System Prerequisites
+| Test Category | Framework | Total Tests | Passed | Failed | Coverage % | Notes |
+|---------------|-----------|-------------|--------|--------|------------|-------|
+| Unit — DateParserTest | Java Assertions (`-ea`) | 11 | 11 | 0 | 100% | Covers valid parsing, format rejection, calendar validation, leap years, null/empty, whitespace, non-numeric, single-digit, two-digit year |
+| Unit — DateValidatorTest | Java Assertions (`-ea`) | 12 | 12 | 0 | 100% | Covers future date rejection, today/past acceptance, null handling, boolean methods, far future, very old dates, error messages |
+| Unit — AgeCalculatorServiceTest | Java Assertions (`-ea`) | 9 | 9 | 0 | 100% | Covers valid calculation, leap year DOB, same-day birth, boundary transitions, invalid input propagation, future date, null, empty, toString format |
+| **Total** | | **32** | **32** | **0** | **100%** | All tests originate from Blitzy's autonomous validation |
 
-| Software | Required Version | Verification Command |
-|----------|-----------------|---------------------|
-| Node.js | 20.x LTS (20.20.0 verified) | `node --version` |
-| npm | 11.x (11.1.0 verified) | `npm --version` |
-| Git | Any recent version | `git --version` |
+---
 
-**Operating System:** Linux, macOS, or Windows with Node.js support
-**Hardware:** Minimal — the application is a lightweight HTTP server with no external service dependencies
+## 4. Runtime Validation & UI Verification
 
-### 5.2 Environment Setup
+### Runtime Health
 
-#### 5.2.1 Clone and Checkout
+- ✅ **Compilation**: All 5 main source files and 3 test files compile with 0 errors and 0 warnings
+- ✅ **Class Generation**: 8 `.class` files generated in `out/` directory
+- ✅ **Application Launch**: `java -cp out com.agecalculator.AgeCalculatorApp` starts successfully
+- ✅ **Console I/O**: User prompt displayed correctly, input accepted via `Scanner`
 
-```bash
-git clone <repository-url>
-cd hello_world
-git checkout blitzy-d6f6e598-6ddd-4d62-a76f-bc92955d563a
-```
+### Runtime Scenario Validation (7/7 Passed)
 
-#### 5.2.2 Environment Variables (Optional)
+- ✅ **Valid date** (`15/08/1995`) → `Your age is 30 years, 6 months, and 19 days.`
+- ✅ **Invalid format** (`2020-01-01`) → `Error: Invalid date format. Please enter date in DD/MM/YYYY format.`
+- ✅ **Invalid calendar date** (`31/02/2020`) → `Error: Invalid date format. Please enter date in DD/MM/YYYY format.`
+- ✅ **Future date** (`25/12/2030`) → `Error: Date of birth cannot be in the future. Please enter a past date.`
+- ✅ **Empty input** (`""`) → `Error: No input provided. Please enter a date in DD/MM/YYYY format.`
+- ✅ **Valid leap year** (`29/02/2000`) → Age calculated correctly
+- ✅ **Invalid leap year** (`29/02/1900`) → `Error: Invalid date format. Please enter date in DD/MM/YYYY format.`
 
-The application uses environment variables with sensible defaults. No `.env` file is required for local development.
+### API / Integration Verification
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `HOST` | `127.0.0.1` | Server bind address |
-| `PORT` | `3000` | Server listen port |
-| `NODE_ENV` | `development` | Runtime environment |
+- ✅ `java.time.LocalDate.now()` — system date retrieval operational
+- ✅ `java.time.Period.between()` — age computation accurate
+- ✅ `DateTimeFormatter.ofPattern("dd/MM/uuuu").withResolverStyle(ResolverStyle.STRICT)` — strict parsing functional
+- ✅ `Scanner` with `System.in` — console input reading operational
 
-To override defaults, export variables before starting:
+---
 
-```bash
-export HOST=0.0.0.0
-export PORT=8080
-export NODE_ENV=production
-```
+## 5. Compliance & Quality Review
 
-### 5.3 Dependency Installation
+| AAP Requirement | Status | Evidence |
+|----------------|--------|----------|
+| Console-based user input via `Scanner` on `System.in` | ✅ Pass | `AgeCalculatorApp.java` lines 81–87 |
+| System date retrieval via `LocalDate.now()` | ✅ Pass | `AgeCalculatorService.java` line 150 |
+| Precise age computation via `Period.between()` | ✅ Pass | `AgeCalculatorService.java` line 154 |
+| Output format: `Your age is X years, Y months, and Z days.` | ✅ Pass | `AgeResult.java` line 84, verified at runtime |
+| `DD/MM/YYYY` input format with `DateTimeFormatter` | ✅ Pass | `DateParser.java` lines 72–74 |
+| `ResolverStyle.STRICT` for robust validation | ✅ Pass | `DateParser.java` line 74 |
+| Future date rejection | ✅ Pass | `DateValidator.java` lines 48–51, 12 test assertions |
+| Invalid calendar date rejection (e.g., 31/02/2020) | ✅ Pass | Strict formatter rejects automatically, 11 test assertions |
+| Leap year edge case handling | ✅ Pass | 29/02/2000 accepted, 29/02/1900 rejected — verified in tests and runtime |
+| OOP principles (encapsulation, separation of concerns) | ✅ Pass | 5 distinct classes: App (I/O), Service (logic), Model (data), Parser (parsing), Validator (validation) |
+| Exception handling via try-catch | ✅ Pass | Tiered catch in `AgeCalculatorApp.java` lines 106–118 |
+| Resource management for Scanner | ✅ Pass | Try-with-resources in `AgeCalculatorApp.java` line 81 |
+| User-friendly error messages (no stack traces) | ✅ Pass | All 7 error scenarios produce clean messages |
+| Mandatory APIs: `LocalDate`, `Period`, `DateTimeFormatter` | ✅ Pass | All three used as specified |
+| No legacy date APIs (`java.util.Date`, `Calendar`) | ✅ Pass | Only `java.time` APIs used throughout |
+| Unit tests for core logic | ✅ Pass | 32 tests across 3 test suites, 100% pass rate |
+| README.md with build/run instructions | ✅ Pass | Full rewrite with all required sections |
+| docs/USAGE.md detailed documentation | ✅ Pass | 344-line comprehensive guide |
+| .gitignore with Java patterns | ✅ Pass | Covers classes, JARs, build dirs, IDEs, OS files |
+| Clean and readable coding standards | ✅ Pass | Comprehensive JavaDoc, meaningful names, consistent formatting |
 
-```bash
-npm ci
-```
+### Validation Fixes Applied During Autonomous Testing
 
-**Expected output:** Installs 379 packages from the lockfile. No warnings expected for production dependencies. You may see npm audit advisories for dev-dependency transitive vulnerabilities (Jest/minimatch) — these do not affect runtime.
-
-**Verification:**
-
-```bash
-npm ls --depth=0
-```
-
-Expected:
-
-```
-hello_world@1.0.0
-├── express@5.2.1
-├── jest@30.2.0
-└── supertest@7.2.2
-```
-
-### 5.4 Application Startup
-
-#### 5.4.1 Default Start
-
-```bash
-npm start
-```
-
-Expected output:
-
-```
-Server running at http://127.0.0.1:3000/
-```
-
-#### 5.4.2 Custom Host and Port
-
-```bash
-HOST=0.0.0.0 PORT=8080 npm start
-```
-
-Expected output:
-
-```
-Server running at http://0.0.0.0:8080/
-```
-
-#### 5.4.3 Direct Node.js Invocation
-
-```bash
-node server.js
-```
-
-### 5.5 Verification Steps
-
-#### 5.5.1 Verify Endpoints
-
-With the server running (in a separate terminal or use `&`):
-
-```bash
-# Test root endpoint
-curl -i http://127.0.0.1:3000/
-```
-
-Expected response:
-
-```
-HTTP/1.1 200 OK
-Content-Type: text/html; charset=utf-8
-Content-Length: 14
-ETag: "e-..."
-X-Powered-By: Express
-
-Hello, World!
-```
-
-```bash
-# Test evening endpoint
-curl -i http://127.0.0.1:3000/evening
-```
-
-Expected response:
-
-```
-HTTP/1.1 200 OK
-Content-Type: text/html; charset=utf-8
-Content-Length: 12
-ETag: "c-..."
-X-Powered-By: Express
-
-Good evening
-```
-
-```bash
-# Test 404 for undefined route
-curl -i http://127.0.0.1:3000/nonexistent
-```
-
-Expected: HTTP 404 Not Found
-
-#### 5.5.2 Verify Test Suite
-
-```bash
-npx jest --ci --watchAll=false --verbose
-```
-
-Expected: 63 passed, 0 failed, 4 suites, 100% coverage on all metrics.
-
-#### 5.5.3 Verify Syntax Only (No Execution)
-
-```bash
-for f in server.js src/app.js src/config/index.js src/routes/index.js src/routes/main.routes.js; do
-  node -c "$f" && echo "$f: OK"
-done
-```
-
-Expected: All files report OK with no syntax errors.
-
-### 5.6 Running Tests
-
-| Command | Purpose |
-|---------|---------|
-| `npm test` | Run all 63 tests with coverage report |
-| `npm run test:watch` | Watch mode for development |
-| `npm run test:coverage` | Generate detailed coverage report |
-| `npm run test:ci` | CI mode with default reporters |
-
-### 5.7 Project Structure
-
-```
-hello_world/
-├── server.js              # HTTP server entry point (88 lines)
-├── src/
-│   ├── app.js             # Express application factory (67 lines)
-│   ├── config/
-│   │   └── index.js       # Twelve-Factor configuration (59 lines)
-│   └── routes/
-│       ├── index.js       # Route barrel/aggregator (28 lines)
-│       └── main.routes.js # GET / and GET /evening handlers (48 lines)
-├── tests/
-│   ├── unit/
-│   │   ├── config.test.js     # 15 config unit tests (141 lines)
-│   │   └── routes.test.js     # 7 route unit tests (95 lines)
-│   ├── integration/
-│   │   └── endpoints.test.js  # 26 HTTP integration tests (244 lines)
-│   └── lifecycle/
-│       └── server.test.js     # 15 lifecycle tests (410 lines)
-├── package.json           # npm manifest (32 lines)
-├── jest.config.js         # Jest configuration (56 lines)
-├── .gitignore             # Git exclusion patterns (24 lines)
-└── README.md              # Project documentation (124 lines)
-```
-
-### 5.8 Troubleshooting
-
-| Issue | Cause | Resolution |
-|-------|-------|------------|
-| `EADDRINUSE` error on startup | Port already in use | Change PORT env var or stop the conflicting process |
-| `npm ci` fails | Lockfile mismatch or corrupt cache | Delete `node_modules/` and run `npm ci` again |
-| Tests enter watch mode | Missing `--watchAll=false` flag | Use `npx jest --ci --watchAll=false` |
-| Coverage below thresholds | Source file changes without test updates | Ensure all new/modified code has test coverage |
+| Fix | Commit | Description |
+|-----|--------|-------------|
+| Documentation error messages corrected | `964d291` | Corrected hallucinated error message strings in documentation to match actual application behavior |
+| Date-dependent test reliability | `cd6f1a6` | Resolved test that depended on specific calendar date to use relative date computation |
 
 ---
 
 ## 6. Risk Assessment
 
-### 6.1 Technical Risks
-
-| Risk | Severity | Likelihood | Mitigation |
-|------|----------|------------|------------|
-| npm audit: 18 high-severity findings in Jest transitive deps (minimatch ReDoS) | Low | N/A (existing) | Dev-dependency only — does not affect production runtime. Monitor for Jest patch releases. Consider `npm audit fix` if a non-breaking fix becomes available. |
-| Express 5.x is relatively new (5.2.1) | Low | Low | Express 5.x has been stable since GA release. All behavioral contracts are validated by 63 tests. Pin version in package.json if strict stability is required. |
-
-### 6.2 Security Risks
-
-| Risk | Severity | Likelihood | Mitigation |
-|------|----------|------------|------------|
-| `X-Powered-By: Express` header disclosed | Low | N/A (by design) | Intentionally preserved per AAP requirements. If security hardening is desired in future, add `app.disable('x-powered-by')`. |
-| No authentication/authorization on endpoints | Low | N/A (by design) | Application serves static greeting responses only. No sensitive data exposed. Add auth middleware if endpoints evolve. |
-
-### 6.3 Operational Risks
-
-| Risk | Severity | Likelihood | Mitigation |
-|------|----------|------------|------------|
-| No CI/CD pipeline | Medium | N/A (out of scope) | Recommended: Set up GitHub Actions or similar to run `npm ci && npm test` on every PR. |
-| No containerization | Low | N/A (out of scope) | Application runs directly on Node.js. Add Dockerfile if container deployment is needed. |
-| No health check endpoint | Low | Low | Express default 404 behavior can serve as a basic liveness indicator. Add explicit `/health` endpoint if monitoring requires it. |
-
-### 6.4 Integration Risks
-
-| Risk | Severity | Likelihood | Mitigation |
-|------|----------|------------|------------|
-| No external service dependencies | None | N/A | Application is self-contained with no external integrations. No integration risk. |
+| Risk | Category | Severity | Probability | Mitigation | Status |
+|------|----------|----------|-------------|------------|--------|
+| JDK version mismatch on target environment | Technical | Low | Low | README documents Java 17+ prerequisite; `javac`/`java` version checks included in USAGE.md | Mitigated |
+| Date output varies based on execution date | Technical | Low | Medium | Tests use relative date assertions; `AgeCalculatorServiceTest` fixed in commit `cd6f1a6` | Resolved |
+| No build tool (Maven/Gradle) for dependency management | Technical | Low | Low | Zero external dependencies; direct `javac` compilation is sufficient per AAP scope | Accepted |
+| No automated CI/CD pipeline | Operational | Low | Low | Explicitly out of AAP scope; manual compilation and test execution documented | Accepted |
+| No logging framework | Operational | Low | Low | Console application uses `System.out`/`System.err`; adequate for single-user tool | Accepted |
+| Scanner left open on `System.in` edge cases | Technical | Low | Very Low | Try-with-resources guarantees `Scanner` closure; tested in runtime validation | Mitigated |
+| No input retry loop (application exits after one attempt) | Technical | Low | Low | Current design matches AAP requirements; retry loop is an enhancement, not a requirement | Accepted |
 
 ---
 
-## 7. Git Repository Analysis
+## 7. Visual Project Status
 
-### 7.1 Branch Information
+```mermaid
+pie title Project Hours Breakdown
+    "Completed Work" : 33
+    "Remaining Work" : 6
+```
 
-- **Feature branch:** `blitzy-d6f6e598-6ddd-4d62-a76f-bc92955d563a`
-- **Base branch:** `main`
-- **Total commits on feature branch:** 13
-- **All commits by:** Blitzy Agent (2026-02-24)
-- **Working tree:** Clean (all changes committed)
+### Remaining Work by Priority
 
-### 7.2 Code Change Summary
-
-| Metric | Value |
-|--------|-------|
-| Files changed | 16 (15 text + 3 screenshots) |
-| Lines added | 1,416 (excl. package-lock.json and images) |
-| Lines removed | 2 (README.md original content replaced) |
-| Net lines | +1,414 |
-| Source files | 5 (290 lines) |
-| Test files | 4 (890 lines) |
-| Config files | 3 (112 lines) |
-| Documentation | 1 (124 lines) |
-
-### 7.3 Commit History
-
-| Hash | Message |
-|------|---------|
-| `13e9ec1` | Refactor tests/unit/config.test.js: enhance JSDoc documentation |
-| `a34e2f8` | refactor(tests): update unit tests for Express Router validation |
-| `e3ddedd` | refactor(tests): enhance JSDoc in integration endpoint tests |
-| `a6adda9` | Refactor tests/lifecycle/server.test.js: enhance JSDoc documentation |
-| `922bc0a` | Refactor src/config/index.js: enhance JSDoc for Twelve-Factor config |
-| `8866342` | Refactor src/routes/index.js: enhance JSDoc for Barrel/Aggregator |
-| `3855a3c` | Refactor src/routes/main.routes.js: enhance JSDoc documentation |
-| `4d23a5e` | refactor(src/app): enhance Express factory with JSDoc documentation |
-| `1c63bf3` | Update README.md with comprehensive Express.js documentation |
-| `89bd299` | refactor(jest.config): enhance JSDoc with test suite details |
-| `014495c` | refactor(package.json): update metadata for Express.js architecture |
-| `a571828` | Refactor server.js: capture server instance, add error handling |
-| `1d641e4` | chore: add setup stub files for Express.js hello_world project |
+| Priority | Hours (After Multiplier) | Percentage of Remaining |
+|----------|-------------------------|------------------------|
+| High | 3.6 | 60% |
+| Medium | 1.2 | 20% |
+| Low | 1.2 | 20% |
+| **Total** | **6.0** | **100%** |
 
 ---
 
-## 8. Consistency Verification
+## 8. Summary & Recommendations
 
-### Pre-Submission Checklist
+### Achievement Summary
 
-- [x] Calculated completion % using hours formula: 18 / (18 + 4) = 18/22 = 81.8%
-- [x] Verified Executive Summary states this exact %: "18 hours completed out of 22 total hours = 81.8% complete"
-- [x] Verified pie chart uses exact completed/remaining hours: Completed Work: 18, Remaining Work: 4
-- [x] Verified task table sums to exact remaining hours: 1.5 + 1.0 + 0.5 + 1.0 = 4.0h
-- [x] Searched report for any % or hour mentions — all match
-- [x] No conflicting or ambiguous statements exist
-- [x] Shown the calculation formula with actual numbers
+The Age Calculator project is **84.6% complete** (33 hours completed out of 39 total project hours). All 11 files scoped in the Agent Action Plan have been successfully created or updated, with 100% compilation success (0 errors, 0 warnings), 100% test pass rate (32/32 tests), and 100% runtime scenario validation (7/7 scenarios). The implementation fully satisfies every AAP requirement including mandatory Java API usage (`LocalDate`, `Period`, `DateTimeFormatter`), `ResolverStyle.STRICT` date validation, OOP design principles, tiered exception handling, and the exact output format specification.
+
+### Remaining Gaps
+
+The 6 remaining hours consist exclusively of path-to-production activities requiring human involvement:
+- **Human code review** (2.4h after multiplier) — manual quality assurance of source code
+- **Production environment validation** (1.2h) — verify compilation and execution on the target deployment JDK
+- **Documentation review** (1.2h) — final proofreading of README and USAGE docs
+- **Build automation** (1.2h) — optional convenience scripts for one-command compilation
+
+### Critical Path to Production
+
+1. Complete human code review of all 5 source files
+2. Verify application on the target production JDK (Java 17+)
+3. Approve and merge this pull request
+
+### Production Readiness Assessment
+
+The application is **production-ready** from a code quality standpoint. All functional requirements are met, all tests pass, all runtime scenarios are validated, and no unresolved errors exist. The remaining 6 hours are standard human review and environment validation activities — no code changes are expected to be necessary.
+
+---
+
+## 9. Development Guide
+
+### System Prerequisites
+
+| Component | Version | Required |
+|-----------|---------|----------|
+| Java Development Kit (JDK) | 17.0.18+ | Yes |
+| Operating System | Linux / macOS / Windows | Any |
+| External Dependencies | None | N/A |
+| Build Tools | None (direct `javac`) | N/A |
+
+### Verify Java Installation
+
+```bash
+# Check Java runtime version (must be 17+)
+java -version
+# Expected: openjdk version "17.0.x"
+
+# Check Java compiler version
+javac -version
+# Expected: javac 17.0.x
+```
+
+### Clone and Navigate to Repository
+
+```bash
+git clone <repository-url>
+cd 21stgitOLDOne
+git checkout blitzy-4fc33cc2-9728-4ffd-9b16-09fd8f3e945f
+```
+
+### Compile Source Files
+
+Compile all 5 main source files into the `out/` directory:
+
+```bash
+javac -d out \
+  src/main/java/com/agecalculator/model/AgeResult.java \
+  src/main/java/com/agecalculator/util/DateParser.java \
+  src/main/java/com/agecalculator/util/DateValidator.java \
+  src/main/java/com/agecalculator/service/AgeCalculatorService.java \
+  src/main/java/com/agecalculator/AgeCalculatorApp.java
+```
+
+**Expected output**: No output (success). Verify with:
+
+```bash
+ls out/com/agecalculator/
+# Expected: AgeCalculatorApp.class  model/  service/  util/
+```
+
+### Compile Test Files
+
+```bash
+javac -d out -cp out \
+  src/test/java/com/agecalculator/util/DateParserTest.java \
+  src/test/java/com/agecalculator/util/DateValidatorTest.java \
+  src/test/java/com/agecalculator/service/AgeCalculatorServiceTest.java
+```
+
+### Run the Application
+
+```bash
+java -cp out com.agecalculator.AgeCalculatorApp
+```
+
+**Example interaction**:
+```
+Enter your Date of Birth (DD/MM/YYYY): 15/08/1995
+Your age is 30 years, 6 months, and 19 days.
+```
+
+### Run Unit Tests
+
+Run all 3 test suites with assertions enabled:
+
+```bash
+# DateParser tests (11 tests)
+java -cp out -ea com.agecalculator.util.DateParserTest
+
+# DateValidator tests (12 tests)
+java -cp out -ea com.agecalculator.util.DateValidatorTest
+
+# AgeCalculatorService tests (9 tests)
+java -cp out -ea com.agecalculator.service.AgeCalculatorServiceTest
+```
+
+**Expected output per suite**: `All <ClassName> tests passed!`
+
+### Troubleshooting
+
+| Problem | Cause | Solution |
+|---------|-------|---------|
+| `javac: command not found` | JDK not installed or not on PATH | Install OpenJDK 17+: `sudo apt install openjdk-17-jdk-headless` |
+| `error: release version 17 not supported` | JDK version too old | Upgrade to JDK 17+; verify with `java -version` |
+| `Could not find or load main class` | Incorrect classpath or working directory | Ensure you run from project root and use `-cp out` |
+| `AssertionError` in tests | Test assertion failed (potential date-dependent issue) | Re-run tests; check system date is valid |
+| No output after compilation | Expected behavior | `javac` produces no output on success; check `out/` directory for `.class` files |
+
+---
+
+## 10. Appendices
+
+### A. Command Reference
+
+| Command | Purpose |
+|---------|---------|
+| `javac -d out src/main/java/com/agecalculator/model/AgeResult.java src/main/java/com/agecalculator/util/DateParser.java src/main/java/com/agecalculator/util/DateValidator.java src/main/java/com/agecalculator/service/AgeCalculatorService.java src/main/java/com/agecalculator/AgeCalculatorApp.java` | Compile all main source files |
+| `javac -d out -cp out src/test/java/com/agecalculator/util/DateParserTest.java src/test/java/com/agecalculator/util/DateValidatorTest.java src/test/java/com/agecalculator/service/AgeCalculatorServiceTest.java` | Compile all test files |
+| `java -cp out com.agecalculator.AgeCalculatorApp` | Run the application |
+| `java -cp out -ea com.agecalculator.util.DateParserTest` | Run DateParser unit tests |
+| `java -cp out -ea com.agecalculator.util.DateValidatorTest` | Run DateValidator unit tests |
+| `java -cp out -ea com.agecalculator.service.AgeCalculatorServiceTest` | Run AgeCalculatorService unit tests |
+
+### B. Port Reference
+
+No network ports are used. The application is a standalone console tool with no server, socket, or HTTP components.
+
+### C. Key File Locations
+
+| File | Path | Purpose |
+|------|------|---------|
+| Main Entry Point | `src/main/java/com/agecalculator/AgeCalculatorApp.java` | Console I/O and application orchestration |
+| Age Calculation Service | `src/main/java/com/agecalculator/service/AgeCalculatorService.java` | Core business logic with `Period.between()` |
+| Age Result Model | `src/main/java/com/agecalculator/model/AgeResult.java` | Immutable value object for age output |
+| Date Parser | `src/main/java/com/agecalculator/util/DateParser.java` | Strict `DD/MM/YYYY` string-to-`LocalDate` conversion |
+| Date Validator | `src/main/java/com/agecalculator/util/DateValidator.java` | Business rule validation (no future dates) |
+| Service Tests | `src/test/java/com/agecalculator/service/AgeCalculatorServiceTest.java` | 9 unit tests for calculation logic |
+| Parser Tests | `src/test/java/com/agecalculator/util/DateParserTest.java` | 11 unit tests for date parsing |
+| Validator Tests | `src/test/java/com/agecalculator/util/DateValidatorTest.java` | 12 unit tests for date validation |
+| Project Documentation | `README.md` | Build/run instructions and project overview |
+| Usage Guide | `docs/USAGE.md` | Detailed usage examples and error scenarios |
+| Git Ignore | `.gitignore` | Java-specific exclusion patterns |
+| Compiled Output | `out/` | Directory containing compiled `.class` files |
+
+### D. Technology Versions
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| OpenJDK | 17.0.18 | Java runtime and compiler |
+| `java.time.LocalDate` | JDK 17 built-in | Immutable date representation |
+| `java.time.Period` | JDK 17 built-in | Date difference calculation (years, months, days) |
+| `java.time.format.DateTimeFormatter` | JDK 17 built-in | Custom date format parsing (`dd/MM/uuuu`) |
+| `java.time.format.ResolverStyle` | JDK 17 built-in | Strict calendar date resolution |
+| `java.util.Scanner` | JDK 17 built-in | Console input reading |
+
+### E. Environment Variable Reference
+
+No environment variables are required. The application is fully self-contained with no external configuration needed.
+
+### G. Glossary
+
+| Term | Definition |
+|------|-----------|
+| DOB | Date of Birth — the user-provided input date |
+| `Period` | A `java.time.Period` object representing a date-based amount of time in years, months, and days |
+| `ResolverStyle.STRICT` | A resolver mode that requires exact calendar date validity (e.g., rejects February 31st) |
+| `uuuu` | DateTimeFormatter pattern for proleptic year (required for STRICT mode; differs from `yyyy` which requires an era) |
+| Greenfield | A project built from scratch with no pre-existing codebase |
+| Value Object | An immutable object whose equality is based on its field values, not identity |
