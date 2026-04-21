@@ -1,1272 +1,839 @@
-# Agent Action Plan
+# Technical Specification
 
 # 0. Agent Action Plan
-## ***0.1 Intent Clarification***
 
-| 0.1.1 Core Documentation Objective |
-| --- |
+## 0.1 Intent Clarification
 
-### 
+### 0.1.1 Core Refactoring Objective
 
-```mermaid
-graph TD
-    A[Start] --> B{Is it?}
-    B -->|Yes| C[OK]
-    C --> D[Rethink]
-    D --> B
-    B ---->|No| E[End]
-```
+Based on the prompt, the Blitzy platform understands that the refactoring objective is to **completely rewrite a Node.js/Express.js server application into a Python 3 Flask application** while maintaining exact feature parity with the original implementation.
 
-### 
+**Refactoring Type**: Tech Stack Migration (Node.js → Python)
 
-Based on the provided requirements, the Blitzy platform understands that the documentation objective is to **create comprehensive documentation for a Node.js/Express.js tutorial server application** that includes:
+**Target Repository**: Same repository transformation (in-place migration)
 
-- **JSDoc comments** for all functions in `server.js`
-- **A comprehensive README** with multiple sections
-- **API documentation** for the server endpoints
-- **Deployment guide** for running the application
-- **Inline code explanations** throughout the codebase
+**Refactoring Goals with Enhanced Clarity**:
 
-**Documentation Request Category**: Create new documentation | Update existing documentation
+| Goal | Description | Success Criteria |
+|------|-------------|------------------|
+| Language Migration | Convert JavaScript/Node.js codebase to Python 3 | All source files converted to Python equivalents |
+| Framework Replacement | Replace Express.js with Flask framework | All Express routes mapped to Flask route decorators |
+| API Preservation | Maintain identical HTTP API behavior | All endpoints return same responses with same status codes |
+| Port Compatibility | Keep default port configuration | Server runs on port 3000 as in original |
+| Response Fidelity | Match exact response content and format | GET /hello returns "Hello world", GET /evening returns "Good evening" |
 
-**Documentation Types Required**:
+**Implicit Requirements Identified**:
 
-- API documentation (JSDoc comments for functions)
-- User guides (README with setup instructions)
-- Technical specifications (inline code explanations)
-- Deployment documentation (deployment guide)
-
-**Explicit Documentation Requirements**:
-
-| Requirement | Description | Documentation Type |
-| --- | --- | --- |
-| JSDoc Comments | Add comprehensive JSDoc comments to all functions in server.js | API Documentation / Code Comments |
-| README Setup Instructions | Create detailed setup and installation instructions | User Guide |
-| API Documentation | Document the `/hello` and `/evening` endpoints | API Reference |
-| Deployment Guide | Provide instructions for deploying the server | Deployment Documentation |
-| Inline Code Explanations | Add explanatory comments throughout the codebase | Code Documentation |
-
-**Implicit Documentation Needs**:
-
-- Prerequisites section (Node.js version requirements, npm)
-- Quick start guide for immediate server testing
-- Environment configuration documentation
-- Troubleshooting section for common issues
-- License information
-- Contributing guidelines (optional but recommended)
+- Maintain all public API contracts (HTTP methods, paths, response formats)
+- Preserve identical behavior for all route handlers
+- Keep the same default port (3000) for backward compatibility
+- Maintain similar project structure patterns (entry point file, configuration)
+- Ensure equivalent error handling behavior
+- Preserve content-type headers and response formats
 
 ### 0.1.2 Special Instructions and Constraints
 
 **Critical Directives Captured**:
 
-- JSDoc comments must follow standard JSDoc syntax with `@param`, `@returns`, `@description`, and `@example` tags
-- README must be comprehensive and include multiple distinct sections
-- Documentation should be educational in nature, matching the tutorial project's purpose
-- Inline comments should explain the "why" behind code decisions, not just the "what"
+| Directive | Source | Implementation Impact |
+|-----------|--------|----------------------|
+| "keeping every feature and functionality exactly as in the original" | User requirement | 100% feature parity required |
+| "fully matches the behavior and logic" | User requirement | Response content, status codes, and API contracts must be identical |
+| "Rewrite this Node.js server into a Python 3 Flask application" | User requirement | Complete language/framework migration |
 
-**Template Requirements**:
+**Migration Requirements**:
 
-- Follow standard JSDoc 3.x comment format for function documentation
-- Use standard Markdown formatting for README
-- Include Mermaid diagrams where appropriate for visual documentation
+- Convert all Express.js route handlers to Flask route decorators
+- Translate JavaScript async patterns to Python synchronous Flask patterns
+- Replace npm/package.json dependency management with pip/requirements.txt
+- Convert Node.js environment variable handling to Python os.environ
 
-**Style Preferences**:
+**Performance/Scalability Considerations**:
 
-- **Tone**: Educational, beginner-friendly, clear and concise
-- **Structure**: Progressive disclosure (simple concepts first, then advanced)
-- **Depth**: Comprehensive enough for junior developers learning Node.js
-- **Format**: Markdown with proper heading hierarchy
+- Flask's WSGI-based synchronous model differs from Node.js event-driven model
+- For production deployment, consider using Gunicorn or uWSGI as WSGI server
+- Flask default development server suitable for tutorial/development purposes
+
+**User Example Preserved**: No specific code examples provided by user - migration based on Technical Specifications document describing the Node.js server structure.
 
 ### 0.1.3 Technical Interpretation
 
-These documentation requirements translate to the following technical documentation strategy:
+This refactoring translates to the following technical transformation strategy:
 
-- **To document server.js functions**, we will **create JSDoc comment blocks** above each function including `http.createServer()` callback, route handlers for `/hello` and `/evening`, and the `app.listen()` callback
-- **To create the README**, we will **generate a comprehensive Markdown file** with sections for project overview, prerequisites, installation, configuration, API reference, deployment, and troubleshooting
-- **To document the API**, we will **create endpoint documentation** describing HTTP methods, paths, request/response formats, and example usage with curl commands
-- **To create the deployment guide**, we will **document the steps** for running the server locally and preparing for production deployment
-- **To add inline explanations**, we will **insert contextual comments** explaining Node.js concepts, Express.js patterns, and the educational purpose of each code section
+**Architecture Mapping**:
 
-### 0.1.4 Inferred Documentation Needs
-
-Based on the technical specification analysis:
-
-**Module Documentation Gaps**:
-
-- `server.js` (to be created) contains public APIs (HTTP endpoints) but lacks documentation
-- The server initialization logic requires explanation of Node.js HTTP module vs Express.js patterns
-- Route handlers need documentation explaining the request-response lifecycle
-
-**Feature Documentation Requirements**:
-
-- Feature F-001 (HTTP Server Initialization) requires setup documentation
-- Feature F-002 (Hello World Endpoint) requires API documentation with examples
-- Feature F-003 (Express.js Integration) requires migration/setup documentation
-- Feature F-004 (Good Evening Endpoint) requires API documentation with examples
-
-**User Journey Documentation**:
-
-- New developers need a clear path from cloning the repository to running the server
-- Tutorial participants need step-by-step instructions for both Phase 1 (vanilla Node.js) and Phase 2 (Express.js)
-- Self-learners need troubleshooting guidance for common issues
-
-**Integration Documentation**:
-
-- The relationship between Node.js HTTP module and Express.js framework needs explanation
-- The progression from Phase 1 to Phase 2 implementation requires clear documentation
-
-## 0.2 Documentation Discovery and Analysis
-
-### 0.2.1 Existing Documentation Infrastructure Assessment
-
-**Repository Analysis Conducted**:
-
-The repository was thoroughly analyzed using the following search patterns:
-
-- Documentation files: `README*`, `docs/**`, `*.md`, `*.mdx`, `*.rst`
-- Configuration files: `package.json`, `jsdoc.json`, `mkdocs.yml`
-- Existing code documentation: `*.js` files with JSDoc comments
-
-**Repository Analysis Findings**:
-
-"Repository analysis reveals a **greenfield project state** with minimal existing documentation infrastructure."
-
-| Discovery | Status | Location |
-| --- | --- | --- |
-| [README.md](http://README.md) | Exists (minimal) | `/README.md` |
-| JSDoc Configuration | Not Found | N/A |
-| Documentation Generator | Not Found | N/A |
-| API Documentation | Not Found | N/A |
-| server.js | Not Found (to be created) | N/A |
-| package.json | Not Found (to be created) | N/A |
-
-**Current Documentation Framework**: None detected
-
-**Documentation Generator Configuration**: Not present - will need to be established
-
-**API Documentation Tools**: None currently in use - JSDoc recommended for implementation
-
-**Diagram Tools**: Mermaid recommended for architecture and flow diagrams
-
-**Documentation Hosting/Deployment**: Not configured - README-based documentation recommended for this tutorial project
-
-### 0.2.2 Repository Code Analysis for Documentation
-
-**Search Patterns Used for Code to Document**:
-
-| Pattern | Purpose | Results |
-| --- | --- | --- |
-| `server.js`, `app.js`, `index.js` | Main server entry point | Not found (greenfield) |
-| `src/**/*.js` | Source JavaScript files | Not found |
-| `routes/**/*.js` | Route definitions | Not found |
-| `*.json` | Configuration files | Not found |
-
-**Key Directories Examined**:
-
-- Root directory (`/`) - Contains only `README.md`
-- `/app` directory - Contains unrelated Python project (out of scope)
-- `.github/workflows/` - Contains `deploy-job.yml` (CI/CD configuration)
-
-**Related Documentation Found**:
-
-- Existing `README.md` at root - minimal content, requires comprehensive update
-- Technical specification provides detailed requirements for documentation
-
-**Code to be Documented** (based on technical specification):
-
-```plaintext
-server.js (to be created)
-├── HTTP Server Initialization (Phase 1)
-│   ├── http.createServer() callback
-│   ├── Request handler function
-│   └── server.listen() callback
-├── Express.js Integration (Phase 2)
-│   ├── Express app initialization
-│   ├── GET /hello route handler
-│   ├── GET /evening route handler
-│   └── app.listen() callback
-└── Utility functions (if any)
+```
+Node.js/Express Architecture     →     Python/Flask Architecture
+═══════════════════════════════════════════════════════════════════
+server.js                        →     app.py (or server.py)
+package.json                     →     requirements.txt
+.nvmrc                           →     .python-version (optional)
+node_modules/                    →     venv/ (virtual environment)
+express()                        →     Flask(__name__)
+app.get('/path', handler)        →     @app.route('/path')
+app.listen(port, callback)       →     app.run(port=port)
+res.send('text')                 →     return 'text'
+process.env.PORT                 →     os.environ.get('PORT')
 ```
 
-### 0.2.3 Web Search Research Conducted
-
-**Research Topics and Findings**:
-
-| Topic | Key Findings |
-| --- | --- |
-| JSDoc Best Practices for Node.js/Express | Use `@param`, `@returns`, `@description`, `@example` tags; install `@types/express` for type hints; document Express middleware with `express.Request`, `express.Response`, `express.NextFunction` types |
-| README Best Practices for Node.js Projects | Include project name, description, badges, prerequisites, installation, usage, API reference, contributing, and license sections; use progressive disclosure |
-| Express.js API Documentation | Use `@route` tag for endpoint documentation; include HTTP method, path, request/response examples |
-| Node.js Documentation Standards | Follow CommonJS module documentation patterns; document exports clearly |
-
-**Best Practices Identified**:
-
-1. **JSDoc for Express Routes**:
-
-   - Use `@param {express.Request} req` for request objects
-   - Use `@param {express.Response} res` for response objects
-   - Document route paths with `@route GET /path` convention
-
-2. **README Structure**:
-
-   - Start with project name and brief description
-   - Include badges for build status, version, license
-   - Provide clear installation and quick start instructions
-   - Document all API endpoints with examples
-   - Include troubleshooting section
-
-3. **Inline Code Comments**:
-
-   - Explain the "why" not just the "what"
-   - Use educational tone for tutorial projects
-   - Reference official documentation where appropriate
-
-## 0.3 Documentation Scope Analysis
-
-### 0.3.1 Code-to-Documentation Mapping
-
-**Modules Requiring Documentation**:
-
-| Module | File Path | Public APIs | Current Documentation | Documentation Needed |
-| --- | --- | --- | --- | --- |
-| HTTP Server | `server.js` | `createServer()` callback, request handler | Missing | JSDoc comments, inline explanations |
-| Express App | `server.js` | Express app instance, route handlers | Missing | JSDoc comments, API reference |
-| Hello Endpoint | `server.js` | `GET /hello` route | Missing | API documentation, usage examples |
-| Evening Endpoint | `server.js` | `GET /evening` route | Missing | API documentation, usage examples |
-
-**Detailed Module Documentation Requirements**:
-
-**Module: server.js (HTTP Server - Phase 1)**
-
-- Public APIs:
-  - `http.createServer(requestListener)` - Server factory function
-  - `requestHandler(req, res)` - Request processing function
-  - `server.listen(port, callback)` - Server startup function
-- Current documentation: None (file to be created)
-- Documentation needed:
-  - JSDoc block for request handler function
-  - Inline comments explaining HTTP module usage
-  - Comments explaining request/response lifecycle
-
-**Module: server.js (Express Server - Phase 2)**
-
-- Public APIs:
-  - `express()` - Express application factory
-  - `app.get('/hello', handler)` - Hello world endpoint
-  - `app.get('/evening', handler)` - Good evening endpoint
-  - `app.listen(port, callback)` - Server startup
-- Current documentation: None (file to be created)
-- Documentation needed:
-  - JSDoc blocks for each route handler
-  - Inline comments explaining Express patterns
-  - API reference documentation
-
-**Configuration Options Requiring Documentation**:
-
-| Config File | Options to Document | Current Status |
-| --- | --- | --- |
-| `package.json` | scripts, dependencies, engines | To be created |
-| `.nvmrc` or `.node-version` | Node.js version | To be created |
-| Environment variables | `PORT` | To be documented |
-
-**Features Requiring User Guides**:
-
-| Feature | Current Coverage | Documentation Gaps |
-| --- | --- | --- |
-| Server Setup | None | Installation, prerequisites, quick start |
-| Hello World Endpoint | None | API usage, curl examples, response format |
-| Good Evening Endpoint | None | API usage, curl examples, response format |
-| Express Migration | None | Migration steps, framework comparison |
-
-### 0.3.2 Documentation Gap Analysis
-
-"Given the requirements and repository analysis, documentation gaps include..."
-
-**Undocumented Public APIs**:
-
-- `server.js` request handler function (Phase 1)
-- `server.js` Express route handlers (Phase 2)
-- Server initialization and startup logic
-- Error handling patterns
-
-**Missing User Guides**:
-
-- Project setup and installation guide
-- Quick start tutorial
-- API usage guide with examples
-- Troubleshooting guide
-
-**Incomplete Architecture Documentation**:
-
-- No explanation of Phase 1 vs Phase 2 architecture
-- No documentation of request flow
-- No explanation of Node.js HTTP module vs Express.js
-
-**Outdated Documentation**:
-
-- Existing `README.md` is minimal and requires complete rewrite
-
-**Documentation Coverage Summary**:
-
-```plaintext
-Current State:
-├── README.md ────────────── Minimal (needs comprehensive update)
-├── JSDoc Comments ───────── 0% (server.js not yet created)
-├── API Documentation ────── 0% (no endpoint docs)
-├── Inline Comments ──────── 0% (no code comments)
-├── Setup Instructions ───── 0% (not documented)
-└── Deployment Guide ─────── 0% (not documented)
-
-Target State:
-├── README.md ────────────── Comprehensive (all sections)
-├── JSDoc Comments ───────── 100% (all functions documented)
-├── API Documentation ────── 100% (all endpoints documented)
-├── Inline Comments ──────── 100% (educational explanations)
-├── Setup Instructions ───── 100% (complete guide)
-└── Deployment Guide ─────── 100% (local and production)
-```
-
-## 0.4 Documentation Implementation Design
-
-### 0.4.1 Documentation Structure Planning
-
-**Documentation Hierarchy**:
-
-```plaintext
-repo-test-sud/
-├── README.md (comprehensive project documentation)
-│   ├── Project Overview
-│   ├── Features
-│   ├── Prerequisites
-│   ├── Installation
-│   ├── Quick Start
-│   ├── API Reference
-│   │   ├── GET /hello
-│   │   └── GET /evening
-│   ├── Configuration
-│   ├── Deployment Guide
-│   ├── Troubleshooting
-│   ├── Contributing
-│   └── License
-├── server.js (with JSDoc comments and inline explanations)
-│   ├── File-level JSDoc block
-│   ├── Import/require statements (commented)
-│   ├── Configuration constants (commented)
-│   ├── Route handlers (JSDoc + inline comments)
-│   └── Server initialization (JSDoc + inline comments)
-└── package.json (with descriptive fields)
-    ├── name, version, description
-    ├── scripts (documented)
-    └── engines (Node.js version)
-```
-
-### 0.4.2 Content Generation Strategy
-
-**Information Extraction Approach**:
-
-| Source | Information to Extract | Target Documentation |
-| --- | --- | --- |
-| Technical Specification | Feature requirements, API specs | README API Reference |
-| Technical Specification | Architecture details | README Overview, Inline comments |
-| Technical Specification | Code examples | JSDoc @example tags |
-| Best Practices Research | JSDoc patterns | server.js comments |
-| Best Practices Research | README structure | [README.md](http://README.md) sections |
-
-**Template Application**:
-
-**JSDoc Comment Template for Route Handlers**:
-
-```javascript
-/**
- * @description Brief description of the endpoint
- * @route HTTP_METHOD /path
- * @param {express.Request} req - Express request object
- * @param {express.Response} res - Express response object
- * @returns {void} Sends response to client
- * @example
- * // Example usage with curl
- * curl http://localhost:3000/path
- */
-```
-
-**README Section Template**:
-
-```plaintext
-## Section Title
-
-Brief introduction to the section.
-
-#### Subsection (if needed)
-
-Detailed content with:
-- Bullet points for lists
-- Code blocks for examples
-- Tables for structured data
-```
-
-**Documentation Standards**:
-
-| Standard | Implementation |
-| --- | --- |
-| Markdown formatting | Proper headers (# ## ###), code blocks with language hints |
-| Mermaid diagrams | \`\`\`mermaid blocks for architecture and flow diagrams |
-| Code examples | \`\`\`javascript blocks with syntax highlighting |
-| Source citations | Reference to technical specification sections |
-| Tables | Parameter descriptions, endpoint specifications |
-| Consistent terminology | Use "endpoint", "route handler", "server" consistently |
-
-### 0.4.3 Diagram and Visual Strategy
-
-**Mermaid Diagrams to Create**:
-
-| Diagram Type | Purpose | Location |
-| --- | --- | --- |
-| Architecture Diagram | Show server component structure | [README.md](http://README.md) |
-| Request Flow Diagram | Illustrate HTTP request lifecycle | [README.md](http://README.md) |
-| Phase Comparison | Compare Phase 1 vs Phase 2 architecture | [README.md](http://README.md) |
-
-**Architecture Diagram Specification**:
-
-```mermaid
-graph TB
-    subgraph "Repo-Test-Sud Server"
-        A[Client Request] --> B[Node.js HTTP Server]
-        B --> C{Route Handler}
-        C -->|/hello| D[Hello World Response]
-        C -->|/evening| E[Good Evening Response]
-        D --> F[Client Response]
-        E --> F
-    end
-```
-
-**Request Flow Diagram Specification**:
-
-```mermaid
-sequenceDiagram
-    participant C as Client
-    participant S as Server
-    participant H as Handler
-    
-    C->>S: GET /hello
-    S->>H: Route to handler
-    H->>S: "Hello world"
-    S->>C: 200 OK + Response
-```
-
-### 0.4.4 JSDoc Implementation Strategy
-
-**JSDoc Tags to Use**:
-
-| Tag | Purpose | Example |
-| --- | --- | --- |
-| `@file` | File-level description | `@file Express server for Repo-Test-Sud tutorial` |
-| `@description` | Function/method description | `@description Handles GET requests to /hello endpoint` |
-| `@param` | Parameter documentation | `@param {express.Request} req - The request object` |
-| `@returns` | Return value documentation | `@returns {void} Sends JSON response` |
-| `@example` | Usage examples | `@example curl http://localhost:3000/hello` |
-| `@see` | Cross-references | `@see https://expressjs.com/en/api.html` |
-| `@since` | Version information | `@since 1.0.0` |
-
-**Inline Comment Strategy**:
-
-| Comment Type | Purpose | Example |
-| --- | --- | --- |
-| Section headers | Organize code sections | `// ============ SERVER CONFIGURATION ============` |
-| Explanatory | Explain "why" decisions | `// Using port 3000 as default for local development` |
-| Educational | Teach Node.js/Express concepts | `// Express automatically parses the URL path` |
-| Reference | Link to documentation | `// See: https://nodejs.org/api/http.html` |
-
-## 0.5 Documentation File Transformation Mapping
-
-### 0.5.1 File-by-File Documentation Plan
-
-**Documentation Transformation Modes**:
-
-- **CREATE** - Create a new documentation file
-- **UPDATE** - Update an existing documentation file
-- **DELETE** - Remove an obsolete documentation file
-- **REFERENCE** - Use as an example for documentation style and structure
-
-**Complete Documentation Transformation Map**:
-
-| Target Documentation File | Transformation | Source Code/Docs | Content/Changes |
-| --- | --- | --- | --- |
-| `README.md` | UPDATE | Technical Specification, existing [README.md](http://README.md) | Complete rewrite with comprehensive sections: Overview, Features, Prerequisites, Installation, Quick Start, API Reference, Configuration, Deployment Guide, Troubleshooting, Contributing, License |
-| `server.js` | CREATE | Technical Specification F-001, F-002, F-003, F-004 | Create server file with comprehensive JSDoc comments for all functions, inline code explanations, and educational comments |
-| `package.json` | CREATE | Technical Specification 3.2, 3.3 | Create package manifest with documented scripts, dependencies (express@4.18.x), and engines field |
-| `.nvmrc` | CREATE | Technical Specification 3.2 | Create Node.js version specification file (18.x or 20.x LTS) |
-
-### 0.5.2 New Documentation Files Detail
-
-**File: server.js**
-
-- **Type**: Source Code with JSDoc Documentation
-- **Source**: Technical Specification sections 2.2, 2.3, 5.2
-- **Sections**:
-  - File-level JSDoc block (`@file`, `@description`, `@author`, `@version`)
-  - Import statements with explanatory comments
-  - Configuration constants with documentation
-  - Phase 1: HTTP Server Implementation
-    - `createServer()` callback with JSDoc
-    - Request handler with JSDoc and inline comments
-    - `server.listen()` with JSDoc
-  - Phase 2: Express.js Implementation
-    - Express app initialization with comments
-    - `GET /hello` route handler with JSDoc
-    - `GET /evening` route handler with JSDoc
-    - `app.listen()` with JSDoc
-- **Diagrams**: None (code file)
-- **Key Citations**: Technical Specification 2.2 Feature Catalog, 5.2 Component Details
-
-**JSDoc Structure for server.js**:
-
-```javascript
-/**
- * @file Repo-Test-Sud Tutorial Server
- * @description Educational Node.js/Express server
- * @version 1.0.0
- */
-
-/**
- * @description Handles GET /hello requests
- * @param {express.Request} req - Request object
- * @param {express.Response} res - Response object
- * @returns {void}
- */
-```
-
-**File: [README.md](http://README.md) (Complete Rewrite)**
-
-- **Type**: Project Documentation
-- **Source**: Technical Specification, existing [README.md](http://README.md)
-- **Sections**:
-  - Project Title and Description
-  - Features List
-  - Prerequisites (Node.js 18.x/20.x, npm)
-  - Installation Instructions
-  - Quick Start Guide
-  - API Reference
-    - `GET /hello` endpoint documentation
-    - `GET /evening` endpoint documentation
-  - Configuration (PORT environment variable)
-  - Deployment Guide (local and production)
-  - Troubleshooting (common issues and solutions)
-  - Contributing Guidelines
-  - License Information
-- **Diagrams**:
-  - Architecture overview (Mermaid)
-  - Request flow diagram (Mermaid)
-- **Key Citations**: Technical Specification 1.1, 1.2, 2.2, 5.1
-
-**File: package.json**
-
-- **Type**: Project Configuration
-- **Source**: Technical Specification 3.2, 3.3
-- **Content**:
-  - `name`: "repo-test-sud"
-  - `version`: "1.0.0"
-  - `description`: Documented project description
-  - `main`: "server.js"
-  - `scripts`: Documented npm scripts (start, dev)
-  - `dependencies`: express@4.18.x or 4.19.x
-  - `engines`: Node.js version specification
-- **Key Citations**: Technical Specification 3.2 Programming Languages, 3.3 Frameworks
-
-**File: .nvmrc**
-
-- **Type**: Node Version Configuration
-- **Source**: Technical Specification 3.2
-- **Content**: Node.js LTS version (18 or 20)
-- **Key Citations**: Technical Specification 3.2 Programming Languages
-
-### 0.5.3 Documentation Files to Update Detail
-
-[**README.md**](http://README.md) **- Complete Rewrite**
-
-| Section | New Content | Source |
-| --- | --- | --- |
-| Title | "Repo-Test-Sud" with project badges | Tech Spec 1.1 |
-| Description | Educational Node.js/Express tutorial server | Tech Spec 1.2 |
-| Features | List of F-001 through F-004 features | Tech Spec 2.2 |
-| Prerequisites | Node.js 18.x/20.x LTS, npm 8.x+ | Tech Spec 3.2 |
-| Installation | Clone, npm install, npm start | Standard practice |
-| Quick Start | 3-step guide to running server | Tech Spec 2.3 |
-| API Reference | /hello and /evening endpoints | Tech Spec 2.2, 2.3 |
-| Configuration | PORT environment variable | Tech Spec 5.2 |
-| Deployment | Local and production instructions | Tech Spec 5.2 |
-| Troubleshooting | Common issues and solutions | Best practices |
-| Contributing | Contribution guidelines | Standard practice |
-| License | MIT License | Standard practice |
-
-### 0.5.4 Documentation Configuration Updates
-
-| Configuration File | Update Required | Purpose |
-| --- | --- | --- |
-| `package.json` | CREATE | Define project metadata, scripts, dependencies |
-| `.nvmrc` | CREATE | Specify Node.js version for nvm users |
-| `.gitignore` | CREATE | Exclude node_modules, logs, etc. |
-
-### 0.5.5 Cross-Documentation Dependencies
-
-**Shared Content/Includes**:
-
-- API endpoint specifications used in both [README.md](http://README.md) and JSDoc comments
-- Port configuration referenced in [README.md](http://README.md), server.js, and package.json
-
-**Navigation Links Between Documents**:
-
-- [README.md](http://README.md) references server.js for implementation details
-- JSDoc comments reference [README.md](http://README.md) for full documentation
-
-**Table of Contents Updates**:
-
-- [README.md](http://README.md) will include auto-generated or manual table of contents
-
-**Index/Glossary Updates**:
-
-- [README.md](http://README.md) will include glossary of terms (Node.js, Express.js, HTTP, etc.) for educational purposes
-
-## 0.6 Dependency Inventory
-
-### 0.6.1 Documentation Dependencies
-
-**Key Documentation Tools and Packages**:
-
-| Registry | Package Name | Version | Purpose |
-| --- | --- | --- | --- |
-| npm | express | 4.18.2 | Web framework for Node.js (runtime dependency) |
-| npm | jsdoc | 4.0.2 | JSDoc documentation generator (optional dev dependency) |
-| npm | @types/express | 4.17.21 | TypeScript type definitions for Express (dev dependency for JSDoc type hints) |
-| npm | @types/node | 20.10.0 | TypeScript type definitions for Node.js (dev dependency for JSDoc type hints) |
-
-**Runtime Dependencies** (required for server operation):
-
-| Registry | Package Name | Version | Purpose |
-| --- | --- | --- | --- |
-| npm | express | 4.18.2 | Express.js web framework for Phase 2 implementation |
-
-**Development Dependencies** (optional, for enhanced documentation):
-
-| Registry | Package Name | Version | Purpose |
-| --- | --- | --- | --- |
-| npm | jsdoc | 4.0.2 | Generate HTML documentation from JSDoc comments |
-| npm | @types/express | 4.17.21 | Provide type hints for Express objects in JSDoc |
-| npm | @types/node | 20.10.0 | Provide type hints for Node.js built-in modules |
-
-**Node.js Runtime**:
-
-| Component | Version | Purpose |
-| --- | --- | --- |
-| Node.js | 18.x LTS or 20.x LTS | JavaScript runtime environment |
-| npm | 8.x+ (bundled with Node.js) | Package manager |
-
-### 0.6.2 Documentation Reference Updates
-
-**Documentation Files Requiring Link Updates**:
-
-| File | Links to Update | Purpose |
-| --- | --- | --- |
-| [README.md](http://README.md) | External links to Node.js docs, Express.js docs | Reference documentation |
-| server.js | JSDoc @see tags linking to official documentation | Cross-reference |
-
-**Link Transformation Rules**:
-
-| Link Type | Format | Example |
-| --- | --- | --- |
-| Node.js Documentation | `https://nodejs.org/api/{module}.html` | `https://nodejs.org/api/http.html` |
-| Express.js Documentation | `https://expressjs.com/en/{version}/api.html` | `https://expressjs.com/en/4x/api.html` |
-| npm Package | `https://www.npmjs.com/package/{package}` | `https://www.npmjs.com/package/express` |
-
-### 0.6.3 Version Compatibility Matrix
-
-| Component | Minimum Version | Recommended Version | Maximum Version |
-| --- | --- | --- | --- |
-| Node.js | 18.0.0 | 20.10.0 (LTS) | 20.x (latest LTS) |
-| npm | 8.0.0 | 10.2.0 | Latest |
-| Express.js | 4.18.0 | 4.18.2 | 4.19.x |
-
-### 0.6.4 Package.json Specification
-
-**Complete package.json Structure**:
-
-```json
-{
-  "name": "repo-test-sud",
-  "version": "1.0.0",
-  "description": "Educational Node.js/Express.js tutorial server",
-  "main": "server.js",
-  "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js"
-  },
-  "keywords": [
-    "nodejs",
-    "express",
-    "tutorial",
-    "http-server"
-  ],
-  "author": "",
-  "license": "MIT",
-  "dependencies": {
-    "express": "^4.18.2"
-  },
-  "devDependencies": {
-    "@types/express": "^4.17.21",
-    "@types/node": "^20.10.0"
-  },
-  "engines": {
-    "node": ">=18.0.0"
-  }
-}
-```
-
-**Script Documentation**:
-
-| Script | Command | Description |
-| --- | --- | --- |
-| `start` | `node server.js` | Start the server in production mode |
-| `dev` | `node --watch server.js` | Start the server with auto-reload (Node.js 18.11+) |
-
-## 0.7 Coverage and Quality Targets
-
-### 0.7.1 Documentation Coverage Metrics
-
-**Current Coverage Analysis**:
-
-| Documentation Type | Current | Target | Gap |
-| --- | --- | --- | --- |
-| Public APIs documented | 0/4 (0%) | 4/4 (100%) | 4 functions |
-| User-facing features documented | 0/4 (0%) | 4/4 (100%) | 4 features |
-| Configuration options documented | 0/1 (0%) | 1/1 (100%) | PORT variable |
-| README sections | 1/12 (8%) | 12/12 (100%) | 11 sections |
-| JSDoc comments | 0/4 (0%) | 4/4 (100%) | 4 functions |
-| Inline code explanations | 0% | 100% | All code sections |
-
-**Target Coverage**: 100% based on user requirement for "comprehensive" documentation
-
-**Coverage Gaps to Address**:
-
-| Module/Feature | Current Coverage | Target Coverage | Focus Areas |
-| --- | --- | --- | --- |
-| server.js | 0% | 100% | JSDoc for all functions, inline comments |
-| [README.md](http://README.md) | 8% | 100% | All 12 sections complete |
-| API Endpoints | 0% | 100% | /hello and /evening fully documented |
-| Configuration | 0% | 100% | PORT environment variable |
-
-### 0.7.2 Documentation Quality Criteria
-
-**Completeness Requirements**:
-
-| Requirement | Criteria | Validation Method |
-| --- | --- | --- |
-| All public APIs have descriptions | Every function has `@description` tag | Manual review |
-| All parameters documented | Every parameter has `@param` tag with type and description | JSDoc validation |
-| All return values documented | Every function has `@returns` tag | JSDoc validation |
-| All endpoints have examples | Every API endpoint has curl example | Manual review |
-| All user guides include setup | Installation section complete | Checklist |
-| All user guides include usage | Quick start section complete | Checklist |
-| All user guides include troubleshooting | Troubleshooting section complete | Checklist |
-| All architecture docs include diagrams | Mermaid diagrams present | Visual inspection |
-| All architecture docs include rationale | Explanatory comments present | Manual review |
-
-**Accuracy Validation**:
-
-| Validation Type | Method | Acceptance Criteria |
-| --- | --- | --- |
-| Code examples tested | Manual execution | All examples run without errors |
-| API signatures match codebase | Code review | JSDoc matches actual function signatures |
-| Screenshots/diagrams current | Visual comparison | Diagrams reflect actual architecture |
-| Version numbers accurate | Package.json review | Versions match technical specification |
-
-**Clarity Standards**:
-
-| Standard | Implementation | Example |
-| --- | --- | --- |
-| Technical accuracy | Use correct terminology | "HTTP GET request" not "web call" |
-| Accessible language | Avoid jargon where possible | Explain terms on first use |
-| Progressive disclosure | Simple concepts first | Prerequisites before advanced config |
-| Consistent terminology | Use same terms throughout | Always "endpoint" not "route/path/URL" |
-
-**Maintainability Standards**:
-
-| Standard | Implementation |
-| --- | --- |
-| Source citations | Reference technical specification sections |
-| Clear ownership | Include author information in JSDoc |
-| Update dates | Include version information |
-| Template-based | Follow consistent JSDoc and README patterns |
-
-### 0.7.3 Example and Diagram Requirements
-
-**Minimum Examples Per Component**:
-
-| Component | Minimum Examples | Example Types |
-| --- | --- | --- |
-| GET /hello endpoint | 2 | curl command, browser URL |
-| GET /evening endpoint | 2 | curl command, browser URL |
-| Server startup | 1 | npm start command |
-| Installation | 3 | clone, install, start |
-
-**Diagram Types Required**:
-
-| Diagram | Type | Purpose |
-| --- | --- | --- |
-| Architecture Overview | Mermaid graph | Show server component structure |
-| Request Flow | Mermaid sequence | Illustrate HTTP request lifecycle |
-| Phase Comparison | Mermaid graph | Compare Phase 1 vs Phase 2 |
-
-**Code Example Testing**:
-
-| Example Type | Testing Method |
-| --- | --- |
-| curl commands | Execute against running server |
-| npm commands | Execute in project directory |
-| Code snippets | Verify syntax correctness |
-
-**Visual Content Freshness**:
-
-| Content Type | Update Policy |
-| --- | --- |
-| Architecture diagrams | Update when architecture changes |
-| Code examples | Update when API changes |
-| Screenshots | Update when UI changes (N/A for this project) |
-
-### 0.7.4 Quality Checklist
-
-**Pre-Completion Quality Checklist**:
-
-- [ ] All functions in server.js have JSDoc comments
-
-- [ ] All JSDoc comments include @description, @param, @returns
-
-- [ ] All API endpoints have usage examples
-
-- [ ] README includes all 12 required sections
-
-- [ ] All code examples are syntactically correct
-
-- [ ] All Mermaid diagrams render correctly
-
-- [ ] All external links are valid
-
-- [ ] Terminology is consistent throughout
-
-- [ ] Language is beginner-friendly and educational
-
-- [ ] Version numbers match technical specification
-
-## 0.8 Scope Boundaries
-
-### 0.8.1 Exhaustively In Scope
-
-**New Documentation Files**:
-
-| File Pattern | Description | Priority |
-| --- | --- | --- |
-| `README.md` | Comprehensive project documentation | High |
-| `server.js` | Source code with JSDoc comments and inline explanations | High |
-| `package.json` | Project manifest with documented fields | High |
-| `.nvmrc` | Node.js version specification | Medium |
-| `.gitignore` | Git ignore patterns | Medium |
-
-**Documentation File Updates**:
-
-| File | Update Type | Description |
-| --- | --- | --- |
-| `README.md` | Complete rewrite | Replace minimal content with comprehensive documentation |
-
-**Documentation Content Types**:
-
-| Content Type | Files Affected | Description |
-| --- | --- | --- |
-| JSDoc comments | `server.js` | Function-level documentation with @description, @param, @returns, @example |
-| Inline comments | `server.js` | Educational explanations of code logic and patterns |
-| API documentation | `README.md` | Endpoint specifications with examples |
-| Setup instructions | `README.md` | Prerequisites, installation, quick start |
-| Deployment guide | `README.md` | Local and production deployment instructions |
-| Troubleshooting | `README.md` | Common issues and solutions |
-
-**Documentation Assets**:
-
-| Asset Type | Location | Description |
-| --- | --- | --- |
-| Mermaid diagrams | `README.md` (inline) | Architecture and flow diagrams |
-| Code examples | `README.md`, `server.js` | Usage examples, curl commands |
-
-**Documentation Configuration**:
-
-| Configuration | File | Description |
-| --- | --- | --- |
-| npm scripts | `package.json` | Documented start and dev scripts |
-| Node.js version | `.nvmrc` | Version specification for nvm |
-| Dependencies | `package.json` | Express.js and dev dependencies |
-
-### 0.8.2 Explicitly Out of Scope
-
-**Source Code Modifications** (unless explicitly for documentation):
-
-| Item | Reason |
-| --- | --- |
-| Feature additions | Documentation task only |
-| Bug fixes | Documentation task only |
-| Refactoring | Documentation task only |
-| Performance optimizations | Documentation task only |
-
-**Test File Modifications**:
-
-| Item | Reason |
-| --- | --- |
-| Unit tests | Not requested in documentation task |
-| Integration tests | Not requested in documentation task |
-| Test documentation | Not requested in documentation task |
-
-**Unrelated Files and Directories**:
-
-| Item | Reason |
-| --- | --- |
-| `/app/**` | Python project, unrelated to Node.js documentation task |
-| `.github/workflows/deploy-job.yml` | CI/CD configuration, not documentation |
-
-**Deployment Configuration Changes**:
-
-| Item | Reason |
-| --- | --- |
-| Docker configuration | Not requested |
-| CI/CD pipeline changes | Not requested |
-| Cloud deployment scripts | Not requested |
-
-**Unrelated Documentation**:
-
-| Item | Reason |
-| --- | --- |
-| Python project documentation | Out of scope (different project) |
-| CI/CD documentation | Not requested |
-| Database documentation | Not applicable |
-
-### 0.8.3 Scope Boundary Diagram
-
-```mermaid
-graph TB
-    subgraph "IN SCOPE"
-        A[README.md - Complete Rewrite]
-        B[server.js - JSDoc + Inline Comments]
-        C[package.json - Create with Documentation]
-        D[.nvmrc - Create]
-        E[.gitignore - Create]
-        F[Mermaid Diagrams in README]
-        G[API Documentation]
-        H[Setup Instructions]
-        I[Deployment Guide]
-    end
-    
-    subgraph "OUT OF SCOPE"
-        J[/app/ Python Project]
-        K[CI/CD Configuration]
-        L[Unit Tests]
-        M[Feature Development]
-        N[Database Setup]
-    end
-    
-    style A fill:#90EE90
-    style B fill:#90EE90
-    style C fill:#90EE90
-    style D fill:#90EE90
-    style E fill:#90EE90
-    style F fill:#90EE90
-    style G fill:#90EE90
-    style H fill:#90EE90
-    style I fill:#90EE90
-    style J fill:#FFB6C1
-    style K fill:#FFB6C1
-    style L fill:#FFB6C1
-    style M fill:#FFB6C1
-    style N fill:#FFB6C1
-```
-
-### 0.8.4 Scope Decision Matrix
-
-| Item | In Scope? | Justification |
-| --- | --- | --- |
-| JSDoc comments in server.js | ✅ Yes | Explicitly requested |
-| README with setup instructions | ✅ Yes | Explicitly requested |
-| API documentation | ✅ Yes | Explicitly requested |
-| Deployment guide | ✅ Yes | Explicitly requested |
-| Inline code explanations | ✅ Yes | Explicitly requested |
-| package.json creation | ✅ Yes | Required for project setup documentation |
-| .nvmrc creation | ✅ Yes | Supports setup instructions |
-| Mermaid diagrams | ✅ Yes | Enhances documentation quality |
-| Python project in /app | ❌ No | Unrelated to Node.js documentation task |
-| CI/CD pipeline documentation | ❌ No | Not requested |
-| Unit test creation | ❌ No | Not a documentation task |
-| Feature implementation | ❌ No | Documentation task only |
-
-## 0.9 Execution Parameters
-
-### 0.9.1 Documentation-Specific Instructions
-
-**Documentation Build Commands**:
-
-| Command | Purpose | Usage |
-| --- | --- | --- |
-| `npm run docs` | Generate HTML documentation from JSDoc (optional) | `npm run docs` |
-| `npx jsdoc server.js` | Generate JSDoc documentation | `npx jsdoc server.js -d docs/` |
-
-**Documentation Preview Commands**:
-
-| Command | Purpose | Usage |
-| --- | --- | --- |
-| Markdown preview | Preview [README.md](http://README.md) | Use VS Code or GitHub preview |
-| JSDoc preview | View generated HTML docs | Open `docs/index.html` in browser |
-
-**Diagram Generation Commands**:
-
-| Command | Purpose | Usage |
-| --- | --- | --- |
-| Mermaid CLI (optional) | Generate diagram images | `npx @mermaid-js/mermaid-cli -i diagram.mmd -o diagram.png` |
-| GitHub/GitLab rendering | Automatic Mermaid rendering | Push to repository |
-
-**Documentation Validation Commands**:
-
-| Command | Purpose | Usage |
-| --- | --- | --- |
-| Markdown lint | Validate README formatting | `npx markdownlint README.md` |
-| Link check | Verify external links | `npx markdown-link-check README.md` |
-| JSDoc validation | Check JSDoc syntax | `npx jsdoc -X server.js` |
-
-### 0.9.2 Default Documentation Format
-
-**Primary Format**: Markdown with Mermaid diagrams
-
-**Markdown Conventions**:
-
-| Element | Convention | Example |
-| --- | --- | --- |
-| Headings | ATX-style with space | `# Heading 1` |
-| Code blocks | Fenced with language | ```` ```javascript ```` |
-| Lists | Dash for unordered | `- Item` |
-| Links | Inline style | `[text](url)` |
-| Tables | Pipe-delimited | \` |
-
-**JSDoc Conventions**:
-
-| Element | Convention | Example |
-| --- | --- | --- |
-| Block comments | Multi-line with asterisks | `/** ... */` |
-| Tags | @ prefix | `@param`, `@returns` |
-| Types | Curly braces | `{string}`, `{Object}` |
-| Descriptions | After tag and type | `@param {string} name - The user's name` |
-
-### 0.9.3 Citation Requirements
-
-**Source Citation Format**:
-
-Every technical detail must reference its source:
-
-| Citation Type | Format | Example |
-| --- | --- | --- |
-| Technical Specification | `Source: Tech Spec Section X.X` | `Source: Tech Spec Section 2.2` |
-| Code Reference | `Source: /path/to/file.js:LineNumber` | `Source: /server.js:15` |
-| External Documentation | `See: URL` | `See: https://expressjs.com/en/4x/api.html` |
-
-### 0.9.4 Style Guide
-
-**Documentation Style Guide**:
-
-| Aspect | Guideline |
-| --- | --- |
-| Tone | Educational, beginner-friendly, encouraging |
-| Voice | Active voice preferred |
-| Tense | Present tense for descriptions |
-| Person | Second person ("you") for instructions |
-| Sentence length | Short to medium (15-25 words) |
-| Paragraph length | 3-5 sentences maximum |
-| Technical terms | Define on first use |
-| Acronyms | Spell out on first use |
-
-**Code Example Style**:
-
-| Aspect | Guideline |
-| --- | --- |
-| Language hints | Always include (\`\`\`javascript) |
-| Comments | Include explanatory comments |
-| Formatting | Consistent indentation (2 spaces) |
-| Length | Keep examples concise (5-15 lines) |
-| Completeness | Show complete, runnable examples |
-
-### 0.9.5 Validation Checklist
-
-**Pre-Submission Validation**:
-
-| Check | Command/Method | Pass Criteria |
-| --- | --- | --- |
-| Markdown syntax | `npx markdownlint README.md` | No errors |
-| Links valid | `npx markdown-link-check README.md` | All links resolve |
-| JSDoc syntax | `npx jsdoc -X server.js` | Valid JSON output |
-| Code examples | Manual execution | All examples run |
-| Mermaid diagrams | GitHub preview | Diagrams render |
-| Spelling | Spell checker | No errors |
-| Consistency | Manual review | Terminology consistent |
-
-### 0.9.6 File Creation Order
-
-**Recommended Documentation Creation Sequence**:
-
-| Order | File | Reason |
-| --- | --- | --- |
-| 1 | `package.json` | Establishes project structure and dependencies |
-| 2 | `.nvmrc` | Specifies Node.js version |
-| 3 | `.gitignore` | Prevents committing unwanted files |
-| 4 | `server.js` | Core application with JSDoc and inline comments |
-| 5 | `README.md` | Comprehensive documentation referencing server.js |
-
-**Dependency Order**:
+**Transformation Rules**:
+
+| Express.js Pattern | Flask Equivalent | Notes |
+|-------------------|------------------|-------|
+| `const express = require('express')` | `from flask import Flask` | Import statement |
+| `const app = express()` | `app = Flask(__name__)` | App initialization |
+| `app.get('/hello', (req, res) => {...})` | `@app.route('/hello')` + `def hello():` | Route decorator pattern |
+| `res.send('Hello world')` | `return 'Hello world'` | Response return |
+| `app.listen(3000, () => {...})` | `app.run(host='0.0.0.0', port=3000)` | Server startup |
+
+**Request-Response Transformation**:
 
 ```mermaid
 graph LR
-    A[package.json] --> B[.nvmrc]
-    B --> C[.gitignore]
-    C --> D[server.js with JSDoc]
-    D --> E[README.md]
+    subgraph "Express.js Pattern"
+        A1[Route Handler] --> B1["(req, res) => {}"]
+        B1 --> C1["res.send(data)"]
+    end
     
-    style A fill:#FFE4B5
-    style B fill:#FFE4B5
-    style C fill:#FFE4B5
-    style D fill:#90EE90
-    style E fill:#90EE90
+    subgraph "Flask Pattern"
+        A2[Route Decorator] --> B2["def handler():"]
+        B2 --> C2["return data"]
+    end
+    
+    A1 -.->|translates to| A2
+    B1 -.->|translates to| B2
+    C1 -.->|translates to| C2
 ```
 
-## 0.10 Special Instructions
+## 0.2 Source Analysis
 
-### 0.10.1 Documentation-Specific Requirements
+### 0.2.1 Comprehensive Source File Discovery
 
-Based on the user's request, the following special instructions apply to this documentation task:
+**Repository State Assessment**:
 
-**Explicitly Emphasized Requirements**:
+The repository analysis reveals this is a **greenfield specification project** where the Node.js server exists only as documented requirements in the Technical Specifications, not as actual source code files. The migration task requires implementing the Python Flask equivalent based on the specified behavior.
 
-| Requirement | Implementation |
-| --- | --- |
-| "Add JSDoc comments to server.js functions" | Every function in server.js must have a complete JSDoc block with @description, @param, @returns, and @example tags |
-| "Create a comprehensive README" | README must include all 12 sections: Overview, Features, Prerequisites, Installation, Quick Start, API Reference, Configuration, Deployment Guide, Troubleshooting, Contributing, License, and Table of Contents |
-| "Setup instructions" | README must include detailed step-by-step installation and configuration instructions |
-| "API documentation" | README must document all API endpoints with HTTP method, path, description, request/response format, and curl examples |
-| "Deployment guide" | README must include instructions for both local development and production deployment |
-| "Inline code explanations" | server.js must include educational comments explaining Node.js and Express.js concepts |
+**Search Patterns Executed**:
 
-### 0.10.2 JSDoc Comment Requirements
+| Search Pattern | Files Found | Assessment |
+|---------------|-------------|------------|
+| `*.js`, `*.ts` | None (excluding system) | No JavaScript source files present |
+| `package.json` | None | No npm manifest found |
+| `server.*`, `app.*`, `index.*` | `/app/main.py` (Blitzy infrastructure) | Out of scope for migration |
+| `node_modules/` | None | No npm dependencies installed |
 
-**Mandatory JSDoc Tags for Each Function**:
+**Source Structure from Technical Specifications**:
 
-| Tag | Required | Purpose |
-| --- | --- | --- |
-| `@description` | Yes | Explain what the function does |
-| `@param` | Yes (if applicable) | Document each parameter with type and description |
-| `@returns` | Yes | Document return value with type and description |
-| `@example` | Yes | Provide usage example |
-| `@see` | Recommended | Link to related documentation |
+Based on the Technical Specifications document, the **intended Node.js source structure** to be migrated is:
 
-**JSDoc Example Template**:
-
-```javascript
-/**
- * @description Handles incoming HTTP GET requests to the /hello endpoint.
- * Returns a plain text "Hello world" response to the client.
- * 
- * @param {express.Request} req - The Express request object containing
- *   information about the HTTP request (headers, query params, etc.)
- * @param {express.Response} res - The Express response object used to
- *   send the HTTP response back to the client
- * @returns {void} Sends "Hello world" as plain text response
- * 
- * @example
- * // Using curl to test the endpoint:
- * // curl http://localhost:3000/hello
- * // Response: Hello world
- * 
- * @see https://expressjs.com/en/4x/api.html#res.send
- */
+```
+Node.js Project (Specified):
+├── server.js              # Main server entry point
+│   ├── Express app initialization
+│   ├── GET /hello route handler
+│   │   └── Returns: "Hello world"
+│   ├── GET /evening route handler  
+│   │   └── Returns: "Good evening"
+│   └── Server listen on port 3000
+│
+├── package.json           # Dependencies and scripts
+│   ├── name: "Repo-Test-Sud"
+│   ├── main: "server.js"
+│   ├── dependencies:
+│   │   └── express: "^4.18.x"
+│   └── scripts:
+│       └── start: "node server.js"
+│
+├── .nvmrc                 # Node version specification
+│   └── Node.js >=18.x
+│
+├── .gitignore             # Git ignore patterns
+│   └── node_modules/
+│
+└── README.md              # Project documentation
 ```
 
-### 0.10.3 README Section Requirements
+### 0.2.2 Source Files Inventory
 
-**Mandatory README Sections**:
+**Complete Source File Enumeration**:
 
-| Section | Content Requirements |
-| --- | --- |
-| Title & Badges | Project name, version badge, license badge |
-| Description | 2-3 sentence project overview |
-| Features | Bulleted list of all features (F-001 through F-004) |
-| Prerequisites | Node.js version, npm version, OS requirements |
-| Installation | Step-by-step clone and install instructions |
-| Quick Start | 3-step guide to running the server |
-| API Reference | Table of endpoints with method, path, description, example |
-| Configuration | Environment variables (PORT) |
-| Deployment Guide | Local and production deployment instructions |
-| Troubleshooting | Common issues with solutions |
-| Contributing | How to contribute to the project |
-| License | MIT License statement |
+| File | Purpose | Lines (Est.) | Transformation Required |
+|------|---------|--------------|------------------------|
+| `server.js` | Main application entry point with Express routes | ~25-30 | Full rewrite to Flask |
+| `package.json` | NPM package manifest and scripts | ~15-20 | Convert to requirements.txt |
+| `.nvmrc` | Node version specification | 1 | Convert to .python-version |
+| `.gitignore` | Version control ignore patterns | ~5 | Update for Python patterns |
+| `README.md` | Project documentation | ~20-30 | Update for Python/Flask |
 
-### 0.10.4 Inline Comment Requirements
+### 0.2.3 Source Code Behavior Analysis
 
-**Comment Types Required in server.js**:
+**Route Handler Specifications**:
 
-| Comment Type | Purpose | Example |
-| --- | --- | --- |
-| Section headers | Organize code into logical sections | `// ============ SERVER CONFIGURATION ============` |
-| Concept explanations | Teach Node.js/Express concepts | `// Express.js is a minimal web framework that simplifies HTTP handling` |
-| Decision rationale | Explain why certain choices were made | `// Using port 3000 as it's the conventional default for Node.js development` |
-| Reference links | Point to official documentation | `// See: https://nodejs.org/api/http.html#httpcreateserveroptions-requestlistener` |
+| Endpoint | HTTP Method | Request Processing | Response | Status Code |
+|----------|-------------|-------------------|----------|-------------|
+| `/hello` | GET | None required | `"Hello world"` | 200 |
+| `/evening` | GET | None required | `"Good evening"` | 200 |
 
-### 0.10.5 Educational Tone Guidelines
+**Server Configuration Specifications**:
 
-**Writing Style for Tutorial Documentation**:
+| Configuration | Value | Notes |
+|--------------|-------|-------|
+| Default Port | 3000 | Standard Express development port |
+| Host Binding | localhost | Development server default |
+| Environment Variable | PORT | Optional port override |
 
-| Guideline | Implementation |
-| --- | --- |
-| Beginner-friendly | Assume reader is new to Node.js |
-| Explain terminology | Define technical terms on first use |
-| Progressive complexity | Start simple, add complexity gradually |
-| Encouraging tone | Use positive, supportive language |
-| Practical examples | Provide real, runnable code examples |
-| Visual aids | Include diagrams where helpful |
+**Logical Flow Analysis**:
 
-**Example of Educational Inline Comment**:
-
-```javascript
-// The http.createServer() function is a built-in Node.js method that creates
-// a new HTTP server. It takes a callback function (often called a "request
-// listener") that will be executed every time the server receives a request.
-// This is the foundation of all Node.js web servers.
-const server = http.createServer((req, res) => {
-  // The 'req' (request) object contains information about the incoming request,
-  // such as the URL, HTTP method, headers, and body.
-  // The 'res' (response) object is used to send data back to the client.
-});
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Server as Flask Server
+    participant Route as Route Handler
+    
+    Note over Server: Server starts on port 3000
+    
+    Client->>Server: GET /hello
+    Server->>Route: Route to hello()
+    Route-->>Server: "Hello world"
+    Server-->>Client: 200 OK + "Hello world"
+    
+    Client->>Server: GET /evening
+    Server->>Route: Route to evening()
+    Route-->>Server: "Good evening"
+    Server-->>Client: 200 OK + "Good evening"
 ```
 
-### 0.10.6 Quality Assurance Checklist
+### 0.2.4 Dependency Analysis
 
-**Final Documentation Quality Checklist**:
+**Node.js Dependencies from Specification**:
 
-- [ ] All functions in server.js have complete JSDoc blocks
+| Package | Version | Purpose | Python Equivalent |
+|---------|---------|---------|-------------------|
+| express | ^4.18.x | Web framework | Flask |
+| (Node.js runtime) | >=18.x | Runtime environment | Python 3.9+ |
 
-- [ ] All JSDoc blocks include @description, @param, @returns, @example
+**No Additional Dependencies Required**:
 
-- [ ] README includes all 12 required sections
+The source specification describes a minimal tutorial server with no external dependencies beyond Express.js itself. The Flask equivalent will be equally minimal.
 
-- [ ] README includes working curl examples for all endpoints
+## 0.3 Target Design
 
-- [ ] README includes Mermaid architecture diagram
+### 0.3.1 Refactored Structure Planning
 
-- [ ] All inline comments are educational and explain "why"
+**Target Python/Flask Architecture**:
 
-- [ ] All code examples are syntactically correct and runnable
+The target structure maintains a minimal, beginner-friendly layout that mirrors the simplicity of the original Node.js tutorial server while following Python best practices.
 
-- [ ] Terminology is consistent throughout all documentation
+```
+Target Flask Project:
+├── app.py                    # Main Flask application (equivalent to server.js)
+│   ├── Flask app initialization
+│   ├── GET /hello route handler
+│   │   └── Returns: "Hello world"
+│   ├── GET /evening route handler
+│   │   └── Returns: "Good evening"
+│   └── Server entry point (port 3000)
+│
+├── requirements.txt          # Python dependencies (equivalent to package.json)
+│   └── Flask==3.0.3
+│
+├── .python-version          # Python version specification (equivalent to .nvmrc)
+│   └── 3.11
+│
+├── .gitignore               # Updated for Python patterns
+│   ├── __pycache__/
+│   ├── *.pyc
+│   ├── venv/
+│   └── .env
+│
+├── README.md                # Updated documentation for Python/Flask
+│   ├── Installation instructions
+│   ├── Running the server
+│   ├── API endpoints documentation
+│   └── Development guidelines
+│
+└── venv/                    # Virtual environment (equivalent to node_modules/)
+    └── (not tracked in git)
+```
 
-- [ ] Language is beginner-friendly and encouraging
+### 0.3.2 Web Search Research Conducted
 
-- [ ] All external links are valid and point to official documentation
+**Best Practices Identified for Node.js to Flask Migration**:
 
-- [ ] Version numbers match technical specification requirements
+| Research Topic | Key Finding | Application |
+|---------------|-------------|-------------|
+| Express to Flask route mapping | Flask uses decorator pattern `@app.route()` vs Express callback pattern | Direct translation of route handlers |
+| Response handling | Flask returns data directly from functions vs Express `res.send()` | Simplified response pattern |
+| Server configuration | Flask uses `app.run()` with host/port parameters | Match port 3000 configuration |
+| Project structure | Flask minimal apps use single file approach | Keep `app.py` as single entry point |
+| Dependency management | `requirements.txt` is Flask standard | Replace `package.json` |
 
-- [ ] Documentation follows the established style guide
+**Flask Version Selection Rationale**:
+
+| Version | Release Date | Python Support | Recommendation |
+|---------|--------------|----------------|----------------|
+| 3.0.3 | April 7, 2024 | Python 3.8+ | Stable LTS choice |
+| 3.1.0 | November 13, 2024 | Python 3.9+ | Latest stable |
+
+**Selected**: Flask 3.0.3 for maximum compatibility while maintaining modern features.
+
+### 0.3.3 Design Pattern Applications
+
+**Pattern Mapping from Express to Flask**:
+
+| Pattern | Express.js Implementation | Flask Implementation |
+|---------|---------------------------|----------------------|
+| Application Factory | `const app = express()` | `app = Flask(__name__)` |
+| Route Registration | `app.get('/path', handler)` | `@app.route('/path')` decorator |
+| Response Handling | `res.send('text')` | `return 'text'` |
+| Server Startup | `app.listen(port, callback)` | `app.run(port=port)` |
+| Environment Config | `process.env.VAR` | `os.environ.get('VAR')` |
+
+### 0.3.4 Target File Specifications
+
+**app.py Structure**:
+
+```python
+from flask import Flask
+import os
+
+app = Flask(__name__)
+
+@app.route('/hello')
+def hello():
+    return 'Hello world'
+
+@app.route('/evening')  
+def evening():
+    return 'Good evening'
+
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 3000))
+    app.run(host='0.0.0.0', port=port)
+```
+
+**requirements.txt Structure**:
+
+```
+Flask==3.0.3
+```
+
+**.python-version Structure**:
+
+```
+3.11
+```
+
+**.gitignore Structure**:
+
+```
+# Python
+
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+
+#### Environment
+
+.env
+.env.local
+
+#### IDE
+
+.idea/
+.vscode/
+*.swp
+```
+
+### 0.3.5 Architecture Comparison Diagram
+
+```mermaid
+graph TB
+    subgraph "Node.js/Express (Source)"
+        N1[server.js] --> N2[Express App]
+        N2 --> N3[GET /hello]
+        N2 --> N4[GET /evening]
+        N5[package.json] --> N2
+        N6[.nvmrc] -.-> N1
+    end
+    
+    subgraph "Python/Flask (Target)"
+        P1[app.py] --> P2[Flask App]
+        P2 --> P3[GET /hello]
+        P2 --> P4[GET /evening]
+        P5[requirements.txt] --> P2
+        P6[.python-version] -.-> P1
+    end
+    
+    N1 ==>|"Transforms to"| P1
+    N5 ==>|"Transforms to"| P5
+    N6 ==>|"Transforms to"| P6
+    
+    style N1 fill:#f9f,stroke:#333
+    style P1 fill:#9f9,stroke:#333
+```
+
+## 0.4 Transformation Mapping
+
+### 0.4.1 File-by-File Transformation Plan
+
+**Complete File Transformation Matrix**:
+
+| Target File | Transformation | Source File | Key Changes |
+|-------------|----------------|-------------|-------------|
+| `app.py` | CREATE | `server.js` | Create Flask application with identical route handlers; translate Express patterns to Flask decorators |
+| `requirements.txt` | CREATE | `package.json` | Create Python dependency manifest with Flask replacing Express |
+| `.python-version` | CREATE | `.nvmrc` | Create Python version specification (3.11) replacing Node version |
+| `.gitignore` | UPDATE | `.gitignore` | Update patterns from node_modules to __pycache__, venv |
+| `README.md` | UPDATE | `README.md` | Update all documentation for Python/Flask stack |
+
+### 0.4.2 Detailed Code Transformations
+
+**server.js → app.py Transformation**:
+
+| Express.js Code Segment | Flask Code Equivalent | Line Reference |
+|------------------------|----------------------|----------------|
+| `const express = require('express');` | `from flask import Flask` | Import statement |
+| `const app = express();` | `app = Flask(__name__)` | App initialization |
+| `app.get('/hello', (req, res) => { res.send('Hello world'); });` | `@app.route('/hello')` + `def hello(): return 'Hello world'` | Hello route |
+| `app.get('/evening', (req, res) => { res.send('Good evening'); });` | `@app.route('/evening')` + `def evening(): return 'Good evening'` | Evening route |
+| `const PORT = process.env.PORT \|\| 3000;` | `port = int(os.environ.get('PORT', 3000))` | Port configuration |
+| `app.listen(PORT, () => {...});` | `app.run(host='0.0.0.0', port=port)` | Server startup |
+
+**package.json → requirements.txt Transformation**:
+
+| package.json Field | requirements.txt Equivalent | Notes |
+|-------------------|---------------------------|-------|
+| `"express": "^4.18.x"` | `Flask==3.0.3` | Framework dependency |
+| `"name": "Repo-Test-Sud"` | (N/A - not needed) | Package metadata not required |
+| `"scripts": { "start": "node server.js" }` | (N/A - use `flask run`) | Flask CLI handles startup |
+
+### 0.4.3 Cross-File Dependencies
+
+**Import Statement Transformations**:
+
+| Source Import | Target Import | Files Affected |
+|--------------|---------------|----------------|
+| `require('express')` | `from flask import Flask` | app.py |
+| `process.env.PORT` | `os.environ.get('PORT')` | app.py |
+| (N/A) | `import os` | app.py (new import) |
+
+**Configuration File Updates**:
+
+| Configuration Aspect | Node.js Pattern | Python Pattern | File |
+|---------------------|-----------------|----------------|------|
+| Dependency list | package.json dependencies | requirements.txt | requirements.txt |
+| Runtime version | .nvmrc | .python-version | .python-version |
+| Ignore patterns | node_modules/ | venv/, __pycache__/ | .gitignore |
+
+### 0.4.4 Wildcard Patterns for File Groups
+
+**Trailing Wildcard Patterns Identified**:
+
+| Pattern | Purpose | Transformation Action |
+|---------|---------|----------------------|
+| `*.js` | JavaScript source files | Convert to Python equivalents |
+| `*.json` | JSON configuration files | Convert to Python equivalents where applicable |
+| `*.md` | Documentation files | Update content for Python/Flask |
+
+### 0.4.5 Single-Phase Execution Plan
+
+**CRITICAL**: The entire refactor will be executed by Blitzy in **ONE phase**. All file transformations occur simultaneously.
+
+**Execution Order Within Single Phase**:
+
+```mermaid
+graph TD
+    A[Phase 1: Complete Migration] --> B[Create app.py]
+    A --> C[Create requirements.txt]
+    A --> D[Create .python-version]
+    A --> E[Update .gitignore]
+    A --> F[Update README.md]
+    
+    B --> G[All Files Complete]
+    C --> G
+    D --> G
+    E --> G
+    F --> G
+    
+    style A fill:#e1f5fe
+    style G fill:#c8e6c9
+```
+
+**File Creation Summary**:
+
+| Priority | File | Action | Dependencies |
+|----------|------|--------|--------------|
+| 1 | app.py | CREATE | None |
+| 2 | requirements.txt | CREATE | None |
+| 3 | .python-version | CREATE | None |
+| 4 | .gitignore | UPDATE | None |
+| 5 | README.md | UPDATE | None |
+
+All five transformations are independent and can be executed in parallel within the single phase.
+
+## 0.5 Dependency Inventory
+
+### 0.5.1 Key Private and Public Packages
+
+**Source Dependencies (Node.js)**:
+
+| Registry | Package | Version | Purpose | Status |
+|----------|---------|---------|---------|--------|
+| npm | express | ^4.18.x | Web framework | To be replaced |
+| npm | (Node.js built-in) | N/A | HTTP server | Replaced by Flask built-in |
+
+**Target Dependencies (Python)**:
+
+| Registry | Package | Version | Purpose | Notes |
+|----------|---------|---------|---------|-------|
+| PyPI | Flask | 3.0.3 | Web framework | Replaces Express.js |
+| PyPI | Werkzeug | >=3.0.0 | WSGI toolkit | Auto-installed with Flask |
+| PyPI | Jinja2 | >=3.1.2 | Template engine | Auto-installed with Flask |
+| PyPI | itsdangerous | >=2.1.2 | Data signing | Auto-installed with Flask |
+| PyPI | click | >=8.1.3 | CLI framework | Auto-installed with Flask |
+| PyPI | blinker | >=1.6.2 | Signal support | Auto-installed with Flask |
+| PyPI | MarkupSafe | >=2.0 | HTML escaping | Auto-installed with Jinja2 |
+
+**Version Verification**:
+
+All package versions have been verified against PyPI as of December 2024:
+- Flask 3.0.3: Released April 7, 2024 - Stable production release
+- Python 3.11: LTS release with full Flask 3.x support
+
+### 0.5.2 Dependency Updates
+
+**Import Refactoring Requirements**:
+
+| File | Old Import Pattern | New Import Pattern |
+|------|-------------------|-------------------|
+| app.py | N/A (new file) | `from flask import Flask` |
+| app.py | N/A (new file) | `import os` |
+
+**Import Transformation Rules**:
+
+```
+Source Pattern (JavaScript):
+────────────────────────────
+const express = require('express');
+const app = express();
+
+Target Pattern (Python):
+────────────────────────────
+from flask import Flask
+import os
+
+app = Flask(__name__)
+```
+
+### 0.5.3 External Reference Updates
+
+**Configuration Files Requiring Updates**:
+
+| File Type | Pattern | Update Required |
+|-----------|---------|-----------------|
+| Dependency manifest | package.json → requirements.txt | Full replacement |
+| Version spec | .nvmrc → .python-version | Full replacement |
+| Ignore rules | .gitignore | Content update |
+| Documentation | README.md | Content update |
+
+**Build and CI/CD Considerations**:
+
+| Aspect | Node.js Approach | Python Approach |
+|--------|-----------------|-----------------|
+| Install dependencies | `npm install` | `pip install -r requirements.txt` |
+| Run server | `npm start` or `node server.js` | `flask run` or `python app.py` |
+| Run tests | `npm test` | `pytest` (if tests added) |
+| Environment setup | `nvm use` | `pyenv local 3.11` or `python -m venv venv` |
+
+### 0.5.4 Runtime Environment Mapping
+
+**Node.js to Python Runtime Mapping**:
+
+| Node.js Component | Python Equivalent | Notes |
+|------------------|-------------------|-------|
+| Node.js v18+ | Python 3.11 | Runtime interpreter |
+| npm | pip | Package manager |
+| package.json | requirements.txt + pyproject.toml | Dependency manifest |
+| node_modules/ | venv/lib/pythonX.X/site-packages/ | Installed packages |
+| .nvmrc | .python-version | Version specification |
+| npx | pipx (optional) | Tool execution |
+
+### 0.5.5 Dependency Verification Matrix
+
+**Pre-Migration vs Post-Migration Dependencies**:
+
+```mermaid
+graph LR
+    subgraph "Node.js Stack"
+        N1[Node.js 18+]
+        N2[npm]
+        N3[express 4.18.x]
+        N1 --> N2
+        N2 --> N3
+    end
+    
+    subgraph "Python Stack"
+        P1[Python 3.11]
+        P2[pip]
+        P3[Flask 3.0.3]
+        P4[Werkzeug]
+        P5[Jinja2]
+        P1 --> P2
+        P2 --> P3
+        P3 --> P4
+        P3 --> P5
+    end
+    
+    N3 -.->|"Replaces"| P3
+```
+
+## 0.6 Scope Boundaries
+
+### 0.6.1 Exhaustively In Scope
+
+**Source Transformations**:
+
+| Pattern | Description | Action |
+|---------|-------------|--------|
+| `server.js` | Main application entry point | Full rewrite to app.py |
+| `package.json` | NPM dependency manifest | Convert to requirements.txt |
+| `.nvmrc` | Node version specification | Convert to .python-version |
+
+**Configuration Updates**:
+
+| Pattern | Description | Action |
+|---------|-------------|--------|
+| `.gitignore` | Version control ignore patterns | Update for Python patterns |
+| Environment variables | PORT configuration | Maintain identical behavior |
+
+**Documentation Updates**:
+
+| Pattern | Description | Action |
+|---------|-------------|--------|
+| `README.md` | Project documentation | Update for Python/Flask instructions |
+
+**API Endpoints**:
+
+| Endpoint | Method | Current Response | Required Response |
+|----------|--------|------------------|-------------------|
+| `/hello` | GET | "Hello world" | "Hello world" (identical) |
+| `/evening` | GET | "Good evening" | "Good evening" (identical) |
+
+### 0.6.2 Explicitly Out of Scope
+
+**Excluded from Migration**:
+
+| Item | Reason |
+|------|--------|
+| `/app/main.py` | Blitzy platform infrastructure code - unrelated to tutorial server |
+| `blitzy/` directory | Documentation scaffolding - not application code |
+| Database functionality | Not present in source specification |
+| Authentication/Authorization | Not present in source specification |
+| Middleware layers | Not present in source specification |
+| Static file serving | Not present in source specification |
+| Template rendering | Not present in source specification |
+| Session management | Not present in source specification |
+| Logging configuration | Not present in source specification |
+| Testing framework | Not explicitly required (can be added later) |
+
+**Architectural Constraints**:
+
+| Constraint | Description |
+|------------|-------------|
+| No framework additions | Do not add Flask extensions beyond core Flask |
+| No database | Application is stateless, no persistence required |
+| No additional routes | Only /hello and /evening endpoints |
+| No complex error handling | Simple default error responses acceptable |
+
+### 0.6.3 Scope Validation Matrix
+
+**Feature Parity Checklist**:
+
+| Feature | Node.js Original | Flask Target | In Scope |
+|---------|-----------------|--------------|----------|
+| GET /hello endpoint | ✓ | ✓ | ✅ Yes |
+| GET /evening endpoint | ✓ | ✓ | ✅ Yes |
+| Port 3000 default | ✓ | ✓ | ✅ Yes |
+| PORT env variable | ✓ | ✓ | ✅ Yes |
+| Dependency manifest | package.json | requirements.txt | ✅ Yes |
+| Version specification | .nvmrc | .python-version | ✅ Yes |
+| Git ignore patterns | .gitignore | .gitignore | ✅ Yes |
+| Documentation | README.md | README.md | ✅ Yes |
+| POST endpoints | ✗ | ✗ | ❌ N/A |
+| Database | ✗ | ✗ | ❌ N/A |
+| Authentication | ✗ | ✗ | ❌ N/A |
+
+### 0.6.4 Boundary Enforcement Rules
+
+**IN SCOPE Rules**:
+
+```
+INCLUDE:
+├── All files defined in Technical Specifications
+├── All HTTP endpoints (/hello, /evening)
+├── All response behaviors (content, status codes)
+├── Configuration equivalents (port, env vars)
+├── Documentation updates
+└── Dependency management files
+```
+
+**OUT OF SCOPE Rules**:
+
+```
+EXCLUDE:
+├── Blitzy platform infrastructure (/app/main.py)
+├── Documentation scaffolding (/blitzy/*)
+├── Features not in original specification
+├── Database integration
+├── Additional Flask extensions
+├── Testing infrastructure (unless explicitly requested)
+└── CI/CD pipeline configuration
+```
+
+### 0.6.5 Risk Assessment for Scope
+
+**Scope Creep Risks**:
+
+| Risk | Mitigation |
+|------|------------|
+| Adding unnecessary Flask extensions | Stick to core Flask only |
+| Over-engineering simple routes | Match original simplicity |
+| Adding features not in original | Reference Technical Specs as single source of truth |
+| Complex project structure | Maintain single-file approach like original |
+
+```mermaid
+graph TD
+    A[Scope Boundary] --> B{In Scope?}
+    B -->|Yes| C[Include in Migration]
+    B -->|No| D[Exclude from Migration]
+    
+    C --> E[/hello endpoint]
+    C --> F[/evening endpoint]
+    C --> G[Port configuration]
+    C --> H[Dependency files]
+    C --> I[Documentation]
+    
+    D --> J[Database]
+    D --> K[Authentication]
+    D --> L[Platform infrastructure]
+    D --> M[Additional routes]
+```
+
+## 0.7 Special Instructions for Refactoring
+
+### 0.7.1 User-Specified Requirements
+
+**Primary Directive from User**:
+
+> "Rewrite this Node.js server into a Python 3 Flask application, keeping every feature and functionality exactly as in the original Node.js project. Ensure the rewritten version fully matches the behavior and logic of the current implementation."
+
+**Extracted Requirements**:
+
+| Requirement | Interpretation | Implementation Approach |
+|-------------|---------------|------------------------|
+| "keeping every feature and functionality exactly" | 100% feature parity | Implement identical endpoints with identical responses |
+| "fully matches the behavior" | Behavioral equivalence | Same HTTP methods, paths, status codes, response content |
+| "logic of the current implementation" | Logic preservation | Route handler logic must produce identical outputs |
+
+### 0.7.2 Refactoring-Specific Constraints
+
+**Mandatory Compliance Items**:
+
+| Constraint | Description | Verification Method |
+|------------|-------------|---------------------|
+| API Contract Preservation | All public endpoints must remain identical | Test GET /hello returns "Hello world" |
+| Response Content Matching | Response bodies must be character-for-character identical | Compare response strings |
+| HTTP Method Preservation | GET requests only, no new methods | Verify only GET handlers exist |
+| Port Configuration | Default port 3000, configurable via PORT env | Test startup on port 3000 |
+| Stateless Operation | No session state, no persistence | Verify no database/file dependencies |
+
+### 0.7.3 Quality Assurance Requirements
+
+**Behavioral Verification Checklist**:
+
+| Test Case | Expected Result | Priority |
+|-----------|-----------------|----------|
+| `GET /hello` | Response: "Hello world", Status: 200 | Critical |
+| `GET /evening` | Response: "Good evening", Status: 200 | Critical |
+| Server starts on port 3000 | Server accessible at localhost:3000 | Critical |
+| PORT env variable override | Server uses custom port when PORT is set | High |
+| Unknown route handling | Default 404 response | Medium |
+
+### 0.7.4 Documentation Requirements
+
+**README.md Must Include**:
+
+| Section | Content |
+|---------|---------|
+| Project title | Updated name reflecting Python/Flask |
+| Description | Purpose as tutorial Flask server |
+| Prerequisites | Python 3.9+, pip |
+| Installation | Virtual environment setup, pip install |
+| Running | flask run or python app.py |
+| API Reference | GET /hello, GET /evening endpoints |
+| Environment Variables | PORT configuration |
+
+### 0.7.5 Code Style Requirements
+
+**Python Code Standards**:
+
+| Standard | Requirement |
+|----------|-------------|
+| PEP 8 | Follow Python style guidelines |
+| Naming | Snake_case for functions and variables |
+| Imports | Standard library first, then third-party |
+| Docstrings | Optional for simple functions |
+| Type hints | Optional for this simple application |
+
+**Flask-Specific Patterns**:
+
+| Pattern | Implementation |
+|---------|----------------|
+| App initialization | `app = Flask(__name__)` |
+| Route decorators | `@app.route('/path')` |
+| Response return | Direct string return |
+| Entry point guard | `if __name__ == '__main__':` |
+
+### 0.7.6 Migration Validation Requirements
+
+**Pre-Deployment Checklist**:
+
+```
+□ app.py created with Flask routes
+□ requirements.txt contains Flask==3.0.3
+□ .python-version specifies Python 3.11
+□ .gitignore updated for Python patterns
+□ README.md updated for Python/Flask
+□ GET /hello returns "Hello world"
+□ GET /evening returns "Good evening"
+□ Server runs on port 3000 by default
+□ PORT environment variable is respected
+□ No Node.js artifacts remain
+```
+
+**Acceptance Criteria Summary**:
+
+```mermaid
+graph TD
+    A[Migration Complete] --> B{All Endpoints Work?}
+    B -->|Yes| C{Responses Identical?}
+    B -->|No| X[FAIL: Fix endpoints]
+    C -->|Yes| D{Port Config Works?}
+    C -->|No| Y[FAIL: Fix responses]
+    D -->|Yes| E{Docs Updated?}
+    D -->|No| Z[FAIL: Fix config]
+    E -->|Yes| F[PASS: Migration Successful]
+    E -->|No| W[FAIL: Update docs]
+    
+    style F fill:#c8e6c9
+    style X fill:#ffcdd2
+    style Y fill:#ffcdd2
+    style Z fill:#ffcdd2
+    style W fill:#ffcdd2
+```
+
