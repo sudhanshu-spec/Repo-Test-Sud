@@ -4,1103 +4,560 @@
 
 ## 0.1 Intent Clarification
 
-This section transforms the user's requirements into precise technical language and surfaces all implicit requirements for enhancing the Express.js server with production-ready capabilities.
+### 0.1.1 Core Refactoring Objective
 
-### 0.1.1 Core Objective
+Based on the prompt, the Blitzy platform understands that the refactoring objective is to **decompose the existing monolithic single-file Express.js server (`server.js`) into a properly layered, modular Express.js architecture inside the same repository, while preserving every observable behavior of the current implementation bit-for-bit**.
 
-Based on the provided requirements, the Blitzy platform understands that the objective is to:
+The user's literal phrasing — "Rewrite this Node.js server into a express.js refactor" — cannot be satisfied as a framework migration because the project is already an Express application: `server.js` already calls `require('express')` and `const app = express()` [server.js:L31, L40], and `package.json` already declares `express: ^4.21.2` as a runtime dependency [package.json:dependencies.express]. The only coherent interpretation is therefore a **structural / modularity refactor of an existing Express server**. The user's qualifier — "keeping every feature and functionality exactly as in the original Node.js project. Ensure the rewritten version fully matches the behavior and logic of the current implementation." — confirms that this is a non-behavioral, non-functional refactor whose sole deliverable is improved internal organization.
 
-- **Enhance Existing Express.js Server**: Extend the current basic HTTP server with production-grade middleware, environment configuration, structured logging, and process management capabilities
-- **Implement Security Middleware**: Add helmet.js for HTTP security headers and CORS support for cross-origin requests
-- **Configure Environment Management**: Integrate dotenv for environment variable management from `.env` files
-- **Add Request Logging**: Implement morgan middleware for HTTP request logging in production-appropriate formats
-- **Prepare PM2 Deployment**: Create ecosystem configuration for PM2 process management with cluster mode support
+| Attribute | Value |
+|-----------|-------|
+| Refactoring type | Code structure / Modularity refactor (separation of concerns) |
+| Sub-category | Modular layout adoption inside an existing Express ^4.x application |
+| Target repository | Same repository (`repo-test-sud`) |
+| Net behavior change | None — strict zero-delta on all observable outputs |
+| Net dependency change | None — no packages added, removed, or version-shifted |
+| Execution phases | Single Blitzy phase |
 
-| Requirement ID | Feature Requirement | Enhanced Clarity |
-|----------------|---------------------|------------------|
-| REQ-001 | Add middleware | Integrate helmet (security headers), morgan (logging), cors (CORS support), and compression (response compression) middleware |
-| REQ-002 | Add routing | Organize routes with Express Router pattern and add health check endpoint for monitoring |
-| REQ-003 | Environment config | Implement dotenv for `.env` file parsing with support for development and production environments |
-| REQ-004 | Add logging | Configure morgan with 'combined' format for production and 'dev' format for development |
-| REQ-005 | PM2 deployment | Create `ecosystem.config.js` with cluster mode, environment variables, and log rotation |
+#### Enumerated Refactoring Goals
 
-**Implicit Requirements Detected:**
+- **G1 — App composition / bootstrap separation.** Split application construction (instantiating `express()`, registering middleware, mounting routes) from the network bootstrap (`app.listen`). The configured app instance must remain testable in isolation, exactly as today.
+- **G2 — Per-domain route modules.** Replace the three inline `app.get(...)` declarations [server.js:L79-L107] with dedicated `express.Router()` modules grouped by domain (`greeting`, `health`).
+- **G3 — Dedicated middleware registration module.** Extract the four `app.use(...)` calls [server.js:L56, L59, L62, L65] into a single registrar that preserves the exact ordering helmet → compression → cors → morgan.
+- **G4 — Centralized environment configuration.** Move the `require('dotenv').config()` call [server.js:L28] into a dedicated configuration module that is loaded once, before any module reads `process.env`.
+- **G5 — Controller layer for handler logic.** Extract the request-handler bodies from the route declarations into named controller functions, so route files declare URLs and methods only.
+- **G6 — Stable public surface.** Preserve `server.js` as the project entry point so that `package.json`'s `"main": "server.js"` and `"start": "node server.js"` [package.json:L5, L7], `ecosystem.config.js`'s `script: './server.js'` [ecosystem.config.js:L26], and `tests/server.test.js`'s `require('../server')` [tests/server.test.js:L25] continue to resolve without edits.
+- **G7 — Preserve the test contract.** All 7 Jest + Supertest assertions in `tests/server.test.js` must pass without any modification to assertions or import paths.
 
-- The server must gracefully handle uncaught exceptions and unhandled promise rejections
-- Environment-specific middleware configuration (e.g., morgan format differs by NODE_ENV)
-- Health check endpoint (`/health`) for load balancer and monitoring integration
-- Trust proxy settings for deployments behind reverse proxies (Nginx, AWS ALB)
-- Error handling middleware for consistent error responses
+### 0.1.2 Technical Interpretation
 
-**Feature Dependencies and Prerequisites:**
+This refactoring translates to the following technical transformation strategy: **convert a single 119-line `server.js` that mixes dotenv loading, middleware registration, route declarations, and `app.listen` into a thin entry-point (`server.js`) that delegates application construction to a new `src/app.js` factory, which composes configuration (`src/config/env.js`), middleware (`src/middleware/index.js`), and routes (`src/routes/index.js` plus per-domain route and controller modules) into the same configured `app` object that is exported today**.
 
-- Node.js runtime v20.19.6 (currently installed, satisfies ≥18.0.0 requirement)
-- npm package manager v11.1.0 (currently installed)
-- Express.js ^4.21.2 (already installed)
-- New production dependencies: helmet, morgan, cors, compression, dotenv
-- PM2 process manager (global installation for production deployment)
+#### Current → Target Architecture Mapping
 
-### 0.1.2 Task Categorization
+```mermaid
+flowchart LR
+    subgraph Current["Current (monolithic)"]
+        S0["server.js<br/>(dotenv + express()<br/>+ 4 app.use + 3 app.get<br/>+ app.listen + export)"]
+    end
 
-- **Primary Task Type**: Configuration + Feature Enhancement
-- **Secondary Aspects**: Security hardening, DevOps/deployment preparation, observability
-- **Scope Classification**: Cross-cutting change affecting server initialization, middleware stack, and deployment configuration
+    subgraph Target["Target (modular)"]
+        S1["server.js<br/>(require src/app +<br/>app.listen + export)"]
+        A1["src/app.js<br/>(express() + compose)"]
+        C1["src/config/env.js<br/>(dotenv.config)"]
+        M1["src/middleware/index.js<br/>(helmet, compression,<br/>cors, morgan)"]
+        R1["src/routes/index.js"]
+        R2["src/routes/greeting.routes.js"]
+        R3["src/routes/health.routes.js"]
+        H1["src/controllers/greeting.controller.js"]
+        H2["src/controllers/health.controller.js"]
+        S1 --> A1
+        A1 --> C1
+        A1 --> M1
+        A1 --> R1
+        R1 --> R2
+        R1 --> R3
+        R2 --> H1
+        R3 --> H2
+    end
 
-### 0.1.3 Special Instructions and Constraints
-
-**User-Specified Directives:**
-
-- User Request: *"Enhance this basic HTTP server with Express.js framework, add routing, middleware, environment config, logging, and prepare for production deployment with PM2."*
-
-**Environment Variables Provided:**
-
-| Variable | Source | Purpose |
-|----------|--------|---------|
-| DB_Host | User-provided environment | Database host configuration |
-| API_KEY | User-provided secret | External API authentication |
-
-**Build Command Specified:**
-
-```bash
-npm run build
+    Current -- "Modularize" --> Target
 ```
 
-Note: The current `package.json` does not define a `build` script. This is acceptable for this Node.js project as no transpilation is required.
+#### Transformation Rules
 
-### 0.1.4 Technical Interpretation
+- The configured Express `app` instance produced by `src/app.js` must be **identical in observable behavior** to the one produced by the current `server.js` — same middleware, same ordering, same routes, same handlers, same exports.
+- All `process.env` reads must occur **after** `dotenv.config()` has executed.
+- `server.js` becomes a 2-responsibility entry point: re-export the configured app and conditionally call `app.listen` only when invoked directly via `node server.js`.
+- No new public API surface, no new response fields, no new headers, no new error pathways are introduced — only internal reorganization.
 
-These requirements translate to the following technical implementation strategy:
+## 0.2 Scope Boundaries
 
-| User Requirement | Technical Action | Implementation Approach |
-|------------------|------------------|------------------------|
-| Add middleware | Install and configure security/utility middleware | Add helmet(), morgan(), cors(), compression() in correct order before routes |
-| Add routing | Implement Express Router pattern | Create routes directory with modular route definitions |
-| Environment config | Integrate dotenv at application entry | Load dotenv before any environment variable access; create comprehensive .env.example |
-| Add logging | Configure morgan with environment-aware formats | Use 'combined' for production, 'dev' for development with conditional logic |
-| PM2 deployment | Create ecosystem.config.js | Configure cluster mode, instances, environment variables, and log paths |
+### 0.2.1 Exhaustively In Scope
 
-**Implementation Strategy Summary:**
+The following files and patterns are explicitly in scope for this refactor. Every CREATE target sits under the new `src/` tree; every UPDATE target is named explicitly.
 
-- To **add middleware**, we will **install** helmet, morgan, cors, compression packages and **configure** them in the correct middleware stack order in `server.js`
-- To **enhance routing**, we will **create** a health check endpoint and **document** API routes in README
-- To **configure environment**, we will **install** dotenv and **update** server.js to load environment variables at startup
-- To **add logging**, we will **configure** morgan with environment-aware format selection and optional file logging
-- To **enable PM2 deployment**, we will **create** `ecosystem.config.js` with cluster mode, environment configurations, and production settings
+#### Source Transformations (Express application code)
 
+- `server.js` — UPDATE: collapse to a thin entry point that requires `./src/app`, re-exports it, and conditionally calls `app.listen`.
+- `src/app.js` — CREATE: Express application factory that composes config, middleware, and routes; exports the configured app.
+- `src/config/env.js` — CREATE: invokes `require('dotenv').config()` exactly once at module load and exports resolved `PORT`, `NODE_ENV`, and `LOG_LEVEL` accessors.
+- `src/middleware/index.js` — CREATE: registers helmet → compression → cors → morgan in this exact order onto a provided Express app.
+- `src/routes/index.js` — CREATE: aggregates per-domain routers and mounts them onto a parent `express.Router()`.
+- `src/routes/greeting.routes.js` — CREATE: declares `GET /` and `GET /evening` using `express.Router()`, delegates to the greeting controller.
+- `src/routes/health.routes.js` — CREATE: declares `GET /health` using `express.Router()`, delegates to the health controller.
+- `src/controllers/greeting.controller.js` — CREATE: exports `getRoot` (returns "Hello world") and `getEvening` (returns "Good evening").
+- `src/controllers/health.controller.js` — CREATE: exports `getHealth` (returns `{status:'healthy', timestamp: ISO-8601, uptime: process.uptime()}` with status 200 and JSON content type).
 
-## 0.2 Repository Scope Discovery
+#### Documentation Updates
 
-This section documents the comprehensive repository analysis conducted to identify all affected files and existing infrastructure patterns.
+- `README.md` — UPDATE: replace any structural references that implied a single-file server with a description of the new modular layout. The endpoint contract tables, environment-variable tables, and PM2 deployment instructions remain unchanged.
 
-### 0.2.1 Comprehensive File Analysis
+#### Configuration and Lockfile (REFERENCE — no edits required)
 
-**Files Identified for Modification:**
+- `package.json` — REFERENCE: `"main": "server.js"` [package.json:L5] and `"start": "node server.js"` [package.json:L7] remain valid because `server.js` is preserved at the repository root. No dependency, devDependency, or script edits are required.
+- `package-lock.json` — REFERENCE: lockfile is unchanged because no `npm install` is required (no dependency additions, removals, or version bumps).
+- `.env.example` — REFERENCE: environment-variable contract is unchanged (NODE_ENV, LOG_LEVEL, PORT, DB_Host, DB, API_KEY).
+- `ecosystem.config.js` — REFERENCE: `script: './server.js'` [ecosystem.config.js:L26] continues to resolve correctly; no PM2 changes required.
+- `postman.json` — REFERENCE: endpoint URLs and methods are unchanged.
 
-| Category | Files | Pattern Match |
-|----------|-------|---------------|
-| Source Code | `server.js` | Main application entry point |
-| Configuration | `package.json` | Dependency manifest |
-| Configuration | `.env.example` | Environment template |
-| Documentation | `README.md` | Project documentation |
-| Tests | `tests/server.test.js` | Test suite |
+#### Tests (REFERENCE — no edits)
 
-**New Files to Create:**
+- `tests/server.test.js` — REFERENCE: the test file's `const app = require('../server')` import and every assertion in the suite continue to hold because the configured app exported from `server.js` is observably identical to the current export.
 
-| File | Purpose |
-|------|---------|
-| `ecosystem.config.js` | PM2 process manager configuration |
-| `.env` | Production environment variables (from template) |
-| `routes/index.js` | Route aggregation module (optional enhancement) |
-| `middleware/errorHandler.js` | Centralized error handling middleware (optional) |
+### 0.2.2 Explicitly Out of Scope
 
-**Related Files Discovery:**
+#### Behavioral Changes (forbidden by user constraint)
 
-| File | Relationship | Action Required |
-|------|--------------|-----------------|
-| `package-lock.json` | Auto-generated dependency lock | Will be updated by npm install |
-| `postman.json` | API collection | Update with health endpoint |
-| `.gitignore` | Version control exclusions | Ensure `.env` is excluded |
+The user directive — "keeping every feature and functionality exactly as in the original Node.js project" — places the following categories explicitly out of scope:
 
-### 0.2.2 Web Search Research Conducted
+- Adding, removing, or modifying any route or its response body, status code, or content type.
+- Adding `app.use(express.json())` or any body parser (no existing handler consumes a request body).
+- Adding a 404 handler, an error-handling middleware, a `trust proxy` setting, or any rate-limiting middleware.
+- Adding `process.on('uncaughtException')` or `process.on('unhandledRejection')` handlers.
+- Adding TLS termination, HTTPS configuration, or cookie/session middleware.
+- Modifying any Helmet, compression, cors, or morgan option from its current default.
+- Changing the morgan format-selection expression `process.env.NODE_ENV === 'production' ? 'combined' : 'dev'` [server.js:L65].
+- Changing the `/health` response schema, the `new Date().toISOString()` timestamp, or `process.uptime()` numeric source.
+- Migrating to Express 5, switching to TypeScript, adding a build step, or introducing async/await on handlers that today are synchronous.
 
-**Best Practices Researched:**
+#### Repository Artifacts (unrelated to the Express server)
 
-| Topic | Key Findings |
-|-------|--------------|
-| Express.js Production Best Practices | Setting NODE_ENV to "production" improves performance by 3x; use PM2 for process management; implement proper error handling |
-| PM2 Ecosystem Configuration | Use cluster mode with `instances: "max"` for CPU utilization; configure `ecosystem.config.js` for environment-specific settings |
-| Security Middleware (Helmet) | Latest version 8.1.0; automatically sets security headers including Content-Security-Policy, X-Content-Type-Options |
-| Request Logging (Morgan) | Use 'combined' format for production (Apache combined format); 'dev' for development with colored output |
-| Environment Configuration | dotenv 17.2.3 is latest; Node.js v20.6.0+ supports native `--env-file` flag as alternative |
+The following files exist in the repository but are unrelated cross-language fixtures and operational samples; they are not modified by this refactor:
 
-**Package Versions Verified:**
+- `amazon_cloudformation.yaml` (AWS CloudFormation sample)
+- `apache.conf` (Apache HTTPD sample)
+- `datadog.yaml` (Datadog Agent sample)
+- `dotnet.cs` (C# sample)
+- `dummy_qtest.csv` (QA test cases)
+- `eclipse.xml` (Eclipse project metadata)
+- `junit.java` (Java JUnit sample)
+- `maven.xml` (Maven POM sample)
+- `mysql.sql` (MySQL seed)
+- `notion.md` (Notion import demo)
+- `oracle.sql` (Oracle seed)
+- `php.php` (PHP sample)
+- `script.sh` (diagnostic shell script)
+- `blitzy/documentation/Project Guide.md` and `blitzy/documentation/Technical Specifications.md` (prior project documentation; not maintained as part of this refactor)
 
-| Package | Latest Version | Purpose |
-|---------|---------------|---------|
-| dotenv | 17.2.3 | Environment variable management |
-| helmet | 8.1.0 | Security HTTP headers |
-| morgan | 1.10.1 | HTTP request logging |
-| cors | 2.8.5 | Cross-Origin Resource Sharing |
-| compression | 1.8.1 | Response compression |
-| express-rate-limit | 8.2.1 | Rate limiting (recommended) |
-| pm2 | 6.0.14 | Process management |
+#### Rules-Mandated Files
 
-### 0.2.3 Existing Infrastructure Assessment
+User-specified rules list is empty (`[]`), so no rule-mandated files (migration scripts, fixtures, configuration files) need to be added to scope beyond what is enumerated above.
 
-**Current Project Structure:**
+### 0.2.3 Design System Compliance
+
+Not applicable. This refactor targets a server-side HTTP API; no UI components, no component library, no design tokens, and no Figma references are involved. The Design System Alignment Protocol is therefore intentionally omitted.
+
+## 0.3 Target Design
+
+### 0.3.1 Refactored Structure Planning
+
+The refactored repository preserves every existing top-level file and folder and introduces a new `src/` tree that holds the decomposed Express application. No file is renamed or moved at the repository root; every external reference that today points at `server.js` continues to resolve.
 
 ```
-/tmp/blitzy/Repo-Test-Sud/010126/
-├── server.js                    # Express application entry point (54 lines)
-├── package.json                 # npm configuration with Express ^4.21.2
-├── package-lock.json            # Dependency lock file
-├── .env.example                 # Environment template (PORT, DB)
-├── .gitignore                   # Git exclusions
-├── README.md                    # Project documentation
+repo-test-sud/
+├── server.js                              [UPDATE — thin entry point]
+├── src/                                   [CREATE — new directory tree]
+│   ├── app.js                             [CREATE — Express application factory]
+│   ├── config/
+│   │   └── env.js                         [CREATE — dotenv loader + env accessors]
+│   ├── middleware/
+│   │   └── index.js                       [CREATE — middleware stack registrar]
+│   ├── routes/
+│   │   ├── index.js                       [CREATE — router aggregator]
+│   │   ├── greeting.routes.js             [CREATE — GET / and GET /evening]
+│   │   └── health.routes.js               [CREATE — GET /health]
+│   └── controllers/
+│       ├── greeting.controller.js         [CREATE — root/evening handlers]
+│       └── health.controller.js           [CREATE — /health handler]
 ├── tests/
-│   └── server.test.js           # Jest test suite (45 lines)
-├── blitzy/
-│   └── documentation/
-│       ├── Project Guide.md     # Implementation guide
-│       └── Technical Specifications.md
-└── postman.json                 # API collection
+│   └── server.test.js                     [REFERENCE — unchanged]
+├── package.json                           [REFERENCE — unchanged]
+├── package-lock.json                      [REFERENCE — unchanged]
+├── .env.example                           [REFERENCE — unchanged]
+├── ecosystem.config.js                    [REFERENCE — unchanged]
+├── postman.json                           [REFERENCE — unchanged]
+├── README.md                              [UPDATE — describe modular layout]
+└── (cross-language sample fixtures)       [OUT OF SCOPE — untouched]
 ```
 
-**Existing Patterns to Follow:**
+#### Module Responsibilities
 
-| Pattern | Location | Description |
-|---------|----------|-------------|
-| CommonJS Modules | `server.js` | Uses `require()` and `module.exports` |
-| Environment Variables | `server.js:21` | `process.env.PORT \|\| 3000` pattern |
-| Conditional Startup | `server.js:46` | `require.main === module` for test compatibility |
-| JSDoc Comments | `server.js:1-10` | Block comments with parameter documentation |
-| Express Route Handlers | `server.js:30-32` | Arrow function handlers with req/res |
+| Module | Responsibility | Required `require()` graph |
+|--------|---------------|----------------------------|
+| `server.js` | Re-export the configured app from `./src/app`; conditionally call `app.listen(PORT, ...)` when `require.main === module`; log startup messages preserving the existing console output [server.js:L111-L114] | `./src/app` |
+| `src/app.js` | Instantiate `express()`, invoke the middleware registrar, mount the router aggregator, export the configured app instance | `express`, `./config/env`, `./middleware`, `./routes` |
+| `src/config/env.js` | Call `require('dotenv').config()` at module load (once, before any other module reads `process.env`); export `PORT`, `NODE_ENV` resolved with the same defaults as the current implementation | `dotenv` |
+| `src/middleware/index.js` | Export a function `registerMiddleware(app)` that calls `app.use(helmet())`, `app.use(compression())`, `app.use(cors())`, `app.use(morgan(...))` in that exact order, with the morgan-format selection logic preserved verbatim | `helmet`, `compression`, `cors`, `morgan` |
+| `src/routes/index.js` | Create a parent `express.Router()`; mount the greeting and health routers; export the parent router | `express`, `./greeting.routes`, `./health.routes` |
+| `src/routes/greeting.routes.js` | Declare `router.get('/', getRoot)` and `router.get('/evening', getEvening)`; export the router | `express`, `../controllers/greeting.controller` |
+| `src/routes/health.routes.js` | Declare `router.get('/health', getHealth)`; export the router | `express`, `../controllers/health.controller` |
+| `src/controllers/greeting.controller.js` | Export `getRoot(req, res)` that calls `res.send('Hello world')` and `getEvening(req, res)` that calls `res.send('Good evening')` | none |
+| `src/controllers/health.controller.js` | Export `getHealth(req, res)` that calls `res.status(200).json({status:'healthy', timestamp: new Date().toISOString(), uptime: process.uptime()})` | none |
 
-**Build and Deployment:**
+### 0.3.2 Web Search Research Conducted
 
-| Aspect | Current State | Enhancement |
-|--------|---------------|-------------|
-| Start Command | `node server.js` | Add PM2 scripts |
-| Test Command | `jest` | No changes needed |
-| Build Command | Not defined | Not required for Node.js |
-| Process Management | None | Add PM2 ecosystem.config.js |
+A targeted web search confirmed the canonical Express.js modular layout: separation of concerns through dedicated folders for routes, controllers, middleware, and config; route grouping by domain using `express.Router()`; and centralizing configuration in one place. The query and confirmed best practices are:
 
-**Testing Infrastructure:**
+- Query: "Express.js modular project structure best practices 2024"
+- Confirmed practice: extract route handlers into per-domain modules using `express.Router()` and mount them on the app
+- Confirmed practice: separate request handler logic into a controllers folder so route files declare URLs and methods only
+- Confirmed practice: centralize environment configuration so consumers do not call `dotenv` directly
+- Confirmed practice: keep an Express application factory ("`app.js`") separate from the network bootstrap so the app can be exercised by Supertest without binding a port
 
-| Component | Status | Details |
-|-----------|--------|---------|
-| Test Framework | ✅ Jest 29.7.0 | Configured in package.json |
-| HTTP Testing | ✅ Supertest 7.0.0 | Used for endpoint assertions |
-| Test Location | `tests/server.test.js` | 2 passing tests |
-| Coverage | Not configured | Optional enhancement |
+The target design applies these practices in the minimum form appropriate for a three-endpoint service; the structure is intentionally not over-engineered (no services layer, no models layer, no DAOs) because the existing application performs no persistence, no external I/O, and no business logic.
 
+### 0.3.3 Design Pattern Applications
 
-## 0.3 File Transformation Mapping
+| Pattern | Application |
+|---------|-------------|
+| Application Factory | `src/app.js` constructs and returns a configured Express `app` without starting an HTTP listener. This enables Supertest to attach to the in-memory app, matching the existing test pattern at `tests/server.test.js:L25` |
+| Entry-Point Pattern | `server.js` retains the `if (require.main === module) { app.listen(...) }` guard [server.js:L110-L115] so the test runner can import the app without binding to a port |
+| Router Composition | A parent `express.Router()` in `src/routes/index.js` aggregates per-domain routers (`greeting.routes`, `health.routes`), each created with `express.Router()`. The parent router is mounted on the app via a single `app.use(router)` call |
+| Controller Layer | Handler bodies move from inline arrow functions into named exports of `controllers/*.controller.js`, so route files become pure URL-to-handler declarations |
+| Middleware Composition | A single registrar in `src/middleware/index.js` encapsulates the four `app.use(...)` calls. The morgan-format selection logic is colocated with the morgan registration to preserve the current behavior verbatim |
+| Configuration Module | `src/config/env.js` owns the single call to `dotenv.config()` and exposes resolved env values, eliminating direct `process.env` reads from the rest of the source tree |
 
-This section provides a comprehensive mapping of all files requiring creation, modification, or deletion to implement the requested enhancements.
+### 0.3.4 User Interface Design
 
-### 0.3.1 File-by-File Execution Plan
+Not applicable. The refactor target is an HTTP/JSON server; there is no user interface to design or update.
 
-| Target File | Transformation | Source/Reference | Purpose/Changes |
-|-------------|----------------|------------------|-----------------|
-| `server.js` | UPDATE | `server.js` | Add middleware imports (helmet, morgan, cors, compression, dotenv); configure middleware stack; add health endpoint |
-| `package.json` | UPDATE | `package.json` | Add production dependencies; add PM2 scripts (start:prod, stop, restart) |
-| `.env.example` | UPDATE | `.env.example` | Add NODE_ENV, LOG_LEVEL, API_KEY placeholder, DB_Host reference |
-| `.env` | CREATE | `.env.example` | Create production environment file from template |
-| `ecosystem.config.js` | CREATE | PM2 documentation | Create PM2 ecosystem configuration with cluster mode |
-| `README.md` | UPDATE | `README.md` | Add middleware documentation, PM2 usage, health endpoint |
-| `tests/server.test.js` | UPDATE | `tests/server.test.js` | Add health endpoint test; update for middleware compatibility |
-| `postman.json` | UPDATE | `postman.json` | Add health check endpoint request |
-| `.gitignore` | UPDATE | `.gitignore` | Ensure .env is excluded, add PM2 log patterns |
+## 0.4 Transformation Mapping
 
-### 0.3.2 New Files Detail
+### 0.4.1 File-by-File Transformation Plan
 
-**ecosystem.config.js** - PM2 Process Manager Configuration
-- Content type: Configuration
-- Based on: PM2 official documentation patterns
-- Key sections:
-  - `apps` array with application configuration
-  - `name`: Application name for PM2 process list
-  - `script`: Entry point (`server.js`)
-  - `instances`: Cluster mode worker count (`max` or specific number)
-  - `exec_mode`: Set to `cluster` for load balancing
-  - `env`: Development environment variables
-  - `env_production`: Production environment variables
-  - `log_file`, `out_file`, `error_file`: Log file paths
-  - `max_memory_restart`: Memory threshold for automatic restart
+Every target file is mapped to a concrete source file (or marked as a pure addition derived from the existing `server.js`). All transformations execute in a single Blitzy phase.
 
-**.env** - Production Environment Configuration
-- Content type: Configuration
-- Based on: `.env.example` template
-- Key variables:
-  - `NODE_ENV=production`
-  - `PORT=3000`
-  - `DB_Host` (from user-provided environment)
-  - `API_KEY` (from user-provided secret)
-  - `LOG_LEVEL=info`
+| Target File | Transformation | Source File | Key Changes |
+|-------------|----------------|-------------|-------------|
+| `server.js` | UPDATE | `server.js` | Reduce to thin entry point: replace the body (currently lines 27-118) with: (1) `const app = require('./src/app');`, (2) `const PORT = require('./src/config/env').PORT;`, (3) preserve the `if (require.main === module) { app.listen(PORT, () => { console.log(...) }) }` guard verbatim from [server.js:L110-L115], (4) `module.exports = app;` preserving the export contract at [server.js:L118] |
+| `src/app.js` | CREATE | `server.js` | New Express application factory. Require order: `./config/env` FIRST (so dotenv runs before any env read), then `express`, then `./middleware`, then `./routes`. Construct `const app = express()`, invoke `registerMiddleware(app)`, mount the aggregate router via `app.use(router)`. Export the configured `app`. Mirrors the assembly at [server.js:L31-L107] minus the listen call |
+| `src/config/env.js` | CREATE | `server.js` | Encapsulates `require('dotenv').config()` from [server.js:L28]. Exports `PORT` resolved as `process.env.PORT || 3000` (matching [server.js:L43]) and `NODE_ENV` accessor for downstream consumers |
+| `src/middleware/index.js` | CREATE | `server.js` | Exports `registerMiddleware(app)` that performs, in this exact order: `app.use(helmet())` [from server.js:L56], `app.use(compression())` [from server.js:L59], `app.use(cors())` [from server.js:L62], `app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'))` [from server.js:L65]. Requires `helmet`, `compression`, `cors`, `morgan` |
+| `src/routes/index.js` | CREATE | `server.js` | Creates `const router = express.Router()`; mounts `router.use(require('./greeting.routes'))` and `router.use(require('./health.routes'))`; exports the parent router. Replaces the inline `app.get(...)` declarations at [server.js:L79, L94, L105] |
+| `src/routes/greeting.routes.js` | CREATE | `server.js` | New `express.Router()` declaring `router.get('/', getRoot)` and `router.get('/evening', getEvening)`. Source rows: [server.js:L94-L96] and [server.js:L105-L107]. Imports handlers from `../controllers/greeting.controller` |
+| `src/routes/health.routes.js` | CREATE | `server.js` | New `express.Router()` declaring `router.get('/health', getHealth)`. Source rows: [server.js:L79-L85]. Imports handler from `../controllers/health.controller` |
+| `src/controllers/greeting.controller.js` | CREATE | `server.js` | Exports two named handlers extracted verbatim from [server.js:L94-L96] and [server.js:L105-L107]: `getRoot = (req, res) => res.send('Hello world')` and `getEvening = (req, res) => res.send('Good evening')` |
+| `src/controllers/health.controller.js` | CREATE | `server.js` | Exports `getHealth = (req, res) => res.status(200).json({status:'healthy', timestamp: new Date().toISOString(), uptime: process.uptime()})` extracted verbatim from [server.js:L79-L85] |
+| `README.md` | UPDATE | `README.md` | Add a "Project Structure" subsection documenting the `src/` tree. Endpoint contract tables [README.md:L29-L33], health-check schema [README.md:L44-L57], env-variable tables [README.md:L74-L82], and PM2 deployment instructions [README.md:L83-L122] remain untouched because their content is still accurate |
+| `tests/server.test.js` | REFERENCE | n/a | No edits. The file imports `../server` [tests/server.test.js:L25] and asserts the public HTTP contract, which the refactor preserves exactly |
+| `package.json` | REFERENCE | n/a | No edits. `"main": "server.js"` [package.json:L5], `"start": "node server.js"` [package.json:L7], dependency list [package.json:L16-L23], devDependencies [package.json:L24-L27], and `engines.node>=18.0.0` [package.json:L13-L15] remain valid |
+| `package-lock.json` | REFERENCE | n/a | No edits. Dependency tree is unchanged because no packages are added, removed, or version-bumped |
+| `.env.example` | REFERENCE | n/a | No edits. Env contract (NODE_ENV, LOG_LEVEL, PORT, DB_Host, DB, API_KEY) is unchanged |
+| `ecosystem.config.js` | REFERENCE | n/a | No edits. `script: './server.js'` [ecosystem.config.js:L26] continues to resolve. PM2 env maps for development/production/test [ecosystem.config.js:L57-L75] are unchanged |
+| `postman.json` | REFERENCE | n/a | No edits. Endpoint URLs (`http://localhost:3000/health`, `/`, `/evening`) and HTTP methods are unchanged |
 
-### 0.3.3 Files to Modify Detail
+### 0.4.2 Cross-File Dependencies
 
-**server.js** - Main Application Entry Point
+#### Import Statement Updates
 
-Sections to update:
-- **Lines 1-15**: Add new imports for middleware packages
-- **Lines 17-22**: Add dotenv configuration call
-- **Lines 23-35**: Configure middleware stack in correct order
-- **Lines 45-50**: Add health check endpoint before server start
+The refactor introduces new internal `require()` paths. No third-party `require()` calls change.
 
-New content to add:
-```javascript
-// Middleware imports (after line 15)
-const helmet = require('helmet');
-const morgan = require('morgan');
-const cors = require('cors');
-const compression = require('compression');
-require('dotenv').config();
+- **`server.js`** — replace top-of-file requires:
+  - FROM: `require('dotenv').config(); const express = require('express'); const helmet = require('helmet'); const morgan = require('morgan'); const cors = require('cors'); const compression = require('compression');` [server.js:L28, L31-L37]
+  - TO: `const app = require('./src/app'); const { PORT } = require('./src/config/env');`
 
-// Middleware configuration (after app creation)
-app.use(helmet());
-app.use(compression());
-app.use(cors());
-app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+- **`src/app.js`** — new requires (order matters):
+  - `require('./config/env');` (must be FIRST so dotenv runs before any env read)
+  - `const express = require('express');`
+  - `const registerMiddleware = require('./middleware');`
+  - `const router = require('./routes');`
+
+- **`src/config/env.js`** — new requires:
+  - `require('dotenv').config();` (executed at module load)
+
+- **`src/middleware/index.js`** — new requires:
+  - `const helmet = require('helmet'); const compression = require('compression'); const cors = require('cors'); const morgan = require('morgan');`
+
+- **`src/routes/index.js`** — new requires:
+  - `const express = require('express');`
+  - `const greetingRoutes = require('./greeting.routes');`
+  - `const healthRoutes = require('./health.routes');`
+
+- **`src/routes/greeting.routes.js`** — new requires:
+  - `const express = require('express');`
+  - `const { getRoot, getEvening } = require('../controllers/greeting.controller');`
+
+- **`src/routes/health.routes.js`** — new requires:
+  - `const express = require('express');`
+  - `const { getHealth } = require('../controllers/health.controller');`
+
+- **`src/controllers/*.controller.js`** — no third-party requires.
+
+#### Configuration and Test Import Stability
+
+No configuration or test imports change:
+
+- `tests/server.test.js` continues to `require('../server')` and receive the configured Express app, because `server.js` will `module.exports = require('./src/app')` (preserving the export contract).
+- `ecosystem.config.js` continues to reference `./server.js`.
+- `package.json`'s `"main"` and `"start"` continue to reference `server.js`.
+
+### 0.4.3 Wildcard Patterns
+
+Wildcards are not required because the file count is small and every path is enumerated explicitly. If future extensions are made under `src/` (additional routes or controllers), the trailing-wildcard patterns `src/routes/*.routes.js` and `src/controllers/*.controller.js` may be applied; no leading wildcards are used.
+
+### 0.4.4 One-Phase Execution
+
+This refactor will be executed by Blitzy in **ONE** phase. All CREATE, UPDATE, and REFERENCE operations happen atomically within a single run: the eight new `src/**` files are created, `server.js` is updated to the thin entry point, and `README.md` is updated to describe the new layout. No multi-phase split is required because the refactor has no dependency on intermediate validation or human approval.
+
+## 0.5 Dependency Inventory
+
+### 0.5.1 Key Packages
+
+The refactor is purely structural and adds, removes, or upgrades zero packages. The existing dependency manifest [package.json:L16-L27] and lockfile [package-lock.json: lockfileVersion 3] remain authoritative. The packages relevant to the refactor are listed below at their resolved versions:
+
+| Registry | Package | Version (Manifest) | Version (Resolved) | Purpose |
+|----------|---------|-------------------|--------------------|---------|
+| npm | express | ^4.21.2 | 4.22.1 | Web application framework; consumed by `src/app.js`, `src/routes/*` |
+| npm | helmet | ^8.1.0 | 8.1.0 | Security HTTP headers middleware; consumed by `src/middleware/index.js` |
+| npm | morgan | ^1.10.1 | 1.10.1 | HTTP request logging middleware; consumed by `src/middleware/index.js` |
+| npm | cors | ^2.8.5 | 2.8.5 | Cross-Origin Resource Sharing middleware; consumed by `src/middleware/index.js` |
+| npm | compression | ^1.8.1 | 1.8.1 | gzip/deflate response compression middleware; consumed by `src/middleware/index.js` |
+| npm | dotenv | ^17.2.3 | 17.2.3 | Environment-variable loader; consumed by `src/config/env.js` |
+| npm | jest | ^29.7.0 (dev) | 29.7.0 | Test runner; consumed by `tests/server.test.js` |
+| npm | supertest | ^7.0.0 (dev) | 7.1.4 | HTTP assertions; consumed by `tests/server.test.js` |
+
+Runtime alignment: `package.json` declares `engines.node: ">=18.0.0"` [package.json:L13-L15]; the validation environment documented in `blitzy/documentation/Project Guide.md` is Node v20.19.5 with npm 10.8.2. The refactor introduces no syntax requiring a newer runtime.
+
+### 0.5.2 Dependency Updates
+
+This section documents the only changes the refactor introduces — purely internal `require()` paths. No external dependency change occurs.
+
+#### Import Refactoring
+
+- **Files requiring import updates** (enumerated; no wildcards required because the file count is small):
+  - `server.js` — top-of-file requires replaced with `require('./src/app')` and a destructured `PORT` from `./src/config/env`
+  - `src/app.js` — new file; requires `./config/env` FIRST, then `express`, `./middleware`, `./routes`
+  - `src/middleware/index.js` — new file; requires `helmet`, `compression`, `cors`, `morgan`
+  - `src/routes/index.js` — new file; requires `express`, `./greeting.routes`, `./health.routes`
+  - `src/routes/greeting.routes.js` — new file; requires `express`, `../controllers/greeting.controller`
+  - `src/routes/health.routes.js` — new file; requires `express`, `../controllers/health.controller`
+  - `src/controllers/greeting.controller.js` — new file; no third-party requires
+  - `src/controllers/health.controller.js` — new file; no third-party requires
+
+- **Import transformation rules** (applied to `server.js` only; all other affected files are CREATEs):
+  - Old: `require('dotenv').config();` [server.js:L28]
+  - New: relocated into `src/config/env.js`, which is required transitively via `src/app.js`
+  - Old: `const express = require('express'); const helmet = require('helmet'); const morgan = require('morgan'); const cors = require('cors'); const compression = require('compression');` [server.js:L31-L37]
+  - New: removed from `server.js`; each module is required only inside its owning sub-module (`express` in `src/app.js` and `src/routes/*`, the four middleware packages in `src/middleware/index.js`)
+
+#### External Reference Updates
+
+The following categories of external files are evaluated for required updates; the conclusion for each is "no change required":
+
+- **Configuration files** (`*.config.*`, `*.json`): `ecosystem.config.js` continues to reference `./server.js` [ecosystem.config.js:L26]; `postman.json` continues to reference the same endpoint URLs; `package.json` `"main"` and `"start"` continue to reference `server.js` [package.json:L5, L7]. No edits.
+- **Documentation files** (`**/*.md`): `README.md` requires a UPDATE to add a "Project Structure" section describing the new modular layout; the existing endpoint contract, env-variable, and PM2 sections remain accurate. `blitzy/documentation/*.md` are not in scope for this refactor.
+- **Build files** (`package.json`, `package-lock.json`): No edits. The refactor introduces no new packages, no new scripts, and no engine changes.
+- **CI/CD files** (`.github/workflows/*.yml`, `.gitlab-ci.yml`): None present in the repository; no CI/CD edits possible or required.
+
+## 0.6 Special Analysis
+
+### 0.6.1 Behavior-Preservation Risk Inventory
+
+This section enumerates the non-trivial risks that arise when decomposing a single-file Express server into modules. Each risk is paired with a specific mitigation rule that downstream code generation MUST honor.
+
+#### Risk B1 — dotenv Load Order
+
+**Risk.** The current implementation calls `require('dotenv').config()` on line 28 of `server.js`, before any other module is required. The expression `process.env.NODE_ENV === 'production' ? 'combined' : 'dev'` on line 65 is evaluated at module-load time when `app.use(morgan(...))` runs. If dotenv has not yet executed, NODE_ENV would be `undefined` and morgan would silently fall through to `'dev'` even when the operator intended `'combined'`.
+
+**Mitigation rule.** `src/config/env.js` MUST invoke `require('dotenv').config()` at the very top of its module body, and `src/app.js` MUST require `./config/env` BEFORE it requires `./middleware`. Equivalently, `server.js` MUST require `./src/app` (which transitively loads `./src/config/env` first) before any code path reads `process.env`. This sequencing must be expressed via `require()` order, not via lazy/conditional evaluation.
+
+#### Risk B2 — Middleware Registration Order
+
+**Risk.** The current `app.use(...)` calls execute in the strict sequence helmet → compression → cors → morgan [server.js:L56, L59, L62, L65]. This ordering is observed by tests/server.test.js (helmet's `x-content-type-options: nosniff` and `x-frame-options: SAMEORIGIN` headers must be present on the `/` response [tests/server.test.js:L83, L88]) and is described in [README.md:L19-L25]. Any reordering risks: (a) compression interfering with helmet header insertion; (b) cors response headers being stripped by a later middleware; (c) morgan logging requests before security headers are applied.
+
+**Mitigation rule.** `src/middleware/index.js` MUST register middleware in the exact sequence helmet, compression, cors, morgan, with no insertion of any additional middleware between or around them.
+
+#### Risk B3 — Test-Export Contract
+
+**Risk.** `tests/server.test.js` requires `../server` and passes the result to `supertest(app)` [tests/server.test.js:L25, L34]. If `server.js` no longer exports the configured Express app, every test fails.
+
+**Mitigation rule.** `server.js` MUST end with `module.exports = app;` where `app` is the configured instance obtained from `require('./src/app')`. Equivalent forms (e.g., `module.exports = require('./src/app');`) are acceptable provided the exported value is the same Express app instance.
+
+#### Risk B4 — Listen Guard
+
+**Risk.** The current implementation guards `app.listen(...)` with `if (require.main === module)` [server.js:L110-L115]. This prevents the test process from binding to a TCP port. If the refactor moves `app.listen` into `src/app.js`, every `require('../server')` from the test process would call `listen`, triggering EADDRINUSE on parallel test runs or hanging the test process.
+
+**Mitigation rule.** `app.listen(...)` MUST remain in `server.js` and MUST remain inside the `if (require.main === module) { ... }` block. `src/app.js` MUST NOT call `listen`.
+
+#### Risk B5 — Morgan Format-Selection Expression
+
+**Risk.** The expression `process.env.NODE_ENV === 'production' ? 'combined' : 'dev'` [server.js:L65] is a behavior-defining ternary. If the refactor "simplifies" it (e.g., reads NODE_ENV via a helper that returns a normalized default), the morgan format selection could change.
+
+**Mitigation rule.** `src/middleware/index.js` MUST preserve the ternary expression verbatim at the point where morgan is registered. Use of `require('../config/env').NODE_ENV` is acceptable provided the resolved value matches `process.env.NODE_ENV` for every input (no defaulting, no normalization).
+
+#### Risk B6 — Handler Response Semantics
+
+**Risk.** The three response patterns must be preserved exactly:
+
+| Route | Source Call | Required Effect |
+|-------|-------------|-----------------|
+| `GET /` | `res.send('Hello world')` [server.js:L95] | status 200, body text "Hello world", Content-Type set by Express default (text/html;charset=utf-8) |
+| `GET /evening` | `res.send('Good evening')` [server.js:L106] | status 200, body text "Good evening", Content-Type set by Express default (text/html;charset=utf-8) |
+| `GET /health` | `res.status(200).json({status:'healthy', timestamp: new Date().toISOString(), uptime: process.uptime()})` [server.js:L80-L84] | status 200, JSON body with `status` string, ISO-8601 `timestamp` string, numeric `uptime`, Content-Type `application/json; charset=utf-8` |
+
+**Mitigation rule.** Controllers MUST use identical Express response methods (`res.send` / `res.status().json`) and identical body shapes. Tests [tests/server.test.js:L32-L74] verify these contracts.
+
+#### Risk B7 — No-Introduction Constraint
+
+**Risk.** A "clean refactor" sometimes tempts the addition of common Express hygiene: a 404 handler, an error-handling middleware, `app.disable('x-powered-by')`, `trust proxy`, body parsers, async wrappers. Each of these would change observable behavior.
+
+**Mitigation rule.** The refactor MUST NOT add any middleware, handler, app setting, or framework option that is not present in the current `server.js`. The full inventory of allowed `app.use(...)` calls is exactly four (helmet, compression, cors, morgan). The full inventory of allowed route handlers is exactly three (`GET /`, `GET /evening`, `GET /health`).
+
+### 0.6.2 Cross-Cutting Concerns
+
+#### Module Load Sequencing (Single-Process)
+
+Because Node.js's `require()` is synchronous and cached, the module-load graph below is deterministic. The graph illustrates the required load order so that env-dependent code runs only after dotenv has executed:
+
+```mermaid
+flowchart TD
+    A["server.js<br/>require('./src/app')"] --> B["src/app.js"]
+    B -- "1. requires" --> C["src/config/env.js<br/>(dotenv.config)"]
+    B -- "2. requires" --> D["express"]
+    B -- "3. requires" --> E["src/middleware/index.js"]
+    B -- "4. requires" --> F["src/routes/index.js"]
+    E --> G["helmet, compression, cors, morgan"]
+    F --> H["src/routes/greeting.routes.js"]
+    F --> I["src/routes/health.routes.js"]
+    H --> J["src/controllers/greeting.controller.js"]
+    I --> K["src/controllers/health.controller.js"]
 ```
 
-**package.json** - Dependency and Script Configuration
-
-Sections to update:
-- `dependencies`: Add helmet, morgan, cors, compression, dotenv
-- `scripts`: Add PM2 management commands
-
-New content to add:
-```json
-"dependencies": {
-  "express": "^4.21.2",
-  "helmet": "^8.1.0",
-  "morgan": "^1.10.1",
-  "cors": "^2.8.5",
-  "compression": "^1.8.1",
-  "dotenv": "^17.2.3"
-},
-"scripts": {
-  "start": "node server.js",
-  "start:prod": "pm2 start ecosystem.config.js --env production",
-  "stop": "pm2 stop ecosystem.config.js",
-  "restart": "pm2 restart ecosystem.config.js",
-  "test": "jest"
-}
-```
-
-**.env.example** - Environment Template
-
-Content to update:
-```env
-# Environment Configuration Template
-NODE_ENV=development
-PORT=3000
-LOG_LEVEL=info
-
-#### Database Configuration
-DB_Host=
-
-#### API Configuration
-API_KEY=
-
-#### Application Settings
-#### DB= (legacy, maintained for compatibility)
-```
-
-**README.md** - Project Documentation
-
-Sections to add:
-- Middleware documentation section
-- PM2 deployment instructions
-- Health check endpoint documentation
-- Environment variables reference table
-
-**.gitignore** - Version Control Exclusions
-
-Content to add (if not present):
-```
-.env
-.env.local
-.env.*.local
-*.log
-logs/
-.pm2/
-```
+The ordering in `src/app.js` is the single point of enforcement; downstream modules need only avoid eager `process.env` reads at module load.
+
+#### PM2 Cluster Mode Compatibility
+
+`ecosystem.config.js` runs `./server.js` in `exec_mode: 'cluster'` with `instances: 'max'` [ecosystem.config.js:L26, L30, L33]. Because each cluster worker is its own Node.js process, each worker independently traverses the new require graph above and obtains its own configured `app` instance from `src/app.js`. Worker isolation is unchanged.
+
+#### Stateless Design Preservation
+
+The refactor adds no module-level mutable state. `src/config/env.js` reads `process.env` once at module load and exposes immutable values; `src/middleware/index.js` and the controllers hold no instance state. Stateless horizontal scaling under PM2 cluster mode [tech spec section 5.1.1] continues to hold.
+
+#### Logging Output
+
+Console output on startup currently consists of two lines [server.js:L112-L113]: `Server running on port ${PORT}` and `Environment: ${process.env.NODE_ENV || 'development'}`. These must be preserved verbatim in the listen callback retained in `server.js`. Morgan request-log lines are produced by middleware and remain unchanged.
+
+## 0.7 Refactoring Rules
+
+### 0.7.1 User-Specified Rules
+
+The user provided an explicit rules list: `[]` (empty). No coding-standards, file-mandate, or workflow rules were declared. The only constraints originate from the user's prompt itself.
+
+### 0.7.2 Constraints Derived from the User Prompt
+
+The user's verbatim instruction is recorded below for traceability:
 
-### 0.3.4 Configuration and Documentation Updates
-
-**Configuration Changes:**
+> **User Instruction:** "Rewrite this Node.js server into a express.js refactor, keeping every feature and functionality exactly as in the original Node.js project. Ensure the rewritten version fully matches the behavior and logic of the current implementation."
 
-| Config File | Settings to Update | Impact |
-|-------------|-------------------|--------|
-| `package.json` | Add 5 new dependencies | Server will require additional npm install |
-| `package.json` | Add PM2 scripts | Enable `npm run start:prod` for production |
-| `.env.example` | Add NODE_ENV, LOG_LEVEL | Document all available configuration options |
-| `ecosystem.config.js` | Create new file | Enable PM2 process management with cluster mode |
-
-**Documentation Updates:**
+This instruction yields the following non-negotiable rules:
 
-| Doc File | Sections to Update | Cross-references |
-|----------|-------------------|------------------|
-| `README.md` | Setup, Endpoints, Deployment | Link to ecosystem.config.js |
-| `postman.json` | Add health check request | Reference new /health endpoint |
-| `blitzy/documentation/Project Guide.md` | Update completion status | Mark middleware task complete |
-
-### 0.3.5 Cross-File Dependencies
-
-**Import/Reference Updates:**
-
-| Source File | Dependency | Action |
-|-------------|-----------|--------|
-| `server.js` | `dotenv` | Add `require('dotenv').config()` before env access |
-| `server.js` | `helmet` | Add `require('helmet')` |
-| `server.js` | `morgan` | Add `require('morgan')` |
-| `server.js` | `cors` | Add `require('cors')` |
-| `server.js` | `compression` | Add `require('compression')` |
-| `ecosystem.config.js` | `server.js` | Reference as entry script |
-
-**Middleware Stack Order:**
-
-The middleware must be configured in this specific order:
-1. `helmet()` - Security headers first
-2. `compression()` - Compress responses early
-3. `cors()` - CORS handling before routes
-4. `morgan()` - Logging after security middleware
-5. `express.json()` - Body parsing (if needed)
-6. Route handlers
-7. Error handling middleware (last)
-
-
-## 0.4 Dependency Inventory
-
-This section catalogs all dependencies required for the production enhancement implementation.
-
-### 0.4.1 Key Private and Public Packages
-
-**Production Dependencies:**
-
-| Registry | Package Name | Version | Purpose |
-|----------|--------------|---------|---------|
-| npm | express | ^4.21.2 | Web application framework (existing) |
-| npm | helmet | ^8.1.0 | Security HTTP headers middleware |
-| npm | morgan | ^1.10.1 | HTTP request logger middleware |
-| npm | cors | ^2.8.5 | Cross-Origin Resource Sharing middleware |
-| npm | compression | ^1.8.1 | Response compression middleware |
-| npm | dotenv | ^17.2.3 | Environment variable loader |
-
-**Development Dependencies (Existing):**
-
-| Registry | Package Name | Version | Purpose |
-|----------|--------------|---------|---------|
-| npm | jest | ^29.7.0 | Testing framework |
-| npm | supertest | ^7.0.0 | HTTP assertion library |
-
-**Global Dependencies (Production Server):**
-
-| Registry | Package Name | Version | Purpose |
-|----------|--------------|---------|---------|
-| npm | pm2 | ^6.0.14 | Production process manager |
-
-### 0.4.2 Dependency Updates
-
-**New Dependencies to Add:**
-
-| Package Name | Version | Reason for Addition |
-|--------------|---------|---------------------|
-| helmet | ^8.1.0 | Security best practice for Express.js production deployments; sets Content-Security-Policy, X-Content-Type-Options, X-Frame-Options |
-| morgan | ^1.10.1 | HTTP request logging for monitoring, debugging, and audit trail |
-| cors | ^2.8.5 | Enable cross-origin requests for API consumers |
-| compression | ^1.8.1 | Gzip compression reduces response sizes by up to 70% |
-| dotenv | ^17.2.3 | Load environment variables from .env files following 12-factor app methodology |
-
-**Dependencies to Update:**
-
-No existing dependencies require version updates. All current versions are compatible.
-
-**Dependencies to Remove:**
-
-No dependencies need to be removed.
-
-### 0.4.3 Import/Reference Updates
-
-**Files Requiring Import Updates:**
-
-| File | Update Required | Pattern |
-|------|-----------------|---------|
-| `server.js` | Add 5 new require statements | `const pkg = require('pkg')` |
-
-**Import Transformation Rules:**
-
-| Old Import | New Import | Apply To |
-|------------|------------|----------|
-| N/A | `require('dotenv').config()` | server.js (line 1-3, before other imports) |
-| N/A | `const helmet = require('helmet')` | server.js (after express import) |
-| N/A | `const morgan = require('morgan')` | server.js (after helmet import) |
-| N/A | `const cors = require('cors')` | server.js (after morgan import) |
-| N/A | `const compression = require('compression')` | server.js (after cors import) |
-
-**Package Installation Command:**
-
-```bash
-npm install helmet@^8.1.0 morgan@^1.10.1 cors@^2.8.5 compression@^1.8.1 dotenv@^17.2.3
-```
-
-**Global PM2 Installation (Production Server):**
-
-```bash
-npm install -g pm2@latest
-```
-
-### 0.4.4 Dependency Compatibility Matrix
-
-| Package | Node.js Requirement | Express.js Compatibility | Status |
-|---------|---------------------|-------------------------|--------|
-| helmet@8.1.0 | ≥18.0.0 | Express 4.x, 5.x | ✅ Compatible |
-| morgan@1.10.1 | ≥0.8.0 | Express 4.x, 5.x | ✅ Compatible |
-| cors@2.8.5 | ≥0.10.0 | Express 4.x, 5.x | ✅ Compatible |
-| compression@1.8.1 | ≥0.8.0 | Express 4.x | ✅ Compatible |
-| dotenv@17.2.3 | ≥12.0.0 | N/A (standalone) | ✅ Compatible |
-| pm2@6.0.14 | ≥16.0.0 | N/A (process manager) | ✅ Compatible |
-
-**Project Runtime:**
-- Node.js: v20.19.6 (exceeds all minimum requirements)
-- npm: v11.1.0
-- Express.js: ^4.21.2
-
-All packages are fully compatible with the project's runtime environment.
-
-
-## 0.5 Implementation Design
-
-This section defines the technical approach and implementation strategy for enhancing the Express.js server with production-ready capabilities.
-
-### 0.5.1 Technical Approach
-
-**Primary Objectives with Implementation Approach:**
-
-| Objective | Implementation Approach | Rationale |
-|-----------|------------------------|-----------|
-| Add security middleware | Configure helmet() as first middleware in stack | Helmet must be applied before any response is sent to set security headers |
-| Add request logging | Configure morgan with environment-aware format | 'combined' format provides Apache-style logs for production analysis |
-| Enable CORS | Configure cors() with production-safe defaults | Allow API consumption from different origins |
-| Compress responses | Configure compression() before routes | Reduce bandwidth and improve response times |
-| Load environment config | Call dotenv.config() at application start | Environment variables must be available before any code uses them |
-| Enable PM2 deployment | Create ecosystem.config.js with cluster mode | Leverage all CPU cores and enable zero-downtime restarts |
-
-**Logical Implementation Flow:**
-
-1. **First, establish environment configuration** by installing dotenv and loading `.env` at the earliest point in `server.js`
-2. **Next, configure security middleware** by adding helmet() as the first middleware after app creation
-3. **Then, add utility middleware** (compression, cors, morgan) in the correct order
-4. **After that, add health endpoint** for load balancer health checks and monitoring
-5. **Finally, create PM2 configuration** with ecosystem.config.js for production deployment
-
-### 0.5.2 Component Impact Analysis
-
-**Direct Modifications Required:**
-
-| Component | Modification | Purpose |
-|-----------|--------------|---------|
-| server.js | Add middleware imports and configuration | Enable security, logging, compression, CORS |
-| server.js | Add health check endpoint | Provide monitoring endpoint |
-| package.json | Add dependencies and scripts | Install packages and enable PM2 commands |
-| .env.example | Expand environment template | Document all configuration options |
-
-**Indirect Impacts:**
-
-| Component | Impact | Action Required |
-|-----------|--------|-----------------|
-| tests/server.test.js | Health endpoint needs testing | Add new test case |
-| README.md | Documentation needs updating | Add middleware and PM2 sections |
-| postman.json | New endpoint to document | Add health check request |
-| package-lock.json | Will be regenerated | Auto-updated by npm install |
-
-**New Components Introduction:**
-
-| Component | Type | Responsibility |
-|-----------|------|----------------|
-| ecosystem.config.js | Configuration | PM2 process management with cluster mode, environment variables, logging |
-
-### 0.5.3 Critical Implementation Details
-
-**Middleware Stack Order (Critical):**
-
-```javascript
-// Order matters! Configure in this sequence:
-app.use(helmet());            // 1. Security headers first
-app.use(compression());       // 2. Compress early for performance
-app.use(cors());              // 3. CORS before route handling
-app.use(morgan(format));      // 4. Log after security, before routes
-// Routes come after middleware
-app.get('/health', ...);
-app.get('/', ...);
-app.get('/evening', ...);
-```
-
-**Environment-Aware Logging:**
-
-```javascript
-const morganFormat = process.env.NODE_ENV === 'production' 
-  ? 'combined' 
-  : 'dev';
-app.use(morgan(morganFormat));
-```
-
-**PM2 Cluster Mode Configuration:**
-
-```javascript
-module.exports = {
-  apps: [{
-    name: 'express-server',
-    script: './server.js',
-    instances: 'max',           // Use all CPU cores
-    exec_mode: 'cluster',       // Enable cluster mode
-    env: {
-      NODE_ENV: 'development',
-      PORT: 3000
-    },
-    env_production: {
-      NODE_ENV: 'production',
-      PORT: 3000
-    }
-  }]
-};
-```
-
-**Health Check Endpoint Design:**
-
-```javascript
-app.get('/health', (req, res) => {
-  res.status(200).json({
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime()
-  });
-});
-```
-
-### 0.5.4 Design Patterns Employed
-
-| Pattern | Application | Benefit |
-|---------|-------------|---------|
-| Middleware Pipeline | Express middleware stack | Clean separation of concerns |
-| Environment Configuration | dotenv + .env files | 12-factor app compliance |
-| Health Check Pattern | /health endpoint | Load balancer integration |
-| Cluster Mode | PM2 cluster | Horizontal scaling on single machine |
-| Graceful Shutdown | PM2 built-in handling | Zero-downtime deployments |
-
-### 0.5.5 Error Handling Considerations
-
-**Current State:**
-The existing server does not have centralized error handling middleware.
-
-**Recommended Enhancement (Optional):**
-
-```javascript
-// Error handling middleware (add at end of middleware stack)
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Internal Server Error' });
-});
-```
-
-**PM2 Error Recovery:**
-- Automatic restart on crash (default behavior)
-- `max_memory_restart` for memory leak protection
-- `exp_backoff_restart_delay` for preventing restart loops
-
-### 0.5.6 Performance Considerations
-
-| Enhancement | Performance Impact |
-|-------------|-------------------|
-| compression() middleware | Reduces response size by 50-70%, faster transfers |
-| PM2 cluster mode | Utilizes all CPU cores, handles more concurrent requests |
-| NODE_ENV=production | Enables Express.js view caching, 3x performance improvement |
-| Helmet caching | Sets appropriate cache headers for static assets |
-
-### 0.5.7 Security Considerations
-
-| Middleware | Security Benefit |
-|------------|------------------|
-| helmet() | Sets Content-Security-Policy, X-Content-Type-Options, X-Frame-Options, Strict-Transport-Security |
-| cors() | Controls which origins can access the API |
-| Rate limiting (recommended) | Prevents brute force and DDoS attacks |
-| .env exclusion | Keeps secrets out of version control |
-
-
-## 0.6 Scope Boundaries
-
-This section defines clear boundaries for what is included and excluded from the implementation scope.
-
-### 0.6.1 Exhaustively In Scope
-
-**Source Code Changes:**
-
-| Pattern | Files | Description |
-|---------|-------|-------------|
-| `server.js` | Main entry point | Add middleware imports, configuration, health endpoint |
-| `routes/*.js` | Route modules (optional) | Modular route organization if implemented |
-
-**Configuration Updates:**
-
-| Pattern | Files | Description |
-|---------|-------|-------------|
-| `package.json` | Dependency manifest | Add production dependencies, PM2 scripts |
-| `.env.example` | Environment template | Expand with all configuration variables |
-| `.env` | Environment config | Create from template with actual values |
-| `ecosystem.config.js` | PM2 configuration | Create new file for process management |
-| `.gitignore` | VCS exclusions | Ensure .env and logs excluded |
-
-**Documentation Updates:**
-
-| Pattern | Files | Description |
-|---------|-------|-------------|
-| `README.md` | Project readme | Add middleware, deployment, health endpoint docs |
-| `postman.json` | API collection | Add health check endpoint request |
-| `blitzy/documentation/*.md` | Blitzy docs | Update completion status |
-
-**Test Updates:**
-
-| Pattern | Files | Description |
-|---------|-------|-------------|
-| `tests/server.test.js` | Jest tests | Add health endpoint test case |
-| `tests/*.test.js` | Additional tests (optional) | Middleware-specific tests if needed |
-
-### 0.6.2 Explicitly Out of Scope
-
-**Related Features Not Specified:**
-
-| Feature | Reason for Exclusion |
-|---------|---------------------|
-| Database integration | Not mentioned in user requirements; DB_Host provided for configuration only |
-| Authentication/Authorization | Not mentioned in user requirements |
-| API versioning | Not mentioned in user requirements |
-| WebSocket support | Not mentioned in user requirements |
-| File upload handling | Not mentioned in user requirements |
-
-**Performance Optimizations Beyond Requirements:**
-
-| Optimization | Reason for Exclusion |
-|--------------|---------------------|
-| Redis caching | Not mentioned; adds infrastructure complexity |
-| CDN integration | Not mentioned; requires external service |
-| Database connection pooling | No database integration in scope |
-| Load balancer configuration | PM2 handles basic load balancing internally |
-
-**Refactoring Unrelated to Core Objectives:**
-
-| Refactoring | Reason for Exclusion |
-|-------------|---------------------|
-| TypeScript migration | Not mentioned; maintains existing CommonJS pattern |
-| ES modules migration | Not mentioned; maintains existing require() pattern |
-| Directory restructuring | Minimal changes; maintains flat structure |
-| Code style/linting | Not mentioned; existing style preserved |
-
-**Additional Tooling Not Mentioned:**
-
-| Tool | Reason for Exclusion |
-|------|---------------------|
-| Docker containerization | Not mentioned; PM2 specified for deployment |
-| Kubernetes orchestration | Not mentioned; beyond scope |
-| CI/CD pipeline | Not mentioned; manual deployment assumed |
-| Monitoring/APM tools | Not mentioned; PM2 monitoring sufficient |
-
-**Future Enhancements Not Part of Current Request:**
-
-| Enhancement | Reason for Exclusion |
-|-------------|---------------------|
-| GraphQL endpoint | Not mentioned |
-| OpenAPI/Swagger documentation | Not mentioned |
-| Input validation middleware | Not mentioned |
-| Session management | Not mentioned |
-| Email integration | Not mentioned |
-
-### 0.6.3 Boundary Clarifications
-
-**Middleware Scope:**
-
-| Middleware | Included | Notes |
-|------------|----------|-------|
-| helmet | ✅ Yes | Security headers |
-| morgan | ✅ Yes | Request logging |
-| cors | ✅ Yes | CORS support |
-| compression | ✅ Yes | Response compression |
-| express-rate-limit | ❌ No | Recommended but not explicitly requested |
-| express-validator | ❌ No | Not mentioned |
-| body-parser | ❌ No | Express built-in sufficient |
-
-**Routing Scope:**
-
-| Route Enhancement | Included | Notes |
-|-------------------|----------|-------|
-| Health check endpoint | ✅ Yes | Required for PM2/load balancer |
-| Route modularization | ⚠️ Optional | Can remain in server.js |
-| API versioning | ❌ No | Not mentioned |
-| Route documentation | ✅ Yes | README update |
-
-**PM2 Configuration Scope:**
-
-| PM2 Feature | Included | Notes |
-|-------------|----------|-------|
-| Basic ecosystem.config.js | ✅ Yes | Core requirement |
-| Cluster mode | ✅ Yes | Best practice for production |
-| Environment configs | ✅ Yes | dev/production environments |
-| Log rotation | ⚠️ Optional | pm2-logrotate module |
-| Remote deployment | ❌ No | Local deployment only |
-
-### 0.6.4 Exclusion Rationale
-
-| Exclusion Category | Rationale |
-|-------------------|-----------|
-| Database integration | User provided DB_Host as environment variable; integration not requested |
-| Authentication | Security middleware (helmet) requested, not auth system |
-| Advanced monitoring | PM2 provides built-in monitoring; external APM not requested |
-| Container orchestration | PM2 explicitly requested for deployment |
-| Code refactoring | User requested enhancement, not architectural changes |
-
-
-## 0.7 Execution Parameters
-
-This section documents special execution instructions and constraints for the implementation.
-
-### 0.7.1 Special Execution Instructions
-
-**Process-Specific Requirements:**
-
-| Requirement | Description | Command/Action |
-|-------------|-------------|----------------|
-| Dependency Installation | Install new production packages | `npm install helmet morgan cors compression dotenv` |
-| PM2 Global Installation | Install PM2 globally on production server | `npm install -g pm2` |
-| Environment Setup | Create .env from template | `cp .env.example .env && edit .env` |
-| Test Execution | Verify all tests pass after changes | `npm test` |
-| Production Start | Start with PM2 in production mode | `npm run start:prod` or `pm2 start ecosystem.config.js --env production` |
-
-**Tools and Platforms:**
-
-| Tool | Version | Purpose | Required |
-|------|---------|---------|----------|
-| Node.js | v20.19.6 | Runtime | ✅ Installed |
-| npm | v11.1.0 | Package manager | ✅ Installed |
-| PM2 | ^6.0.14 | Process manager | ⚠️ Global install needed |
-| Jest | ^29.7.0 | Testing | ✅ Installed |
-| Git | Any | Version control | ✅ Assumed |
-
-**Quality/Style Requirements:**
-
-| Requirement | Description |
-|-------------|-------------|
-| Code Comments | Maintain JSDoc-style block comments for new code |
-| CommonJS Modules | Use `require()` and `module.exports` (existing pattern) |
-| Arrow Functions | Use arrow functions for route handlers (existing pattern) |
-| 'use strict' | Maintain strict mode declaration |
-
-### 0.7.2 Constraints and Boundaries
-
-**Technical Constraints:**
-
-| Constraint | Description | Impact |
-|------------|-------------|--------|
-| Node.js ≥18.0.0 | Engine requirement in package.json | All packages compatible |
-| CommonJS modules | Existing codebase uses require() | Maintain pattern |
-| Flat structure | Single server.js entry point | Minimal refactoring |
-| Express 4.x | Current framework version | Middleware compatibility verified |
-
-**Process Constraints:**
-
-| Constraint | Description |
-|------------|-------------|
-| Preserve existing endpoints | Root (/) and evening (/evening) routes must remain functional |
-| Maintain test compatibility | Existing tests must continue passing |
-| Non-breaking changes | Application should work with/without .env file present |
-| Backward compatible | Default values for all environment variables |
-
-**Output Constraints:**
-
-| Output | Constraint |
-|--------|------------|
-| Response format | Maintain plain text responses for existing endpoints |
-| Health endpoint | JSON response format for monitoring compatibility |
-| Log output | Console output in development, file-based in production |
-
-**Compatibility Requirements:**
-
-| Requirement | Description |
-|-------------|-------------|
-| Supertest compatibility | Tests must work without starting actual server |
-| Environment agnostic | Work in development and production |
-| Middleware order | Maintain correct middleware execution order |
-
-### 0.7.3 Deployment Considerations
-
-**Development Environment:**
-
-```bash
-# Start in development mode
-npm start
-# Or with dotenv
-node -r dotenv/config server.js
-```
-
-**Production Environment:**
-
-```bash
-# Start with PM2 cluster mode
-pm2 start ecosystem.config.js --env production
-
-#### Monitor running processes
-pm2 monit
-
-#### View logs
-pm2 logs
-
-#### Restart with zero downtime
-pm2 reload ecosystem.config.js
-```
-
-**PM2 Startup Configuration (Optional):**
-
-```bash
-# Generate startup script for OS boot
-pm2 startup
-
-#### Save current process list
-pm2 save
-```
-
-### 0.7.4 Environment Variables Reference
-
-| Variable | Default | Description | Required |
-|----------|---------|-------------|----------|
-| NODE_ENV | development | Application environment | No |
-| PORT | 3000 | Server listening port | No |
-| LOG_LEVEL | info | Logging verbosity | No |
-| DB_Host | (none) | Database host (user-provided) | No |
-| API_KEY | (none) | API authentication key (user-provided) | No |
-
-### 0.7.5 Validation Checklist
-
-**Pre-Implementation Validation:**
-
-- [ ] Node.js version ≥18.0.0 verified
-- [ ] npm available and functional
-- [ ] All existing tests passing
-- [ ] .env.example template present
-
-**Post-Implementation Validation:**
-
-- [ ] All new packages installed successfully
-- [ ] Server starts without errors
-- [ ] All existing tests still passing
-- [ ] New health endpoint test passing
-- [ ] Health endpoint returns 200 OK
-- [ ] Morgan logs appearing in console
-- [ ] Helmet security headers present in responses
-- [ ] CORS headers present when applicable
-- [ ] PM2 starts server in cluster mode
-- [ ] PM2 shows correct number of instances
-
-
-## 0.8 Rules
-
-This section captures task-specific rules and requirements explicitly emphasized for implementation.
-
-### 0.8.1 Implementation Rules
-
-**Code Pattern Rules:**
-
-| Rule | Description | Example |
-|------|-------------|---------|
-| Follow existing patterns in `server.js` | Maintain CommonJS imports, JSDoc comments, arrow function handlers | `const pkg = require('pkg')` not `import pkg from 'pkg'` |
-| Maintain backward compatibility | All existing functionality must continue working | Existing tests must pass |
-| Use environment variable defaults | All env vars must have sensible defaults | `process.env.PORT \|\| 3000` |
-| Conditional middleware configuration | Environment-aware settings | `morgan(NODE_ENV === 'production' ? 'combined' : 'dev')` |
-
-**Middleware Rules:**
-
-| Rule | Description | Rationale |
-|------|-------------|-----------|
-| helmet() must be first middleware | Security headers applied before any response | Express.js security best practice |
-| compression() before routes | Compress all responses | Performance optimization |
-| cors() before route handlers | Handle preflight requests | CORS specification requirement |
-| morgan() after security middleware | Log after security checks | Avoid logging sensitive data |
-
-**Configuration Rules:**
-
-| Rule | Description |
-|------|-------------|
-| Never commit .env file | Keep secrets out of version control |
-| Always update .env.example | Document all environment variables |
-| Use semantic version ranges | `^major.minor.patch` in package.json |
-| PM2 ecosystem file ends in .config.js | PM2 convention for configuration files |
-
-### 0.8.2 Quality Rules
-
-**Testing Requirements:**
-
-| Rule | Description |
-|------|-------------|
-| All tests must pass | No regression in existing functionality |
-| New endpoints need tests | Health endpoint requires test coverage |
-| Use Supertest for HTTP testing | Maintain existing test pattern |
-| Test both success and failure cases | Comprehensive test coverage |
-
-**Documentation Requirements:**
-
-| Rule | Description |
-|------|-------------|
-| Update README for new features | Document middleware, PM2, health endpoint |
-| Update Postman collection | Add health endpoint request |
-| Document all environment variables | In .env.example and README |
-| Include usage examples | Show PM2 commands and curl examples |
-
-### 0.8.3 Security Rules
-
-| Rule | Description |
-|------|-------------|
-| Use helmet with default configuration | Accept secure defaults |
-| Exclude .env from version control | Already in .gitignore |
-| Set NODE_ENV=production in production | Enables security optimizations |
-| Use environment variables for secrets | Never hardcode sensitive values |
-
-### 0.8.4 Deployment Rules
-
-| Rule | Description |
-|------|-------------|
-| Use PM2 for production deployment | As specified by user |
-| Configure cluster mode | Utilize all CPU cores |
-| Set up environment-specific configs | Separate dev/production settings |
-| Enable auto-restart on crash | PM2 default behavior |
-
-### 0.8.5 Files Not to Modify
-
-| File | Reason |
-|------|--------|
-| `tests/server.test.js` (existing tests) | Only add new tests, don't modify existing |
-| `package-lock.json` (manual) | Auto-generated by npm |
-| `.git/*` | Version control internals |
-| `node_modules/*` | Managed by npm |
-| `blitzy/documentation/*` (structure) | Only update content, not structure |
-
-### 0.8.6 Error Handling Rules
-
-| Rule | Description |
-|------|-------------|
-| Use try-catch for async operations | Prevent unhandled rejections |
-| Return appropriate HTTP status codes | 200 for success, 500 for errors |
-| Log errors before responding | Morgan captures request, add error logging |
-| Graceful degradation | Server should handle missing .env gracefully |
-
-
-## 0.9 References
-
-This section documents all sources, files, and external resources used to derive the Agent Action Plan.
-
-### 0.9.1 Repository Files Analyzed
-
-**Source Code Files:**
-
-| File Path | Lines | Purpose |
-|-----------|-------|---------|
-| `/tmp/blitzy/Repo-Test-Sud/010126/server.js` | 54 | Main Express.js application entry point |
-| `/tmp/blitzy/Repo-Test-Sud/010126/tests/server.test.js` | 45 | Jest test suite for endpoints |
-
-**Configuration Files:**
-
-| File Path | Lines | Purpose |
-|-----------|-------|---------|
-| `/tmp/blitzy/Repo-Test-Sud/010126/package.json` | 21 | npm dependency manifest |
-| `/tmp/blitzy/Repo-Test-Sud/010126/.env.example` | 14 | Environment variable template |
-| `/tmp/blitzy/Repo-Test-Sud/010126/.gitignore` | - | Version control exclusions |
-
-**Documentation Files:**
-
-| File Path | Lines | Purpose |
-|-----------|-------|---------|
-| `/tmp/blitzy/Repo-Test-Sud/010126/README.md` | 32 | Project readme |
-| `/tmp/blitzy/Repo-Test-Sud/010126/blitzy/documentation/Project Guide.md` | 316 | Development and validation guide |
-| `/tmp/blitzy/Repo-Test-Sud/010126/blitzy/documentation/Technical Specifications.md` | 100+ | Technical specification document |
-| `/tmp/blitzy/Repo-Test-Sud/010126/postman.json` | 29 | API collection |
-
-### 0.9.2 External Web Resources Consulted
-
-**Official Documentation:**
-
-| Source | URL | Information Retrieved |
-|--------|-----|----------------------|
-| Express.js Performance Best Practices | expressjs.com | PM2 usage, NODE_ENV optimization, middleware patterns |
-| PM2 Documentation | pm2.keymetrics.io | Ecosystem file configuration, cluster mode, environment variables |
-| PM2 Best Practices | pm2.io | Environment variable management, startup configuration |
-| Morgan Documentation | expressjs.com, npmjs.com | Format options, file logging, custom tokens |
-| Helmet Documentation | npmjs.com, helmetjs.github.io | Security header configuration, default settings |
-| dotenv Documentation | npmjs.com | Configuration options, best practices |
-
-**Package Version Sources:**
-
-| Package | Source | Version Verified |
-|---------|--------|-----------------|
-| dotenv | npm registry | 17.2.3 |
-| helmet | npm registry | 8.1.0 |
-| morgan | npm registry | 1.10.1 |
-| cors | npm registry | 2.8.5 |
-| compression | npm registry | 1.8.1 |
-| express-rate-limit | npm registry | 8.2.1 |
-| pm2 | npm registry | 6.0.14 |
-
-### 0.9.3 User-Provided Attachments
-
-| Attachment | Type | Size | Description |
-|------------|------|------|-------------|
-| s1.png | image/png | 49,680 bytes | Project-related image (no description provided) |
-| tech_spec.pdf | application/pdf | 648,521 bytes | Technical specification document |
-
-### 0.9.4 Environment Variables Provided
-
-**User-Provided Environment Variables:**
-
-| Variable | Type | Description |
-|----------|------|-------------|
-| DB_Host | Environment Variable | Database host configuration |
-| API_KEY | Secret | External API authentication key |
-
-### 0.9.5 Build Instructions Provided
-
-**User-Specified Build Command:**
-
-```bash
-npm run build
-```
-
-Note: The current `package.json` does not define a `build` script. For this Node.js Express project, no build/transpilation step is required as the code runs directly on Node.js runtime.
-
-### 0.9.6 Search Queries Executed
-
-| Query | Purpose | Key Findings |
-|-------|---------|--------------|
-| "Express.js production best practices PM2" | Production deployment patterns | PM2 cluster mode, NODE_ENV optimization |
-| "Express.js middleware helmet morgan dotenv" | Middleware configuration | Security headers, logging formats |
-| "dotenv npm latest version" | Version verification | v17.2.3 latest stable |
-| "PM2 ecosystem.config.js" | Configuration patterns | Environment-specific configs, cluster mode |
-| "morgan npm compression cors express-rate-limit" | Package versions | Latest versions for all middleware |
-
-### 0.9.7 Repository Commands Executed
-
-| Command | Purpose | Result |
-|---------|---------|--------|
-| `npm show [package] version` | Verify latest package versions | All versions confirmed |
-| `find . -type f -not -path './node_modules/*'` | Inventory project files | 24 relevant files identified |
-| `node --version && npm --version` | Verify runtime versions | v20.19.6, v11.1.0 |
-| `npm test` | Verify existing tests | 2/2 tests passing |
-| `npm install` | Install dependencies | 355 packages, 0 vulnerabilities |
-
-### 0.9.8 Technical Specification Sections Referenced
-
-| Section | Content Used |
-|---------|--------------|
-| 0. Agent Action Plan (existing) | Current implementation status |
-| 1.1 Executive Summary | Project overview |
-| 3.3 Frameworks & Libraries | Express.js selection criteria |
-| 8.3 Deployment Environment | Production configuration patterns |
-
+- **R1 — Functional parity.** Every route, response body, response status code, response Content-Type, and response header that the current `server.js` produces MUST be reproduced exactly by the refactored implementation. There is no allowance for "equivalent but improved" semantics.
+- **R2 — Test parity.** All 7 assertions in `tests/server.test.js` MUST pass without modification: the file is REFERENCE-only. This includes the Helmet `x-content-type-options: nosniff` and `x-frame-options: SAMEORIGIN` headers, the CORS `access-control-allow-origin` header, the `/health` JSON shape, and the ISO-8601 timestamp round-trip [tests/server.test.js:L32-L103].
+- **R3 — Public surface parity.** `server.js` MUST remain at the repository root, MUST export the configured Express app, and MUST remain the entry point referenced by `package.json` `"main"` / `"start"` [package.json:L5, L7] and by `ecosystem.config.js` `script` [ecosystem.config.js:L26].
+- **R4 — Dependency parity.** No package additions, removals, or version bumps. The dependency manifest [package.json:L16-L27] and lockfile remain authoritative as they exist today.
+- **R5 — Environment-variable contract parity.** `.env.example` [\.env.example:L1-L66] MUST NOT change. Every env name and default the current implementation consumes (`PORT`, `NODE_ENV`) MUST be consumed identically by the refactored implementation.
+- **R6 — No introduction of new behaviors.** The refactor MUST NOT add: a 404 handler, an error-handling middleware, `trust proxy`, `app.disable('x-powered-by')`, a body parser (`express.json`, `express.urlencoded`), process-level error handlers, rate limiting, or any additional logging beyond what morgan already emits. See Risk B7 in section 0.6.1.
+- **R7 — Middleware ordering invariant.** The four `app.use(...)` calls MUST execute in the order helmet → compression → cors → morgan. See Risk B2 in section 0.6.1.
+- **R8 — dotenv load-order invariant.** `dotenv.config()` MUST execute before any module reads `process.env`. See Risk B1 in section 0.6.1.
+- **R9 — Listen guard invariant.** `app.listen(...)` MUST remain inside `if (require.main === module) { ... }` within `server.js`. The application factory in `src/app.js` MUST NOT bind to a port. See Risk B4 in section 0.6.1.
+- **R10 — Single-phase delivery.** All changes ship in one Blitzy phase; no incremental milestones.
+
+### 0.7.3 Validation Criteria
+
+The refactor is considered complete when ALL of the following are true. These criteria are testable using only the artifacts already present in the repository:
+
+| Criterion | Verification Method |
+|-----------|--------------------|
+| `npm test` exits 0 with 7/7 passing assertions | Run `npm test`; observe Jest output |
+| `curl http://localhost:3000/` returns 200 + body "Hello world" | Start server with `node server.js`; curl root |
+| `curl http://localhost:3000/evening` returns 200 + body "Good evening" | Start server with `node server.js`; curl /evening |
+| `curl http://localhost:3000/health` returns 200 + JSON with keys `status`, `timestamp`, `uptime`; timestamp round-trips via `new Date(...).toISOString()` | Start server; curl /health; inspect JSON |
+| Response includes `x-content-type-options: nosniff` and `x-frame-options: SAMEORIGIN` | curl with `-i` flag |
+| Response to a cross-origin request includes `access-control-allow-origin` | curl with `-H "Origin: http://example.com" -i` |
+| `pm2 start ecosystem.config.js` launches the configured cluster | Run PM2 launch; observe `pm2 status` |
+| `node -e "require('./server')"` succeeds and the export is an Express app function | One-line smoke test |
+| No new package appears in `package-lock.json`'s top-level `packages` map | Diff lockfile against the current revision |
+| No file outside the scope enumerated in section 0.2.1 is modified | Diff against the current revision |
+
+### 0.7.4 Special Instructions
+
+There are no special instructions beyond the constraints above. Specifically:
+
+- No migration to a new repository (the user's prompt says "this Node.js server" — same repo).
+- No performance or scalability deliverables (the user explicitly demands behavior preservation; no perf targets are set).
+- No examples were provided by the user.
+- No web search outputs are mandatory beyond the corroborating "Express.js modular project structure best practices" reference cited in section 0.3.2.
+
+## 0.8 References
+
+### 0.8.1 Files and Locators Cited in this Section
+
+Every factual claim made in sub-sections 0.1 through 0.7 about the existing system traces to a specific file path and locator. The complete list of cited locators is:
+
+| Source File | Locator(s) | Used to Substantiate |
+|-------------|-----------|----------------------|
+| `server.js` | L28 | `require('dotenv').config()` location at top of file |
+| `server.js` | L31 | `const express = require('express')` proving the project is already an Express app |
+| `server.js` | L31-L37 | The full list of top-of-file third-party requires that will be relocated |
+| `server.js` | L40 | `const app = express()` instantiation point |
+| `server.js` | L43 | `const PORT = process.env.PORT || 3000` default port resolution |
+| `server.js` | L56 | `app.use(helmet())` — first middleware |
+| `server.js` | L59 | `app.use(compression())` — second middleware |
+| `server.js` | L62 | `app.use(cors())` — third middleware |
+| `server.js` | L65 | `app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'))` — fourth middleware, format-selection ternary |
+| `server.js` | L79-L85 | `GET /health` handler returning `{status:'healthy', timestamp, uptime}` |
+| `server.js` | L94-L96 | `GET /` handler returning "Hello world" |
+| `server.js` | L105-L107 | `GET /evening` handler returning "Good evening" |
+| `server.js` | L110-L115 | `if (require.main === module) { app.listen(PORT, () => { console.log(...) }) }` block |
+| `server.js` | L112-L113 | The two startup `console.log` statements that must be preserved verbatim |
+| `server.js` | L118 | `module.exports = app` — the test-export contract |
+| `package.json` | L5 | `"main": "server.js"` |
+| `package.json` | L7 | `"start": "node server.js"` |
+| `package.json` | L13-L15 | `"engines": { "node": ">=18.0.0" }` |
+| `package.json` | L16-L23 | runtime dependencies map |
+| `package.json` | L24-L27 | devDependencies map |
+| `package-lock.json` | `lockfileVersion: 3`, `packages["node_modules/<pkg>"].version` for each direct dep | Resolved versions cited in section 0.5.1 |
+| `tests/server.test.js` | L25 | `const app = require('../server')` — test import path |
+| `tests/server.test.js` | L32-L103 | Full assertion set covering routes, /health schema, ISO-8601 timestamp, Helmet headers, CORS header |
+| `tests/server.test.js` | L83, L88 | `x-content-type-options` and `x-frame-options` assertions |
+| `.env.example` | L1-L66 | Environment-variable contract |
+| `ecosystem.config.js` | L26 | `script: './server.js'` |
+| `ecosystem.config.js` | L30, L33 | `instances: 'max'`, `exec_mode: 'cluster'` |
+| `ecosystem.config.js` | L57-L75 | env, env_production, env_test maps |
+| `README.md` | L19-L25 | Middleware stack table |
+| `README.md` | L29-L33 | Endpoint contract table |
+| `README.md` | L44-L57 | Health-check response schema |
+| `README.md` | L74-L82 | Environment-variables table |
+| `README.md` | L83-L122 | PM2 deployment section |
+| Existing tech spec | §1.2 System Overview | Confirms existing Express ^4.21.2 stack and middleware order |
+| Existing tech spec | §5.1 High-Level Architecture | Confirms monolithic architecture style and middleware-chain pattern |
+| Existing tech spec | §5.2 Component Details | Confirms `server.js` responsibilities and `require.main === module` pattern |
+| `blitzy/documentation/Project Guide.md` | (whole document) | Confirms validation environment Node v20.19.5 / npm 10.8.2 and 7/7 passing test count |
+
+Where a claim about external best practices is made (section 0.3.2), the supporting source is the web-search result cited in section 0.8.4.
+
+### 0.8.2 Attachments
+
+No attachments were provided by the user. The "Setup Instructions" field is "None provided", the environment-variables list is empty (`[]`), the secrets list is empty (`[]`), and zero environments were attached. No files exist in `/tmp/environments_files`.
+
+### 0.8.3 Figma Screens
+
+No Figma URLs or frame names were referenced by the user. This refactor has no UI component and no design-system applicability.
+
+### 0.8.4 Search Log (Appendix)
+
+The investigation underlying this Agent Action Plan consisted of the following inspections:
+
+- **Folder listings (`get_source_folder_contents`):** repository root (`""`), `tests/`, `blitzy/`, `blitzy/documentation/`
+- **File reads (`read_file`):** `server.js` [1, -1], `package.json` [1, -1], `tests/server.test.js` [1, -1], `.env.example` [1, -1], `ecosystem.config.js` [1, -1], `README.md` [1, -1]
+- **File summaries (`get_file_summary`):** `postman.json`, `blitzy/documentation/Project Guide.md`
+- **Tech-spec section retrievals (`get_tech_spec_section`):** `1.2 System Overview`, `5.1 HIGH-LEVEL ARCHITECTURE`, `5.2 COMPONENT DETAILS`
+- **Shell inspections (`bash`):**
+  - `find / -name ".blitzyignore"` — confirmed no .blitzyignore exists in the repository
+  - `node --version` / `npm --version` / `which node` — verified Node v22.22.2, npm 11.1.0 are installed in the working environment
+  - Python parse of `package-lock.json` — extracted lockfileVersion and resolved versions for express (4.22.1), helmet (8.1.0), morgan (1.10.1), cors (2.8.5), compression (1.8.1), dotenv (17.2.3), jest (29.7.0), supertest (7.1.4)
+  - `find . -maxdepth 2 -type d` — enumerated top-level directory structure
+- **Web search (`web_search`):**
+  - Query: "Express.js modular project structure best practices 2024" — corroborated standard patterns for routers, controllers, middleware separation, and config centralization referenced in section 0.3.2
 

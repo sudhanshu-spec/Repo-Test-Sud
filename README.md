@@ -5,6 +5,45 @@ Testing Existing and New Projects
 
 This project includes a Node.js server built with Express.js framework, enhanced with production-ready middleware, environment configuration, and PM2 process management.
 
+### Project Structure
+
+The application follows a modular layered architecture for clear separation of concerns:
+
+```
+repo-test-sud/
+├── server.js                      # Entry point: requires ./src/app and conditionally calls app.listen()
+├── src/
+│   ├── app.js                     # Express application factory: composes config, middleware, and routes
+│   ├── config/
+│   │   └── env.js                 # Loads dotenv and exposes PORT, NODE_ENV
+│   ├── middleware/
+│   │   └── index.js               # Registers helmet → compression → cors → morgan (in order)
+│   ├── routes/
+│   │   ├── index.js               # Aggregates per-domain routers
+│   │   ├── greeting.routes.js     # GET / and GET /evening
+│   │   └── health.routes.js       # GET /health
+│   └── controllers/
+│       ├── greeting.controller.js # Handler logic for / and /evening
+│       └── health.controller.js   # Handler logic for /health
+├── tests/
+│   └── server.test.js             # Jest + Supertest integration tests
+├── package.json
+├── ecosystem.config.js            # PM2 cluster-mode configuration
+└── .env.example                   # Environment-variable template
+```
+
+**Module responsibilities:**
+
+| Module | Responsibility |
+|--------|---------------|
+| `server.js` | Entry point that requires `./src/app`, conditionally calls `app.listen(PORT, ...)` when invoked directly, and exports the configured app for tests |
+| `src/app.js` | Express application factory — instantiates `express()`, invokes middleware registration, mounts routes, and exports the configured app |
+| `src/config/env.js` | Calls `dotenv.config()` once at module load and exposes resolved environment values (`PORT`, `NODE_ENV`) |
+| `src/middleware/index.js` | Registers the production middleware stack (helmet → compression → cors → morgan) on a provided Express app |
+| `src/routes/index.js` | Composes per-domain routers (`greeting.routes`, `health.routes`) into a single parent router |
+| `src/routes/*.routes.js` | Domain-scoped `express.Router()` modules that declare URL paths and HTTP methods, delegating to controllers |
+| `src/controllers/*.controller.js` | Named request handler functions extracted from route definitions |
+
 ### Setup
 
 ```bash
